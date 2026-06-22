@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport" />
+    <title>Logística de Salida - Instituto Inglés de Toluca</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script src="db.js"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "outline": "#64748b",
+                        "background": "#f8fafc",
+                        "error-container": "#fee2e2",
+                        "primary-fixed": "#dbeafe",
+                        "on-tertiary-fixed-variant": "#475569",
+                        "on-primary": "#ffffff",
+                        "surface-variant": "#f1f5f9",
+                        "on-surface-variant": "#475569",
+                        "tertiary-container": "#1e293b",
+                        "surface-container-highest": "#e2e8f0",
+                        "surface-container-high": "#f1f5f9",
+                        "surface-container": "#e2e8f0",
+                        "on-error-container": "#991b1b",
+                        "secondary": "#ef4444", // Cheerful primary-school red/coral
+                        "surface-tint": "#3b82f6",
+                        "primary-fixed-dim": "#bfdbfe",
+                        "surface-dim": "#cbd5e1",
+                        "surface-container-low": "#f8fafc",
+                        "secondary-fixed-dim": "#fca5a5",
+                        "inverse-on-surface": "#f8fafc",
+                        "outline-variant": "#cbd5e1",
+                        "inverse-primary": "#93c5fd",
+                        "on-primary-fixed": "#1e3a8a",
+                        "surface": "#ffffff",
+                        "tertiary": "#0f172a",
+                        "secondary-fixed": "#fee2e2",
+                        "on-secondary-container": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-fixed": "#f1f5f9",
+                        "on-tertiary-fixed": "#0f172a",
+                        "on-primary-container": "#1e40af",
+                        "on-error": "#ffffff",
+                        "on-primary-fixed-variant": "#1d4ed8",
+                        "on-secondary-fixed-variant": "#b91c1c",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary-container": "#64748b",
+                        "error": "#ef4444",
+                        "on-surface": "#0f172a",
+                        "inverse-surface": "#1e293b",
+                        "on-background": "#0f172a",
+                        "primary-container": "#dbeafe", // Friendly light blue
+                        "primary": "#1e40af", // Vibrant academic blue
+                        "on-secondary-fixed": "#7f1d1d",
+                        "surface-bright": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-fixed-dim": "#cbd5e1",
+                        "secondary-container": "#fee2e2"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "container-margin-desktop": "64px",
+                        "stack-md": "16px",
+                        "gutter": "16px",
+                        "stack-lg": "32px",
+                        "base": "8px",
+                        "container-margin-mobile": "16px",
+                        "stack-sm": "8px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Hanken Grotesk"],
+                        "headline-lg-mobile": ["Hanken Grotesk"],
+                        "headline-md": ["Hanken Grotesk"],
+                        "button-text": ["Hanken Grotesk"],
+                        "body-md": ["Hanken Grotesk"],
+                        "headline-lg": ["Hanken Grotesk"],
+                        "headline-sm": ["Hanken Grotesk"],
+                        "label-md": ["Hanken Grotesk"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["32px", { "lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "headline-md": ["28px", { "lineHeight": "34px", "fontWeight": "600" }],
+                        "button-text": ["16px", { "lineHeight": "24px", "letterSpacing": "0.01em", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-lg": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-sm": ["22px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        body {
+            font-family: 'Hanken Grotesk', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .active-press {
+            transform: scale(0.96);
+            filter: brightness(0.9);
+        }
+
+        /* Custom scroll settings - enabled vertical scrolling */
+        html,
+        body {
+            overflow-y: auto;
+            height: auto;
+        }
+    </style>
+    <style>
+        body {
+            min-height: 100dvh;
+        }
+    </style>
+</head>
+
+<body class="bg-background text-on-background flex flex-col">
+    <!-- TopAppBar -->
+    <header
+        class="fixed top-0 w-full bg-surface-container flex items-center justify-between px-container-margin-mobile h-16 w-full z-50 transition-colors duration-200">
+        <div class="flex items-center gap-3">
+            <div
+                class="w-11 h-11 rounded-full bg-white flex items-center justify-center border border-outline-variant/60 overflow-hidden shadow-sm">
+                <img alt="IIT Logo" class="w-full h-full object-cover" src="logo_IIT.jpg" />
+            </div>
+            <h1 class="font-headline-sm text-headline-sm font-bold text-primary">Student Pickup - Instituto Ingles de
+                Toluca</h1>
+        </div>
+        <div class="flex items-center gap-4">
+            <button
+                class="material-symbols-outlined text-on-surface-variant hover:bg-surface-variant/20 p-2 rounded-full transition-colors">notifications</button>
+        </div>
+    </header>
+    <!-- Main Content Canvas -->
+    <main class="flex-1 mt-16 pb-20 px-container-margin-mobile flex flex-col justify-between py-stack-md">
+        <!-- Welcome Section -->
+        <section class="space-y-stack-sm">
+            <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-stack-md shadow-sm">
+                <div class="flex justify-between items-center mb-3">
+                    <div>
+                        <p class="text-on-surface-variant font-label-md text-label-md uppercase tracking-wider">
+                            Bienvenido,</p>
+                        <h2 class="text-headline-sm font-headline-sm text-primary">Padre de Familia</h2>
+                    </div>
+                    <div class="relative">
+                        <select id="student-selector"
+                            class="bg-surface-container-low border border-outline-variant rounded-lg px-3 py-1.5 font-label-md text-label-md text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer shadow-sm"
+                            onchange="changeStudent(this.value)">
+                        </select>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3 bg-surface-container-low p-3 rounded-lg border-l-4 border-secondary transition-all"
+                    id="student-card-info">
+                    <img id="student-avatar"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuAt26n3kin1y74Y4yE0a2wZNRwM8iJ3k9HiSRTvU_HAhWFnLvRQ9ucyfFgm-o8BEWIXFGWkWovyg7vigZzYQphdXriMr3-0zyukU9iWb5odtlrfxLMSxQRWbuAedMLZ5e5CQI1DERl8RYpZyUqEm3ASxo-mPxf0pK3fWPFVjameMS7BMjpfLEn1SvYzjF_39vIkGlrlAsjyXi_89_botb8AdYn66ZbCd-97lUclnr3Ms9ovxKj43SmWUGDXABgKhFlMyVJO2ci7cO0"
+                        class="w-10 h-10 rounded-full object-cover border border-outline-variant shadow-sm"
+                        alt="Student avatar">
+                    <div>
+                        <p class="font-button-text text-button-text text-on-surface" id="student-name">Danna Irina</p>
+                        <p class="text-on-surface-variant font-label-md text-label-md" id="student-grade">1º Secundaria
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- Action Panel (Bento-style layout for mobile efficiency) -->
+        <section class="flex-1 flex flex-col justify-center gap-stack-md">
+            <button
+                class="w-full h-20 bg-primary text-white font-button-text text-button-text rounded-xl flex items-center justify-between px-6 shadow-md transition-all active:scale-95 active:brightness-90"
+                id="btn-10" onclick="handleAction('ESTOY A 10 MINUTOS', 'btn-10')">
+                <span class="flex flex-col items-start">
+                    <span class="text-primary-fixed-dim text-xs uppercase opacity-80">Distancia Media</span>
+                    <span>ESTOY A 10 MINUTOS</span>
+                </span>
+                <span class="material-symbols-outlined text-3xl">timer_10</span>
+            </button>
+            <button
+                class="w-full h-20 bg-primary text-white font-button-text text-button-text rounded-xl flex items-center justify-between px-6 shadow-md transition-all active:scale-95 active:brightness-90"
+                id="btn-5" onclick="handleAction('ESTOY A 5 MINUTOS', 'btn-5')">
+                <span class="flex flex-col items-start">
+                    <span class="text-primary-fixed-dim text-xs uppercase opacity-80">Próxima Llegada</span>
+                    <span>ESTOY A 5 MINUTOS</span>
+                </span>
+                <span class="material-symbols-outlined text-3xl">timer_3</span>
+            </button>
+            <button
+                class="w-full h-28 bg-secondary text-white font-button-text text-button-text rounded-xl flex items-center justify-between px-6 shadow-lg border-2 border-white/20 transition-all active:scale-95 active:brightness-90"
+                id="btn-now" onclick="handleAction('YA ESTOY EN FILA / LLEGUE', 'btn-now')">
+                <span class="flex flex-col items-start">
+                    <span class="text-white/80 text-xs uppercase font-bold tracking-widest">Acción Inmediata</span>
+                    <span class="text-xl">YA ESTOY EN FILA / LLEGUE</span>
+                </span>
+                <span class="material-symbols-outlined text-5xl"
+                    style="font-variation-settings: 'FILL' 1;">directions_car</span>
+            </button>
+        </section>
+        <!-- Status Confirmation -->
+        <section class="mt-auto">
+            <div class="bg-surface-container-high rounded-lg p-4 flex items-center gap-3 border border-outline-variant opacity-80 transition-all duration-500"
+                id="status-card">
+                <span class="material-symbols-outlined text-on-surface-variant">history</span>
+                <p class="text-on-surface-variant font-label-md text-label-md italic" id="status-text">
+                    Esperando actualización de estado...
+                </p>
+            </div>
+        </section>
+    </main>
+    <!-- Footer -->
+    <footer
+        class="w-full py-stack-md mb-20 flex flex-col items-center justify-center text-center px-container-margin-mobile bg-surface-container-low">
+        <p class="font-button-text text-button-text italic text-secondary mb-1">Excelencia académica con visión
+            internacional</p>
+        <p class="text-on-surface-variant font-label-md text-label-md">© 2024 Educational Institution</p>
+    </footer>
+    <!-- BottomNavBar -->
+    <nav
+        class="fixed bottom-0 left-0 w-full bg-surface dark:bg-surface-dim flex justify-around items-center py-2 px-4 pb-safe shadow-md z-50">
+        <a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 transition-transform active:scale-90"
+            href="#">
+            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">directions_car</span>
+            <span class="font-label-md text-label-md">Pickup</span>
+        </a>
+        <a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-transform active:scale-90"
+            href="#">
+            <span class="material-symbols-outlined">calendar_month</span>
+            <span class="font-label-md text-label-md">Schedule</span>
+        </a>
+        <a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-transform active:scale-90"
+            href="#">
+            <span class="material-symbols-outlined">person</span>
+            <span class="font-label-md text-label-md">Profile</span>
+        </a>
+    </nav>
+    <script>
+        let studentData = {};
+        let currentStudentId = 'danna_irina';
+        
+        function loadStudents() {
+            const list = getStoredStudents();
+            studentData = {};
+            list.forEach(s => {
+                studentData[s.id] = s;
+            });
+        }
+        
+        loadStudents();
+
+        function populateSelector() {
+            const selector = document.getElementById('student-selector');
+            const savedValue = selector.value || currentStudentId;
+            selector.innerHTML = '';
+            
+            const list = Object.values(studentData);
+            
+            const levels = {
+                'KINDER': 'Kínder',
+                'PRIMARIA': 'Primaria',
+                'SECUNDARIA': 'Secundaria'
+            };
+            
+            Object.keys(levels).forEach(lvlKey => {
+                const groupEl = document.createElement('optgroup');
+                groupEl.label = levels[lvlKey];
+                groupEl.className = 'font-bold text-outline';
+                
+                const levelStudents = list.filter(s => s.level === lvlKey);
+                levelStudents.forEach(student => {
+                    const opt = document.createElement('option');
+                    opt.value = student.id;
+                    opt.innerText = student.name.charAt(0) + student.name.slice(1).toLowerCase() + ` (${student.grade} ${student.group || ''})`;
+                    if (student.id === savedValue) {
+                        opt.selected = true;
+                        currentStudentId = student.id;
+                    }
+                    groupEl.appendChild(opt);
+                });
+                
+                if (levelStudents.length > 0) {
+                    selector.appendChild(groupEl);
+                }
+            });
+        }
+
+        const channel = new BroadcastChannel('stitch_pickup_channel');
+        
+        // Rastrear los estados reportados en esta sesión por alumno
+        const reportedStates = {};
+
+        // Persistencia diaria de confirmaciones
+        function getTodayKey() {
+            return 'confirmed_' + new Date().toISOString().slice(0, 10);
+        }
+
+        function loadConfirmedFromStorage() {
+            try {
+                const arr = JSON.parse(localStorage.getItem(getTodayKey()) || '[]');
+                return new Set(arr);
+            } catch (e) {
+                return new Set();
+            }
+        }
+
+        function saveConfirmedToStorage(studentId) {
+            try {
+                const key = getTodayKey();
+                const arr = JSON.parse(localStorage.getItem(key) || '[]');
+                if (!arr.includes(studentId)) {
+                    arr.push(studentId);
+                    localStorage.setItem(key, JSON.stringify(arr));
+                }
+            } catch (e) { }
+        }
+
+        function changeStudent(id) {
+            currentStudentId = id;
+            const student = studentData[id];
+            
+            // Animación suave de transición de datos
+            const infoCard = document.getElementById('student-card-info');
+            infoCard.style.opacity = 0;
+            infoCard.style.transform = 'translateY(5px)';
+            
+            setTimeout(() => {
+                document.getElementById('student-name').innerText = student.name.charAt(0) + student.name.slice(1).toLowerCase();
+                document.getElementById('student-grade').innerText = student.grade.charAt(0) + student.grade.slice(1).toLowerCase();
+                document.getElementById('student-avatar').src = student.avatar;
+                
+                infoCard.style.opacity = 1;
+                infoCard.style.transform = 'translateY(0)';
+            }, 200);
+
+            // Cargar estado reportado previo de este alumno
+            const currentStatus = reportedStates[currentStudentId];
+            if (currentStatus === 'CONFIRMADO') {
+                showConfirmationState("reciente");
+            } else if (currentStatus === 'URGENTE') {
+                const statusCard = document.getElementById('status-card');
+                const statusTextEl = document.getElementById('status-text');
+                statusCard.className = "bg-red-500 border-red-600 rounded-lg p-4 flex items-center justify-between border-2 transition-all duration-500 animate-pulse text-white shadow-lg";
+                statusTextEl.className = "text-white font-bold not-italic font-label-md text-label-md flex items-center gap-2";
+                statusTextEl.innerHTML = `
+                    <span class="material-symbols-outlined text-white animate-bounce">warning</span>
+                    <span>¡Alerta de demora enviada! Reportado urgente.</span>
+                `;
+            } else if (currentStatus === '10_MIN' || currentStatus === '5_MIN' || currentStatus === 'EN_FILA') {
+                const statusCard = document.getElementById('status-card');
+                const statusTextEl = document.getElementById('status-text');
+                let text = currentStatus === '10_MIN' ? 'ESTOY A 10 MINUTOS' : (currentStatus === '5_MIN' ? 'ESTOY A 5 MINUTOS' : 'YA ESTOY EN FILA / LLEGUE');
+                statusCard.className = "bg-primary-container border-primary rounded-lg p-4 flex items-center justify-between border transition-all duration-500 shadow-sm";
+                statusTextEl.className = "text-on-primary-container font-bold not-italic font-label-md text-label-md";
+                statusTextEl.innerText = `Último aviso enviado: ${text}`;
+            } else {
+                resetStatusCard();
+            }
+        }
+
+        // Al cargar la página, marcar confirmaciones del día y bloquear botones si aplica
+        document.addEventListener('DOMContentLoaded', () => {
+            populateSelector();
+            changeStudent(currentStudentId);
+            const confirmed = loadConfirmedFromStorage();
+            confirmed.forEach(id => reportedStates[id] = 'CONFIRMADO');
+            if (confirmed.has(currentStudentId)) {
+                disableActionButtons(true);
+                showConfirmationState('confirmado');
+            }
+        });
+
+        function handleAction(statusText, btnId) {
+            // Bloquear acciones si ya confirmado para el día
+            if (reportedStates[currentStudentId] === 'CONFIRMADO') {
+                showConfirmationState('confirmado');
+                return;
+            }
+            const now = new Date();
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const timeStr = `${hours}:${minutes}`;
+
+            let statusCode = '';
+            if (btnId === 'btn-10') statusCode = '10_MIN';
+            else if (btnId === 'btn-5') statusCode = '5_MIN';
+            else if (btnId === 'btn-now') {
+                // Si el alumno ya está en fila, pasa a URGENTE
+                const lastStatus = reportedStates[currentStudentId];
+                if (lastStatus === 'EN_FILA' || lastStatus === 'URGENTE') {
+                    statusCode = 'URGENTE';
+                    statusText = 'ALERTA DE DEMORA / ¡URGENTE!';
+                } else {
+                    statusCode = 'EN_FILA';
+                }
+            }
+
+            reportedStates[currentStudentId] = statusCode;
+            const student = studentData[currentStudentId];
+
+            // Emitir evento al administrador
+            channel.postMessage({
+                type: 'PARENT_UPDATE',
+                studentId: currentStudentId,
+                studentName: student.name,
+                grade: student.grade,
+                level: student.level,
+                group: student.group,
+                parentName: student.parent,
+                avatar: student.avatar,
+                status: statusCode,
+                time: timeStr
+            });
+
+            // Actualizar interfaz del Padre
+            const statusCard = document.getElementById('status-card');
+            const statusTextEl = document.getElementById('status-text');
+            
+            // Eliminar botón de reinicio previo si existe
+            const prevResetBtn = document.getElementById('reset-simulation-btn');
+            if (prevResetBtn) prevResetBtn.remove();
+
+            if (statusCode === 'URGENTE') {
+                statusCard.className = "bg-red-500 border-red-600 rounded-lg p-4 flex items-center justify-between border-2 transition-all duration-500 animate-pulse text-white shadow-lg";
+                statusTextEl.className = "text-white font-bold not-italic font-label-md text-label-md flex items-center gap-2";
+                statusTextEl.innerHTML = `
+                    <span class="material-symbols-outlined text-white animate-bounce">warning</span>
+                    <span>¡Alerta de demora enviada! Reportado urgente a las ${timeStr}.</span>
+                `;
+            } else {
+                statusCard.className = "bg-primary-container border-primary rounded-lg p-4 flex items-center justify-between border transition-all duration-500 shadow-sm";
+                statusTextEl.className = "text-on-primary-container font-bold not-italic font-label-md text-label-md";
+                statusTextEl.innerText = `Último aviso enviado: ${statusText} a las ${timeStr}`;
+            }
+
+            // Efecto visual en el botón presionado
+            const btn = document.getElementById(btnId);
+            btn.classList.add('ring-4', 'ring-primary/30');
+            setTimeout(() => btn.classList.remove('ring-4', 'ring-primary/30'), 400);
+
+            if (navigator.vibrate) {
+                navigator.vibrate(statusCode === 'URGENTE' ? [100, 50, 100] : 50);
+            }
+        }
+
+        // Escuchar confirmación del administrador
+        channel.onmessage = (event) => {
+            const data = event.data;
+            if (data.type === 'ADMIN_CONFIRM') {
+                reportedStates[data.studentId] = 'CONFIRMADO';
+                // Persistir confirmación para el día
+                saveConfirmedToStorage(data.studentId);
+                if (data.studentId === currentStudentId) {
+                    showConfirmationState(data.time);
+                }
+            } else if (data.type === 'DATABASE_UPDATED') {
+                loadStudents();
+                populateSelector();
+                if (!studentData[currentStudentId]) {
+                    const keys = Object.keys(studentData);
+                    if (keys.length > 0) {
+                        changeStudent(keys[0]);
+                    }
+                } else {
+                    changeStudent(currentStudentId);
+                }
+            }
+        };
+
+        function showConfirmationState(timeStr) {
+            const statusCard = document.getElementById('status-card');
+            const statusTextEl = document.getElementById('status-text');
+            
+            statusCard.className = "bg-green-100 border-green-500 rounded-lg p-4 flex items-center justify-between border transition-all duration-500";
+            statusTextEl.className = "text-green-800 font-bold not-italic font-label-md text-label-md flex items-center gap-2";
+            statusTextEl.innerHTML = `
+                <span class="material-symbols-outlined text-green-600 animate-bounce">check_circle</span>
+                <span>¡Entrega confirmada a las ${timeStr}! Alumno despachado.</span>
+            `;
+
+            // Crear botón para simular una nueva salida
+            let resetBtn = document.getElementById('reset-simulation-btn');
+            if (!resetBtn) {
+                resetBtn = document.createElement('button');
+                resetBtn.id = 'reset-simulation-btn';
+                resetBtn.className = 'ml-auto text-xs bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-3 rounded transition-all active:scale-95';
+                resetBtn.innerText = 'Nueva Salida';
+                resetBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    resetStatusCard();
+                };
+                statusCard.appendChild(resetBtn);
+            }
+            // Deshabilitar botones de acción para este alumno
+            disableActionButtons(true);
+        }
+
+        function resetStatusCard() {
+            const statusCard = document.getElementById('status-card');
+            const statusTextEl = document.getElementById('status-text');
+            
+            const resetBtn = document.getElementById('reset-simulation-btn');
+            if (resetBtn) resetBtn.remove();
+
+            // Permitir nuevos reportes
+            reportedStates[currentStudentId] = null;
+
+            // Rehabilitar botones de acción
+            disableActionButtons(false);
+
+            statusCard.className = "bg-surface-container-high rounded-lg p-4 flex items-center gap-3 border border-outline-variant opacity-80 transition-all duration-500";
+            statusTextEl.className = "text-on-surface-variant font-label-md text-label-md italic";
+            statusTextEl.innerText = "Esperando actualización de estado...";
+        }
+
+        function disableActionButtons(disabled) {
+            const btns = ['btn-10','btn-5','btn-now'];
+            btns.forEach(id=>{
+                const el = document.getElementById(id);
+                if (!el) return;
+                if (disabled) {
+                    el.setAttribute('disabled','true');
+                    el.classList.add('opacity-50','cursor-not-allowed');
+                } else {
+                    el.removeAttribute('disabled');
+                    el.classList.remove('opacity-50','cursor-not-allowed');
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>

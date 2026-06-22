@@ -1,0 +1,2323 @@
+<!DOCTYPE html>
+
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Control de Entregas - Instituto Inglés de Toluca</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script src="../db.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700;800&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .pulse-red {
+            animation: pulse-red-shadow 2s infinite;
+        }
+
+        @keyframes pulse-red-shadow {
+            0% {
+                box-shadow: 0 0 0 0 rgba(182, 23, 30, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(182, 23, 30, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(182, 23, 30, 0);
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #e5e2e1;
+            border-radius: 10px;
+        }
+    </style>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "outline": "#64748b",
+                        "background": "#f8fafc",
+                        "error-container": "#fee2e2",
+                        "primary-fixed": "#dbeafe",
+                        "on-tertiary-fixed-variant": "#475569",
+                        "on-primary": "#ffffff",
+                        "surface-variant": "#f1f5f9",
+                        "on-surface-variant": "#475569",
+                        "tertiary-container": "#1e293b",
+                        "surface-container-highest": "#e2e8f0",
+                        "surface-container-high": "#f1f5f9",
+                        "surface-container": "#e2e8f0",
+                        "on-error-container": "#991b1b",
+                        "secondary": "#ef4444", // Cheerful primary-school red/coral
+                        "surface-tint": "#3b82f6",
+                        "primary-fixed-dim": "#bfdbfe",
+                        "surface-dim": "#cbd5e1",
+                        "surface-container-low": "#f8fafc",
+                        "secondary-fixed-dim": "#fca5a5",
+                        "inverse-on-surface": "#f8fafc",
+                        "outline-variant": "#cbd5e1",
+                        "inverse-primary": "#93c5fd",
+                        "on-primary-fixed": "#1e3a8a",
+                        "surface": "#ffffff",
+                        "tertiary": "#0f172a",
+                        "secondary-fixed": "#fee2e2",
+                        "on-secondary-container": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-fixed": "#f1f5f9",
+                        "on-tertiary-fixed": "#0f172a",
+                        "on-primary-container": "#1e40af",
+                        "on-error": "#ffffff",
+                        "on-primary-fixed-variant": "#1d4ed8",
+                        "on-secondary-fixed-variant": "#b91c1c",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary-container": "#64748b",
+                        "error": "#ef4444",
+                        "on-surface": "#0f172a",
+                        "inverse-surface": "#1e293b",
+                        "on-background": "#0f172a",
+                        "primary-container": "#dbeafe", // Friendly light blue
+                        "primary": "#1e40af", // Vibrant academic blue
+                        "on-secondary-fixed": "#7f1d1d",
+                        "surface-bright": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-fixed-dim": "#cbd5e1",
+                        "secondary-container": "#fee2e2"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-md": "16px",
+                        "gutter": "16px",
+                        "stack-sm": "8px",
+                        "container-margin-desktop": "64px",
+                        "stack-lg": "32px",
+                        "container-margin-mobile": "16px",
+                        "base": "8px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Hanken Grotesk"],
+                        "body-md": ["Hanken Grotesk"],
+                        "label-md": ["Hanken Grotesk"],
+                        "headline-sm": ["Hanken Grotesk"],
+                        "headline-lg-mobile": ["Hanken Grotesk"],
+                        "body-lg": ["Hanken Grotesk"],
+                        "headline-lg": ["Hanken Grotesk"],
+                        "button-text": ["Hanken Grotesk"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["28px", { "lineHeight": "34px", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+                        "headline-sm": ["22px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["32px", { "lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-lg": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "button-text": ["16px", { "lineHeight": "24px", "letterSpacing": "0.01em", "fontWeight": "700" }]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+
+<body class="bg-surface-container-lowest text-on-background font-body-md overflow-hidden h-screen flex flex-col">
+    <!-- TopAppBar - Brightened to white -->
+    <header
+        class="bg-white text-primary font-headline-md text-headline-md docked full-width top-0 shadow-sm border-b border-outline-variant/30 flex justify-between items-center w-full px-6 py-4 z-50">
+        <div class="flex items-center gap-4">
+            <img alt="IIT Logo" class="w-10 h-10 object-contain rounded-full border border-outline-variant/40"
+                src="../logo_IIT.jpg" />
+            <div class="font-headline-md text-headline-md font-bold text-primary">Control de Entregas</div>
+        </div>
+        <div class="flex flex-col items-center">
+            <div class="font-headline-lg text-headline-lg leading-none tracking-tight text-primary" id="digital-clock">
+                20:48</div>
+            <div class="font-label-md text-label-md opacity-60 uppercase tracking-widest text-on-surface-variant"
+                id="current-date">miércoles, 3 de junio</div>
+        </div>
+        <div class="flex items-center gap-stack-md">
+            <div class="flex flex-col items-end">
+                <span class="text-[10px] font-bold opacity-60 text-on-surface-variant">ZONA ACTUAL</span>
+                <div
+                    class="flex items-center gap-2 bg-surface-container-low px-4 py-2 rounded-lg cursor-pointer hover:bg-surface-container transition-colors border border-outline-variant">
+                    <span class="material-symbols-outlined text-primary">location_on</span>
+                    <span class="font-label-md text-label-md text-primary">Puerta Principal</span>
+                    <span class="material-symbols-outlined text-primary">expand_more</span>
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <button
+                    class="p-2 hover:bg-surface-container-low text-on-surface-variant rounded-full transition-colors"><span
+                        class="material-symbols-outlined">schedule</span></button>
+                <button
+                    class="p-2 hover:bg-surface-container-low text-on-surface-variant rounded-full transition-colors"><span
+                        class="material-symbols-outlined">settings</span></button>
+            </div>
+        </div>
+    </header>
+    <div class="flex flex-1 overflow-hidden">
+        <!-- SideNavBar - Lightened background, Navy active state -->
+        <aside
+            class="bg-surface-container-lowest flex flex-col h-full w-72 p-4 gap-stack-md border-r border-outline-variant flex-shrink-0">
+            <!-- Selector de Módulo -->
+            <div class="mb-2">
+                <h2 class="font-label-md text-label-md text-outline uppercase tracking-wider mb-2 px-2">Módulos</h2>
+                <nav class="flex flex-col gap-1">
+                    <button id="mod-monitor" onclick="switchModule('MONITOR')" class="flex items-center gap-3 px-4 py-2.5 bg-primary text-on-primary font-bold rounded-lg transition-all w-full text-left">
+                        <span class="material-symbols-outlined text-lg">monitor</span>
+                        <span class="font-label-md text-label-md">Pantalla de Entrega</span>
+                    </button>
+                    <button id="mod-kpis" onclick="switchModule('KPIS')" class="flex items-center gap-3 px-4 py-2.5 text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-all w-full text-left">
+                        <span class="material-symbols-outlined text-lg">analytics</span>
+                        <span class="font-label-md text-label-md">Dashboard KPIs</span>
+                    </button>
+                    <button id="mod-admin" onclick="switchModule('ADMIN')" class="flex items-center gap-3 px-4 py-2.5 text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-all w-full text-left">
+                        <span class="material-symbols-outlined text-lg">admin_panel_settings</span>
+                        <span class="font-label-md text-label-md">Super Admin</span>
+                    </button>
+                </nav>
+            </div>
+            
+            <div class="border-t border-outline-variant/30 my-1"></div>
+
+            <!-- Filtros de Monitoreo (Niveles y Grupos) - Visibles solo en MONITOR y ADMIN -->
+            <div id="sidebar-filters" class="flex flex-col gap-stack-md flex-1 overflow-y-auto">
+                <div>
+                    <h2 class="font-headline-sm text-headline-sm text-primary">Niveles</h2>
+                    <p class="font-label-md text-label-md text-on-surface-variant">Ciclo Escolar 2026</p>
+                </div>
+                <nav class="flex flex-col gap-2">
+                    <button id="lvl-general" onclick="setActiveLevel('GENERAL')" class="flex items-center gap-4 px-4 py-3 text-on-primary bg-primary font-bold rounded-lg transition-colors">
+                        <span class="material-symbols-outlined">public</span>
+                        <span class="font-label-md text-label-md">GENERAL</span>
+                    </button>
+                    <button id="lvl-kinder" onclick="setActiveLevel('KINDER')" class="flex items-center gap-4 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-colors">
+                        <span class="material-symbols-outlined">child_care</span>
+                        <span class="font-label-md text-label-md uppercase">KÍNDER</span>
+                    </button>
+                    <button id="lvl-primaria" onclick="setActiveLevel('PRIMARIA')" class="flex items-center gap-4 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-colors">
+                        <span class="material-symbols-outlined">school</span>
+                        <span class="font-label-md text-label-md uppercase">PRIMARIA</span>
+                    </button>
+                    <button id="lvl-secundaria" onclick="setActiveLevel('SECUNDARIA')" class="flex items-center gap-4 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-colors">
+                        <span class="material-symbols-outlined">menu_book</span>
+                        <span class="font-label-md text-label-md uppercase">SECUNDARIA</span>
+                    </button>
+                </nav>
+                <div class="mt-4">
+                    <h3 class="font-label-md text-label-md text-outline mb-2 px-2 uppercase tracking-wider">Grupos Activos</h3>
+                    <div class="flex flex-col gap-1" id="groups-container">
+                        <!-- Grupos generados dinámicamente -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filtros de Dashboard KPIs - Visibles solo en KPIS -->
+            <div id="sidebar-kpis-filters" class="flex flex-col gap-stack-md flex-1 hidden">
+                <div>
+                    <h2 class="font-headline-sm text-headline-sm text-primary">Filtros KPI</h2>
+                    <p class="font-label-md text-label-md text-on-surface-variant">Analíticas globales</p>
+                </div>
+                <div class="flex flex-col gap-3 px-2">
+                    <div class="flex flex-col gap-1">
+                        <label class="text-xs font-bold text-outline uppercase">Nivel Escolar</label>
+                        <select id="kpi-level-filter" onchange="updateKpiCharts()" class="w-full bg-surface-container-low border border-outline-variant rounded-lg p-2 text-sm text-primary">
+                            <option value="ALL">Todos los Niveles</option>
+                            <option value="KINDER">Kínder</option>
+                            <option value="PRIMARIA">Primaria</option>
+                            <option value="SECUNDARIA">Secundaria</option>
+                        </select>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <label class="text-xs font-bold text-outline uppercase">Rango Temporal</label>
+                        <select id="kpi-time-filter" onchange="updateKpiCharts()" class="w-full bg-surface-container-low border border-outline-variant rounded-lg p-2 text-sm text-primary">
+                            <option value="TODAY">Hoy</option>
+                            <option value="WEEK">Esta Semana</option>
+                            <option value="MONTH">Último Mes</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-auto pt-4 border-t border-outline-variant flex flex-col gap-2">
+                <button onclick="logoutAdmin()"
+                    class="flex items-center gap-4 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low rounded-lg w-full text-left text-error">
+                    <span class="material-symbols-outlined">logout</span>
+                    <span class="font-label-md text-label-md">Cerrar Sesión</span>
+                </button>
+            </div>
+        </aside>
+        <!-- Main Content - Brighter background -->
+        <main class="flex-1 p-6 overflow-y-auto bg-surface-bright relative">
+            
+            <!-- 1. VISTA MONITOR -->
+            <div id="view-monitor" class="flex flex-col gap-6">
+                <div class="flex justify-between items-end mb-2">
+                    <div>
+                        <h1 class="font-headline-md text-headline-md text-primary">Estado de Alumnos</h1>
+                        <p class="text-on-surface-variant">Monitoreo en tiempo real de proximidad de padres</p>
+                    </div>
+                    <div class="flex gap-stack-sm">
+                        <span class="inline-flex items-center gap-2 px-3 py-1 bg-white border border-outline-variant/30 rounded-full font-label-md text-label-md text-on-surface-variant shadow-sm">
+                            <span class="w-2 h-2 rounded-full bg-secondary"></span> En Fila: <span id="stat-in-fila-count" class="font-bold">0</span>
+                        </span>
+                        <span class="inline-flex items-center gap-2 px-3 py-1 bg-white border border-outline-variant/30 rounded-full font-label-md text-label-md text-on-surface-variant shadow-sm">
+                            <span class="w-2 h-2 rounded-full bg-orange-500"></span> 5 min: <span id="stat-5-min-count" class="font-bold">0</span>
+                        </span>
+                        <span class="inline-flex items-center gap-2 px-3 py-1 bg-white border border-outline-variant/30 rounded-full font-label-md text-label-md text-on-surface-variant shadow-sm">
+                            <span class="w-2 h-2 rounded-full bg-yellow-500"></span> 10 min: <span id="stat-10-min-count" class="font-bold">0</span>
+                        </span>
+                    </div>
+                </div>
+                <!-- Bento Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4" id="student-cards-grid">
+                    <!-- Carga dinámica mediante JS -->
+                </div>
+            </div>
+
+            <!-- 2. VISTA DASHBOARD KPIS -->
+            <div id="view-kpis" class="flex flex-col gap-6 hidden">
+                <div>
+                    <h1 class="font-headline-md text-headline-md text-primary">Dashboard de Rendimiento</h1>
+                    <p class="text-on-surface-variant">KPIs y tiempos de entrega del alumnado</p>
+                </div>
+                
+                <!-- Tarjetas KPI Superiores -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-white p-4 rounded-xl border border-outline-variant/30 shadow-sm flex items-center justify-between hover:shadow-md transition-all">
+                        <div>
+                            <p class="text-xs font-bold text-outline uppercase tracking-wider">Tiempo Promedio</p>
+                            <h3 class="text-2xl font-bold text-primary mt-1" id="kpi-avg-time">7.8 min</h3>
+                            <span class="text-[10px] text-green-600 font-bold flex items-center gap-0.5 mt-1">
+                                <span class="material-symbols-outlined text-xs">arrow_downward</span>
+                                -45% vs histórico manual
+                            </span>
+                        </div>
+                        <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                            <span class="material-symbols-outlined text-2xl">schedule</span>
+                        </div>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl border border-outline-variant/30 shadow-sm flex items-center justify-between hover:shadow-md transition-all">
+                        <div>
+                            <p class="text-xs font-bold text-outline uppercase tracking-wider">Adherencia Digital</p>
+                            <h3 class="text-2xl font-bold text-primary mt-1" id="kpi-adoption">84.2%</h3>
+                            <span class="text-[10px] text-primary font-bold flex items-center gap-0.5 mt-1">
+                                <span class="material-symbols-outlined text-xs">trending_up</span>
+                                Avisos anticipados (5/10 min)
+                            </span>
+                        </div>
+                        <div class="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center text-orange-600">
+                            <span class="material-symbols-outlined text-2xl">tap_and_play</span>
+                        </div>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl border border-outline-variant/30 shadow-sm flex items-center justify-between hover:shadow-md transition-all">
+                        <div>
+                            <p class="text-xs font-bold text-outline uppercase tracking-wider">Entregas de Hoy</p>
+                            <h3 class="text-2xl font-bold text-primary mt-1" id="kpi-delivered">18 / 25</h3>
+                            <span class="text-[10px] text-on-surface-variant font-bold flex items-center gap-0.5 mt-1" id="kpi-delivered-pct">
+                                72% del padrón escolar
+                            </span>
+                        </div>
+                        <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                            <span class="material-symbols-outlined text-2xl">how_to_reg</span>
+                        </div>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl border border-outline-variant/30 shadow-sm flex items-center justify-between hover:shadow-md transition-all">
+                        <div>
+                            <p class="text-xs font-bold text-outline uppercase tracking-wider">Alertas de Seguridad</p>
+                            <h3 class="text-2xl font-bold text-primary mt-1" id="kpi-alerts">0</h3>
+                            <span class="text-[10px] text-green-600 font-bold flex items-center gap-0.5 mt-1">
+                                <span class="material-symbols-outlined text-xs">check_circle</span>
+                                Sin incidencias reportadas
+                            </span>
+                        </div>
+                        <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-secondary">
+                            <span class="material-symbols-outlined text-2xl">security</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gráficas de Rendimiento -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-2">
+                    <div class="bg-white p-5 rounded-xl border border-outline-variant/30 shadow-sm flex flex-col gap-3">
+                        <div class="flex justify-between items-center border-b border-outline-variant/20 pb-3">
+                            <h3 class="font-bold text-primary text-sm flex items-center gap-2">
+                                <span class="material-symbols-outlined text-lg">stacked_line_chart</span>
+                                Reducción del Tiempo de Entrega (Semanas de Uso)
+                            </h3>
+                        </div>
+                        <div class="relative w-full h-80">
+                            <canvas id="chart-delivery-times"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl border border-outline-variant/30 shadow-sm flex flex-col gap-3">
+                        <div class="flex justify-between items-center border-b border-outline-variant/20 pb-3">
+                            <h3 class="font-bold text-primary text-sm flex items-center gap-2">
+                                <span class="material-symbols-outlined text-lg">bar_chart</span>
+                                Distribución de Salidas por Bloque de Tiempo (Throughput)
+                            </h3>
+                        </div>
+                        <div class="relative w-full h-80">
+                            <canvas id="chart-throughput"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-xl border border-outline-variant/30 shadow-sm flex flex-col gap-3">
+                    <div class="flex justify-between items-center border-b border-outline-variant/20 pb-3">
+                        <h3 class="font-bold text-primary text-sm flex items-center gap-2">
+                            <span class="material-symbols-outlined text-lg">pie_chart</span>
+                            Porcentaje de Reportes de Proximidad por Nivel Escolar
+                        </h3>
+                    </div>
+                    <div class="relative w-full h-72">
+                        <canvas id="chart-proximities"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. VISTA SUPER ADMIN LOGIN -->
+            <div id="view-admin-login" class="flex flex-col items-center justify-center min-h-[70vh] hidden">
+                <div class="bg-white p-8 rounded-2xl border border-outline-variant/40 shadow-xl w-full max-w-md flex flex-col items-center gap-6">
+                    <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                        <span class="material-symbols-outlined text-4xl">admin_panel_settings</span>
+                    </div>
+                    <div class="text-center">
+                        <h2 class="font-headline-sm text-headline-sm text-primary font-bold">Acceso Super Admin</h2>
+                        <p class="text-xs text-on-surface-variant mt-1">Configuración del sistema e importaciones</p>
+                    </div>
+                    <div class="w-full flex flex-col gap-4">
+                        <div class="flex flex-col gap-1 w-full">
+                            <label class="text-xs font-bold text-outline uppercase">PIN / Contraseña de Acceso</label>
+                            <input id="admin-pin-input" type="password" placeholder="••••••••" class="w-full bg-surface-container-low border border-outline-variant rounded-lg p-3 text-center text-lg tracking-widest text-primary focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none" onkeydown="if(event.key==='Enter') loginAdmin()"/>
+                            <p id="admin-login-error" class="text-xs text-secondary font-bold hidden text-center mt-1">PIN incorrecto. Reintente.</p>
+                        </div>
+                        <button onclick="loginAdmin()" class="w-full bg-primary text-on-primary py-3 rounded-lg font-button-text hover:bg-primary-container hover:text-on-primary-container transition-all flex items-center justify-center gap-2 shadow-md">
+                            ENTRAR
+                            <span class="material-symbols-outlined">login</span>
+                        </button>
+                        <p class="text-[10px] text-center text-outline">PIN Demo por defecto: <span class="font-mono font-bold">admin123</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. VISTA SUPER ADMIN PANEL -->
+            <div id="view-admin-panel" class="flex flex-col gap-6 hidden">
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                    <div>
+                        <h1 class="font-headline-md text-headline-md text-primary">Panel de Configuración</h1>
+                        <p class="text-on-surface-variant">Gestión de alumnos, grupos y carga masiva</p>
+                    </div>
+                    <!-- Pestañas Administrativas -->
+                    <div class="bg-surface-container-low p-1.5 rounded-xl border border-outline-variant flex gap-2">
+                        <button id="admin-tab-alumnos" onclick="switchAdminTab('ALUMNOS')" class="px-4 py-2 bg-primary text-on-primary font-bold text-xs rounded-lg transition-all flex items-center gap-2">
+                            <span class="material-symbols-outlined text-sm">group</span>
+                            Alumnos y Familiares
+                        </button>
+                        <button id="admin-tab-masiva" onclick="switchAdminTab('MASIVA')" class="px-4 py-2 text-on-surface-variant font-bold text-xs rounded-lg hover:bg-surface-container transition-all flex items-center gap-2">
+                            <span class="material-symbols-outlined text-sm">upload_file</span>
+                            Carga Masiva Excel
+                        </button>
+                    </div>
+                </div>
+
+                <!-- SUB-PESTAÑA 1: CRUD ALUMNOS Y CONFIGURACIÓN GRUPOS -->
+                <div id="admin-subview-alumnos" class="flex flex-col gap-6">
+                    
+                    <!-- Gestión de Grupos -->
+                    <div class="bg-white p-5 rounded-xl border border-outline-variant/30 shadow-sm flex flex-col gap-4">
+                        <div class="flex justify-between items-center border-b border-outline-variant/20 pb-3">
+                            <div>
+                                <h3 class="font-bold text-primary text-sm flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-lg">school</span>
+                                    Configuración de Grupos Escolares
+                                </h3>
+                                <p class="text-xs text-on-surface-variant">Niveles activos en la institución</p>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="bg-surface-container-low/50 p-4 rounded-xl border border-outline-variant/20 flex flex-col gap-3">
+                                <div class="flex justify-between items-center">
+                                    <span class="font-bold text-primary text-xs uppercase flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-sm">child_care</span> KÍNDER
+                                    </span>
+                                </div>
+                                <div id="group-list-kinder" class="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto"></div>
+                                <div class="flex gap-2">
+                                    <input id="new-group-kinder" type="text" placeholder="Ej: 3º A" class="bg-white border border-outline-variant rounded p-1 text-xs flex-1 focus:outline-none focus:border-primary"/>
+                                    <button onclick="addGroup('KINDER')" class="bg-primary text-on-primary px-3 py-1 rounded text-xs hover:bg-primary-container font-bold">+</button>
+                                </div>
+                            </div>
+                            <div class="bg-surface-container-low/50 p-4 rounded-xl border border-outline-variant/20 flex flex-col gap-3">
+                                <div class="flex justify-between items-center">
+                                    <span class="font-bold text-primary text-xs uppercase flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-sm">school</span> PRIMARIA
+                                    </span>
+                                </div>
+                                <div id="group-list-primaria" class="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto"></div>
+                                <div class="flex gap-2">
+                                    <input id="new-group-primaria" type="text" placeholder="Ej: 3º A" class="bg-white border border-outline-variant rounded p-1 text-xs flex-1 focus:outline-none focus:border-primary"/>
+                                    <button onclick="addGroup('PRIMARIA')" class="bg-primary text-on-primary px-3 py-1 rounded text-xs hover:bg-primary-container font-bold">+</button>
+                                </div>
+                            </div>
+                            <div class="bg-surface-container-low/50 p-4 rounded-xl border border-outline-variant/20 flex flex-col gap-3">
+                                <div class="flex justify-between items-center">
+                                    <span class="font-bold text-primary text-xs uppercase flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-sm">menu_book</span> SECUNDARIA
+                                    </span>
+                                </div>
+                                <div id="group-list-secundaria" class="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto"></div>
+                                <div class="flex gap-2">
+                                    <input id="new-group-secundaria" type="text" placeholder="Ej: 3º A" class="bg-white border border-outline-variant rounded p-1 text-xs flex-1 focus:outline-none focus:border-primary"/>
+                                    <button onclick="addGroup('SECUNDARIA')" class="bg-primary text-on-primary px-3 py-1 rounded text-xs hover:bg-primary-container font-bold">+</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CRUD Estudiantes -->
+                    <div class="bg-white p-5 rounded-xl border border-outline-variant/30 shadow-sm flex flex-col gap-4">
+                        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-outline-variant/20 pb-3">
+                            <div>
+                                <h3 class="font-bold text-primary text-sm flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-lg">group</span>
+                                    Listado General de Alumnos
+                                </h3>
+                                <p class="text-xs text-on-surface-variant">Gestión de padrón estudiantil y familiares autorizados</p>
+                            </div>
+                            <button onclick="openStudentModal()" class="bg-secondary text-on-secondary px-4 py-2 rounded-lg font-button-text text-xs hover:bg-secondary-container hover:text-on-secondary-container transition-all flex items-center gap-2 shadow-sm">
+                                <span class="material-symbols-outlined text-sm">person_add</span>
+                                NUEVO ALUMNO
+                            </button>
+                        </div>
+
+                        <!-- Filtros del CRUD -->
+                        <div class="flex flex-col sm:flex-row gap-3">
+                            <div class="relative flex-1">
+                                <span class="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant text-sm">search</span>
+                                <input id="student-crud-search" oninput="resetCrudPageAndRender()" type="text" placeholder="Buscar por nombre de alumno o padre..." class="w-full bg-surface-container-low border border-outline-variant rounded-lg pl-9 pr-3 py-2 text-xs focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"/>
+                            </div>
+                            <div class="flex gap-2">
+                                <select id="student-crud-level" onchange="resetCrudPageAndRender()" class="bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-xs text-primary focus:outline-none">
+                                    <option value="ALL">Todos los Niveles</option>
+                                    <option value="KINDER">Kínder</option>
+                                    <option value="PRIMARIA">Primaria</option>
+                                    <option value="SECUNDARIA">Secundaria</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Tabla CRUD -->
+                        <div class="overflow-x-auto overflow-y-auto max-h-[480px] border border-outline-variant/20 rounded-xl relative">
+                            <table class="w-full text-left border-collapse">
+                                <thead class="sticky top-0 bg-surface-container-high z-10 shadow-[0_1px_0_0_rgba(0,0,0,0.05)]">
+                                    <tr class="bg-surface-container-high text-xs font-bold text-outline border-b border-outline-variant/30">
+                                        <th class="p-3">Foto</th>
+                                        <th class="p-3">Nombre Completo</th>
+                                        <th class="p-3">Nivel / Grado / Grupo</th>
+                                        <th class="p-3">Cumpleaños</th>
+                                        <th class="p-3">Familiar Autorizado Principal</th>
+                                        <th class="p-3">Otros Autorizados</th>
+                                        <th class="p-3 text-center">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="student-crud-tbody" class="text-xs text-on-surface">
+                                    <!-- Generado dinámicamente -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Paginación -->
+                        <div class="flex flex-col sm:flex-row justify-between items-center gap-4 pt-3 border-t border-outline-variant/20 text-xs text-on-surface-variant font-medium">
+                            <div class="flex items-center gap-2">
+                                <span>Mostrar</span>
+                                <select id="student-crud-pagesize" onchange="changeCrudPageSize(this.value)" class="bg-surface-container-low border border-outline-variant rounded-lg px-2 py-1 text-primary focus:outline-none cursor-pointer">
+                                    <option value="20">20</option>
+                                    <option value="30">30</option>
+                                    <option value="50">50</option>
+                                </select>
+                                <span>registros por página</span>
+                            </div>
+                            <div id="student-crud-pagination-info" class="text-on-surface-variant font-medium">
+                                <!-- Info de páginas -->
+                            </div>
+                            <div id="student-crud-pagination-buttons" class="flex items-center gap-1">
+                                <!-- Botones de página -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUB-PESTAÑA 2: CARGA MASIVA -->
+                <div id="admin-subview-masiva" class="flex flex-col gap-6 hidden">
+                    <div class="bg-white p-5 rounded-xl border border-outline-variant/30 shadow-sm flex flex-col gap-6">
+                        <div>
+                            <h3 class="font-bold text-primary text-sm flex items-center gap-2">
+                                <span class="material-symbols-outlined text-lg">upload_file</span>
+                                Carga Masiva desde Archivo
+                            </h3>
+                            <p class="text-xs text-on-surface-variant">Importa alumnos y familiares mediante un archivo CSV estructurado</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Drag and Drop Area -->
+                            <div class="border-2 border-dashed border-outline-variant/60 rounded-xl p-8 flex flex-col items-center justify-center gap-4 text-center cursor-pointer bg-surface-container-low/20 hover:bg-surface-container-low/40 hover:border-primary transition-all relative" id="drag-drop-zone">
+                                <input type="file" id="csv-file-input" accept=".csv" class="absolute inset-0 opacity-0 cursor-pointer"/>
+                                <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary" id="upload-icon-box">
+                                    <span class="material-symbols-outlined text-4xl">cloud_upload</span>
+                                </div>
+                                <div>
+                                    <p class="font-bold text-primary text-sm">Arrastra tu archivo CSV aquí</p>
+                                    <p class="text-xs text-outline mt-1">o haz clic para explorar en tu computadora</p>
+                                </div>
+                                <p class="text-[10px] text-outline">Formatos permitidos: <span class="font-bold">.csv</span> (delimitado por comas, codificación UTF-8)</p>
+                            </div>
+
+                            <!-- Instrucciones y Plantilla -->
+                            <div class="bg-surface-container-low/40 p-5 rounded-xl border border-outline-variant/20 flex flex-col justify-between">
+                                <div class="flex flex-col gap-3">
+                                    <h4 class="font-bold text-primary text-xs uppercase tracking-wider">Instrucciones de Importación</h4>
+                                    <ul class="text-xs text-on-surface-variant list-disc pl-4 space-y-1">
+                                        <li>El archivo debe contener las cabeceras exactas del formato de plantilla.</li>
+                                        <li>Los niveles escolares permitidos son: <span class="font-bold text-primary">KINDER, PRIMARIA, SECUNDARIA</span>.</li>
+                                        <li>El grupo asignado debe existir previamente configurado en la escuela.</li>
+                                        <li>Puedes registrar el familiar principal y hasta 2 familiares adicionales autorizados en la misma fila del CSV.</li>
+                                    </ul>
+                                </div>
+                                <button onclick="downloadCsvTemplate()" class="w-full mt-4 bg-white border border-primary text-primary py-2.5 rounded-lg font-button-text text-xs hover:bg-primary hover:text-on-primary transition-all flex items-center justify-center gap-2 shadow-sm">
+                                    DESCARGAR PLANTILLA CSV
+                                    <span class="material-symbols-outlined text-sm">download</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Sección de previsualización -->
+                        <div id="csv-preview-container" class="hidden flex flex-col gap-4 border-t border-outline-variant/20 pt-6">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <h4 class="font-bold text-primary text-sm">Previsualización de Registros a Importar</h4>
+                                    <p class="text-xs text-on-surface-variant" id="csv-record-count">Se encontraron 0 filas válidas</p>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button onclick="cancelCsvImport()" class="bg-white border border-outline-variant text-on-surface-variant px-4 py-2 rounded-lg text-xs hover:bg-surface-container transition-all font-bold">Cancelar</button>
+                                    <button onclick="confirmCsvImport()" class="bg-green-600 text-white px-5 py-2 rounded-lg text-xs hover:bg-green-700 transition-all font-bold flex items-center gap-2 shadow-sm">
+                                        Confirmar Importación
+                                        <span class="material-symbols-outlined text-sm">check_circle</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="overflow-x-auto border border-outline-variant/20 rounded-xl max-h-80 overflow-y-auto">
+                                <table class="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr class="bg-surface-container-low text-xs font-bold text-outline border-b border-outline-variant/30 sticky top-0">
+                                            <th class="p-3">Nombre</th>
+                                            <th class="p-3">Nivel</th>
+                                            <th class="p-3">Grado</th>
+                                            <th class="p-3">Grupo</th>
+                                            <th class="p-3">Familiar 1</th>
+                                            <th class="p-3">Familiar 2</th>
+                                            <th class="p-3">Familiar 3</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="csv-preview-tbody" class="text-xs text-on-surface">
+                                        <!-- Filas cargadas dinámicamente -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </main>
+        
+        <!-- Right Lateral Panel - Brighter and cleaner -->
+        <aside id="right-panel-monitor" class="w-80 bg-white flex flex-col border-l border-outline-variant/30 flex-shrink-0">
+            <div class="p-6">
+                <h2 class="font-headline-sm text-headline-sm text-primary mb-4 flex items-center gap-2">
+                    <span class="material-symbols-outlined">assignment_turned_in</span>
+                    Alumnos Listos
+                </h2>
+                <p class="text-xs text-on-surface-variant font-bold uppercase mb-6 tracking-widest opacity-60">
+                    Recientemente despachados</p>
+                <div class="flex flex-col gap-4" id="dispatched-list">
+                    <!-- Dispatched Item -->
+                </div>
+                <button
+                    class="w-full mt-8 py-3 border border-secondary text-secondary rounded-lg font-button-text text-button-text hover:bg-secondary hover:text-on-secondary transition-all flex items-center justify-center gap-2 shadow-sm">
+                    VER HISTORIAL COMPLETO
+                    <span class="material-symbols-outlined">history</span>
+                </button>
+            </div>
+            <!-- Urgent Alert Area - dinámico -->
+            <div class="mt-auto p-4 m-4 bg-error-container/50 border border-secondary/20 rounded-xl flex flex-col gap-3" id="urgent-area">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <span class="material-symbols-outlined text-secondary">report</span>
+                        <div>
+                            <p class="font-bold text-secondary text-sm uppercase">Alertas Urgentes</p>
+                            <p class="text-xs text-on-error-container font-medium">Demoras y re-reportes</p>
+                        </div>
+                    </div>
+                    <span id="urgent-count-badge" class="bg-red-500 text-white px-2 py-0.5 rounded-full text-[12px]">0</span>
+                </div>
+                <div id="urgent-alerts-list" class="flex flex-col gap-2">
+                    <div class="text-xs text-on-error-container">Sin reportes de demora</div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- FORMULARIO MODAL CRUD ALUMNO (OCULTO POR DEFECTO) -->
+        <div id="student-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-[99] hidden p-4">
+            <div class="bg-white rounded-2xl border border-outline-variant/30 shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+                <!-- Header Modal -->
+                <div class="p-6 border-b border-outline-variant/20 flex justify-between items-center bg-primary text-on-primary">
+                    <div>
+                        <h3 class="text-lg font-bold" id="modal-student-title">Nuevo Registro de Alumno</h3>
+                        <p class="text-xs text-on-primary-container">Complete los datos generales y los familiares autorizados</p>
+                    </div>
+                    <button onclick="closeStudentModal()" class="text-on-primary hover:bg-white/10 p-1.5 rounded-full transition-all">
+                        <span class="material-symbols-outlined text-lg">close</span>
+                    </button>
+                </div>
+                
+                <!-- Body Modal (Scrollable) -->
+                <div class="p-6 overflow-y-auto flex flex-col gap-6 flex-1 bg-surface-container-lowest">
+                    
+                    <input type="hidden" id="modal-student-id"/>
+                    
+                    <!-- Sección 1: Datos del Alumno -->
+                    <div class="flex flex-col gap-4">
+                        <h4 class="font-bold text-primary text-xs uppercase tracking-wider flex items-center gap-1.5 border-b border-outline-variant/20 pb-2">
+                            <span class="material-symbols-outlined text-sm">person</span>
+                            Datos Generales del Estudiante
+                        </h4>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div class="flex flex-col gap-1">
+                                <label class="text-xs font-bold text-outline uppercase">Nombre Completo</label>
+                                <input id="m-stud-name" type="text" placeholder="Ej: JUAN PÉREZ LÓPEZ" class="bg-white border border-outline-variant rounded-lg p-2.5 text-xs text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"/>
+                            </div>
+                            <div class="flex flex-col gap-1">
+                                <label class="text-xs font-bold text-outline uppercase">Fecha de Cumpleaños</label>
+                                <input id="m-stud-birthday" type="date" class="bg-white border border-outline-variant rounded-lg p-2.5 text-xs text-primary focus:outline-none focus:border-primary"/>
+                            </div>
+                            <div class="flex flex-col gap-1">
+                                <label class="text-xs font-bold text-outline uppercase">Nivel Escolar</label>
+                                <select id="m-stud-level" onchange="updateModalGradesAndGroups()" class="bg-white border border-outline-variant rounded-lg p-2.5 text-xs text-primary focus:outline-none focus:border-primary">
+                                    <option value="KINDER">Kínder</option>
+                                    <option value="PRIMARIA">Primaria</option>
+                                    <option value="SECUNDARIA">Secundaria</option>
+                                </select>
+                            </div>
+                            <div class="flex grid grid-cols-2 gap-2">
+                                <div class="flex flex-col gap-1">
+                                    <label class="text-xs font-bold text-outline uppercase">Grado</label>
+                                    <select id="m-stud-grade" class="bg-white border border-outline-variant rounded-lg p-2.5 text-xs text-primary focus:outline-none focus:border-primary">
+                                        <!-- Llenado por JS -->
+                                    </select>
+                                </div>
+                                <div class="flex flex-col gap-1">
+                                    <label class="text-xs font-bold text-outline uppercase">Grupo</label>
+                                    <select id="m-stud-group" class="bg-white border border-outline-variant rounded-lg p-2.5 text-xs text-primary focus:outline-none focus:border-primary">
+                                        <!-- Llenado por JS -->
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <label class="text-xs font-bold text-outline uppercase">URL de Foto de Perfil</label>
+                            <div class="flex gap-2">
+                                <input id="m-stud-avatar" type="text" placeholder="https://..." class="bg-white border border-outline-variant rounded-lg p-2.5 text-xs text-primary flex-1 focus:outline-none focus:border-primary"/>
+                                <button onclick="setRandomAvatar('m-stud-avatar')" class="bg-surface-container border border-outline-variant text-primary px-3 rounded-lg text-xs font-bold hover:bg-surface-container-high">Aleatorio</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección 2: Familiares Autorizados -->
+                    <div class="flex flex-col gap-4">
+                        <div class="flex justify-between items-center border-b border-outline-variant/20 pb-2">
+                            <h4 class="font-bold text-primary text-xs uppercase tracking-wider flex items-center gap-1.5">
+                                <span class="material-symbols-outlined text-sm">group</span>
+                                Familiares Autorizados para Pickup
+                            </h4>
+                            <button onclick="addModalFamiliarRow()" class="text-primary hover:text-primary-container font-bold text-xs flex items-center gap-0.5">
+                                <span class="material-symbols-outlined text-sm font-bold">add_circle</span>
+                                AÑADIR FAMILIAR
+                            </button>
+                        </div>
+                        
+                        <div id="modal-familiares-container" class="flex flex-col gap-4">
+                            <!-- Filas de familiares cargadas dinámicamente -->
+                        </div>
+                    </div>
+
+                </div>
+                
+                <!-- Footer Modal -->
+                <div class="p-6 border-t border-outline-variant/20 flex justify-end gap-3 bg-surface-container-low">
+                    <button onclick="closeStudentModal()" class="bg-white border border-outline-variant text-on-surface-variant px-5 py-2.5 rounded-lg text-xs font-bold hover:bg-surface-container transition-all">Cancelar</button>
+                    <button onclick="saveStudentModal()" class="bg-primary text-on-primary px-6 py-2.5 rounded-lg text-xs font-bold hover:bg-primary-container transition-all shadow-md">Guardar Alumno</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Toast Container for Notifications -->
+    <div id="toast-container" class="fixed bottom-6 left-80 flex flex-col gap-3 z-50 pointer-events-none"></div>
+
+    <script>
+        // Sincronización de reloj digital superior
+        function updateClock() {
+            const now = new Date();
+            const clock = document.getElementById('digital-clock');
+            const date = document.getElementById('current-date');
+
+            if (clock) clock.innerText = now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false });
+            if (date) {
+                const options = { weekday: 'long', day: 'numeric', month: 'long' };
+                date.innerText = now.toLocaleDateString('es-MX', options);
+            }
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Variables de estado
+        let students = [];
+        let levelGroups = {};
+        let activeLevel = 'GENERAL';
+        let activeGroupFilter = null;
+        const urgentAlerts = {}; // studentId -> alert data
+        let currentModule = 'MONITOR'; // MONITOR, KPIS, ADMIN
+        let currentAdminTab = 'ALUMNOS'; // ALUMNOS, MASIVA
+        let crudPageSize = 20;
+        let crudCurrentPage = 1;
+        let chartDeliveryTimes = null;
+        let chartThroughput = null;
+        let chartProximities = null;
+
+        const channel = new BroadcastChannel('stitch_pickup_channel');
+
+        // Persistencia diaria de confirmaciones
+        function getTodayKey() {
+            return 'confirmed_' + new Date().toISOString().slice(0, 10);
+        }
+
+        function loadConfirmedFromStorage() {
+            try {
+                const arr = JSON.parse(localStorage.getItem(getTodayKey()) || '[]');
+                return new Set(arr);
+            } catch (e) {
+                return new Set();
+            }
+        }
+
+        function saveConfirmedToStorage(studentId) {
+            try {
+                const key = getTodayKey();
+                const arr = JSON.parse(localStorage.getItem(key) || '[]');
+                if (!arr.includes(studentId)) {
+                    arr.push(studentId);
+                    localStorage.setItem(key, JSON.stringify(arr));
+                }
+            } catch (e) { }
+        }
+
+        // Carga inicial de datos
+        function initData() {
+            students = getStoredStudents();
+            levelGroups = getStoredGroups();
+            
+            // Cargar confirmaciones diarias
+            const confirmed = loadConfirmedFromStorage();
+            students.forEach(s => {
+                if (confirmed.has(s.id)) s.status = 'CONFIRMADO';
+            });
+        }
+
+        // Alternancia de Módulos (SPA)
+        function switchModule(moduleName) {
+            currentModule = moduleName;
+            
+            // Actualizar botones de navegación en sidebar
+            ['mod-monitor', 'mod-kpis', 'mod-admin'].forEach(id => {
+                const btn = document.getElementById(id);
+                if (!btn) return;
+                const mName = id.replace('mod-', '').toUpperCase();
+                if (mName === moduleName) {
+                    btn.className = "flex items-center gap-3 px-4 py-2.5 bg-primary text-on-primary font-bold rounded-lg transition-all w-full text-left";
+                } else {
+                    btn.className = "flex items-center gap-3 px-4 py-2.5 text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-all w-full text-left";
+                }
+            });
+
+            // Ocultar/mostrar filtros correspondientes
+            const sidebarFilters = document.getElementById('sidebar-filters');
+            const sidebarKpisFilters = document.getElementById('sidebar-kpis-filters');
+            
+            if (moduleName === 'KPIS') {
+                if (sidebarFilters) sidebarFilters.classList.add('hidden');
+                if (sidebarKpisFilters) sidebarKpisFilters.classList.remove('hidden');
+            } else {
+                if (sidebarFilters) sidebarFilters.classList.remove('hidden');
+                if (sidebarKpisFilters) sidebarKpisFilters.classList.add('hidden');
+            }
+
+            // Ocultar todas las vistas
+            document.getElementById('view-monitor').classList.add('hidden');
+            document.getElementById('view-kpis').classList.add('hidden');
+            document.getElementById('view-admin-login').classList.add('hidden');
+            document.getElementById('view-admin-panel').classList.add('hidden');
+            document.getElementById('right-panel-monitor').classList.add('hidden');
+
+            if (moduleName === 'MONITOR') {
+                document.getElementById('view-monitor').classList.remove('hidden');
+                document.getElementById('right-panel-monitor').classList.remove('hidden');
+                renderGroups();
+                renderStudents();
+                updateStatsCount();
+            } else if (moduleName === 'KPIS') {
+                document.getElementById('view-kpis').classList.remove('hidden');
+                setTimeout(initCharts, 50); // Dar tiempo para que renderice el canvas
+            } else if (moduleName === 'ADMIN') {
+                // Verificar si ya está logueado en la sesión
+                if (sessionStorage.getItem('superadmin_logged') === 'true') {
+                    document.getElementById('view-admin-panel').classList.remove('hidden');
+                    renderGroupsConfig();
+                    renderCrudStudents();
+                } else {
+                    document.getElementById('view-admin-login').classList.remove('hidden');
+                    document.getElementById('admin-pin-input').value = '';
+                    document.getElementById('admin-login-error').classList.add('hidden');
+                    document.getElementById('admin-pin-input').focus();
+                }
+            }
+        }
+
+        // Login del Super Admin
+        function loginAdmin() {
+            const input = document.getElementById('admin-pin-input');
+            const error = document.getElementById('admin-login-error');
+            if (input.value === 'admin123') {
+                sessionStorage.setItem('superadmin_logged', 'true');
+                error.classList.add('hidden');
+                switchModule('ADMIN');
+            } else {
+                error.classList.remove('hidden');
+                const box = input.parentElement.parentElement;
+                box.classList.add('animate-shake');
+                setTimeout(() => box.classList.remove('animate-shake'), 500);
+            }
+        }
+
+        function logoutAdmin() {
+            sessionStorage.removeItem('superadmin_logged');
+            switchModule('MONITOR');
+            showToast('Sesión Cerrada', 'Has salido del modo administrativo.', null);
+        }
+
+        // Cambio de pestañas en panel Super Admin
+        function switchAdminTab(tabName) {
+            currentAdminTab = tabName;
+            const btnAlumnos = document.getElementById('admin-tab-alumnos');
+            const btnMasiva = document.getElementById('admin-tab-masiva');
+            const viewAlumnos = document.getElementById('admin-subview-alumnos');
+            const viewMasiva = document.getElementById('admin-subview-masiva');
+
+            if (tabName === 'ALUMNOS') {
+                btnAlumnos.className = "px-4 py-2 bg-primary text-on-primary font-bold text-xs rounded-lg transition-all flex items-center gap-2";
+                btnMasiva.className = "px-4 py-2 text-on-surface-variant font-bold text-xs rounded-lg hover:bg-surface-container transition-all flex items-center gap-2";
+                viewAlumnos.classList.remove('hidden');
+                viewMasiva.classList.add('hidden');
+                renderCrudStudents();
+                renderGroupsConfig();
+            } else {
+                btnAlumnos.className = "px-4 py-2 text-on-surface-variant font-bold text-xs rounded-lg hover:bg-surface-container transition-all flex items-center gap-2";
+                btnMasiva.className = "px-4 py-2 bg-primary text-on-primary font-bold text-xs rounded-lg transition-all flex items-center gap-2";
+                viewAlumnos.classList.add('hidden');
+                viewMasiva.classList.remove('hidden');
+                cancelCsvImport(); // Reset del área de importación
+            }
+        }
+
+        // Lógica de Niveles y Grupos en Monitor
+        function setActiveLevel(level) {
+            activeLevel = level;
+            activeGroupFilter = null;
+            
+            ['lvl-general', 'lvl-kinder', 'lvl-primaria', 'lvl-secundaria'].forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                const isActive = (id === `lvl-${level.toLowerCase()}`) || (level === 'GENERAL' && id === 'lvl-general');
+                if (isActive) {
+                    el.className = "flex items-center gap-4 px-4 py-3 text-on-primary bg-primary font-bold rounded-lg transition-colors w-full text-left";
+                } else {
+                    el.className = "flex items-center gap-4 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-colors w-full text-left";
+                }
+            });
+            renderGroups();
+            renderStudents();
+        }
+
+        function renderGroups() {
+            const container = document.getElementById('groups-container');
+            if (!container) return;
+            container.innerHTML = '';
+            let groups = [];
+            if (activeLevel === 'GENERAL') {
+                groups = Array.from(new Set(students.map(s => s.group).filter(Boolean))).slice(0, 8);
+            } else {
+                groups = levelGroups[activeLevel] || [];
+            }
+
+            if (groups.length === 0) {
+                container.innerHTML = '<div class="text-xs text-on-surface-variant px-2 italic">Sin grupos registrados</div>';
+                return;
+            }
+
+            groups.forEach(g => {
+                const count = students.filter(s => s.group === g && s.status && s.status !== 'CONFIRMADO').length;
+                const btn = document.createElement('button');
+                btn.className = `flex justify-between items-center px-4 py-2 w-full text-left rounded-lg transition-colors ${activeGroupFilter === g ? 'bg-primary text-on-primary font-bold' : 'text-on-surface-variant hover:bg-surface-container-low'}`;
+                btn.innerHTML = `<span>${g}</span><span class="px-2 py-0.5 rounded-full text-[10px] ${count ? 'bg-secondary text-on-secondary' : 'bg-surface-dim text-on-surface'}">${count}</span>`;
+                btn.onclick = () => { activeGroupFilter = activeGroupFilter === g ? null : g; renderStudents(); renderGroups(); };
+                container.appendChild(btn);
+            });
+        }
+
+        // Renderizado del Bento Grid de alumnos del monitor
+        function renderStudents() {
+            const grid = document.getElementById('student-cards-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+            
+            let filtered = students.filter(s => s.status && s.status !== 'CONFIRMADO' && (activeLevel === 'GENERAL' || s.level === activeLevel) && (!activeGroupFilter || s.group === activeGroupFilter));
+
+            const priority = { 'URGENTE': 0, 'EN_FILA': 1, '5_MIN': 2, '10_MIN': 3 };
+            filtered.sort((a, b) => {
+                const pa = priority[a.status] !== undefined ? priority[a.status] : 99;
+                const pb = priority[b.status] !== undefined ? priority[b.status] : 99;
+                if (pa !== pb) return pa - pb;
+                
+                function toMinutes(t) {
+                    if (!t) return -Infinity;
+                    const parts = t.split(':');
+                    if (parts.length < 2) return -Infinity;
+                    return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
+                }
+                return toMinutes(b.lastUpdate) - toMinutes(a.lastUpdate);
+            });
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full py-16 flex flex-col items-center justify-center text-center gap-4 text-outline">
+                        <span class="material-symbols-outlined text-5xl">directions_car</span>
+                        <p class="font-label-md text-label-md">Sin reportes activos en este nivel / grupo.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            filtered.forEach(student => {
+                const card = document.createElement('div');
+
+                let borderClass = 'border-outline-variant/30';
+                let badgeClass = 'bg-surface-dim text-on-surface';
+                let badgeText = 'SIN REPORTE';
+                let buttonHTML = `<button class="w-full bg-surface-container text-on-surface-variant py-2 rounded-lg font-button-text text-xs cursor-not-allowed flex items-center justify-center" disabled>ESPERANDO</button>`;
+                let pulseClass = '';
+                let timerIcon = 'hourglass_empty';
+
+                const isUrgent = student.status === 'URGENTE' || urgentAlerts[student.id];
+
+                if (isUrgent) {
+                    borderClass = 'border-red-700/60';
+                    badgeClass = 'bg-red-700 text-white';
+                    badgeText = '¡URGENTE!';
+                    buttonHTML = `
+                        <div class="flex gap-2 w-full">
+                            <button onclick="confirmPickup('${student.id}')" class="w-1/2 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg font-button-text text-xs transition-all shadow-sm">CONFIRMAR</button>
+                            <button onclick="removeUrgent('${student.id}')" class="w-1/2 bg-red-800 hover:bg-red-900 text-white py-2 rounded-lg font-button-text text-xs transition-all shadow-sm">ATENDIDO</button>
+                        </div>`;
+                    pulseClass = 'animate-pulse shadow-2xl ring-4 ring-red-200';
+                    timerIcon = 'warning';
+                } else if (student.status === 'EN_FILA') {
+                    borderClass = 'border-orange-600/60';
+                    badgeClass = 'bg-orange-600 text-white';
+                    badgeText = '¡YA EN FILA!';
+                    buttonHTML = `
+                        <button onclick="confirmPickup('${student.id}')" class="w-full bg-primary text-on-primary py-2 rounded-lg font-button-text text-xs hover:bg-on-primary-fixed-variant transition-all flex items-center justify-center gap-1 shadow-sm">
+                            CONFIRMAR
+                            <span class="material-symbols-outlined text-sm">check_circle</span>
+                        </button>
+                    `;
+                    pulseClass = 'ring-2 ring-orange-200 shadow-lg';
+                    timerIcon = 'notifications_active';
+                } else if (student.status === '5_MIN') {
+                    borderClass = 'border-orange-500/30';
+                    badgeClass = 'bg-orange-500 text-white';
+                    badgeText = 'A 5 MIN';
+                    buttonHTML = `<button class="w-full bg-surface-container text-on-surface-variant py-2 rounded-lg font-button-text text-xs cursor-not-allowed flex items-center justify-center" disabled>EN DISTANCIA</button>`;
+                    timerIcon = 'timer_3';
+                } else if (student.status === '10_MIN') {
+                    borderClass = 'border-yellow-500/30';
+                    badgeClass = 'bg-yellow-500 text-on-tertiary-fixed';
+                    badgeText = 'A 10 MIN';
+                    buttonHTML = `<button class="w-full bg-surface-container text-on-surface-variant py-2 rounded-lg font-button-text text-xs cursor-not-allowed flex items-center justify-center" disabled>EN DISTANCIA</button>`;
+                    timerIcon = 'timer_10';
+                }
+
+                card.className = `bg-white border ${borderClass} rounded-xl p-3 shadow-sm relative overflow-hidden ${pulseClass} flex flex-col transition-all hover:shadow-md hover:translate-y-[-2px]`;
+                card.id = `card-${student.id}`;
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-center mb-2">
+                        <div class="relative">
+                            <img alt="${student.name}" class="w-12 h-12 rounded-full object-cover border-2 ${student.status === 'EN_FILA' ? 'border-secondary/20' : 'border-outline-variant/20'}" src="${student.avatar}"/>
+                            ${student.status === 'EN_FILA' || isUrgent ? `
+                            <div class="absolute -bottom-1 -right-1 bg-secondary text-white rounded-full p-0.5 border border-white">
+                                <span class="material-symbols-outlined text-[10px] block">${timerIcon}</span>
+                            </div>` : ''}
+                        </div>
+                        <span class="${badgeClass} px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider">${badgeText}</span>
+                    </div>
+                    <div class="mb-2 flex-1">
+                        <h3 class="font-bold text-sm text-primary truncate">${student.name}</h3>
+                        <p class="text-on-surface-variant text-[10px] font-bold uppercase">${student.grade} · ${student.group || ''}</p>
+                    </div>
+                    
+                    <!-- Tarjeta del Padre/Madre -->
+                    <div class="bg-surface-container-low p-2 rounded-lg mb-2 border border-outline-variant/10 cursor-pointer hover:bg-surface-container transition-all" onclick="showFamilyPopup('${student.id}')" title="Ver familiares autorizados">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <span class="material-symbols-outlined text-primary text-sm">person</span>
+                                <p class="text-[10px] text-on-surface truncate font-medium">${student.parent}</p>
+                            </div>
+                            <span class="material-symbols-outlined text-outline text-xs">group</span>
+                        </div>
+                    </div>
+                    
+                    ${student.lastUpdate ? `
+                    <div class="text-[10px] text-outline mb-2 italic">
+                        Reportado a las ${student.lastUpdate}
+                    </div>` : ''}
+                    ${buttonHTML}
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // Mostrar un Popover / Modal rápido con los Familiares Autorizados
+        function showFamilyPopup(studentId) {
+            const student = students.find(s => s.id === studentId);
+            if (!student) return;
+            
+            const family = student.family || [];
+            
+            const overlay = document.createElement('div');
+            overlay.className = 'fixed inset-0 bg-black/40 flex items-center justify-center z-[150] p-4';
+            overlay.onclick = () => overlay.remove();
+            
+            const box = document.createElement('div');
+            box.className = 'bg-white rounded-2xl border border-outline-variant/30 shadow-2xl p-6 w-full max-w-md flex flex-col gap-4 animate-in fade-in zoom-in-95 duration-200';
+            box.onclick = (e) => e.stopPropagation();
+            
+            box.innerHTML = `
+                <div class="flex justify-between items-center border-b border-outline-variant/20 pb-3">
+                    <div>
+                        <h4 class="font-bold text-primary text-sm">Familiares Autorizados</h4>
+                        <p class="text-[10px] text-on-surface-variant">Para recoger a: <span class="font-bold text-primary">${student.name}</span></p>
+                    </div>
+                    <button class="hover:bg-surface-container p-1 rounded-full text-outline" onclick="this.parentElement.parentElement.parentElement.remove()">
+                        <span class="material-symbols-outlined text-sm">close</span>
+                    </button>
+                </div>
+                <div class="flex flex-col gap-3 max-h-80 overflow-y-auto pr-1">
+                    ${family.length === 0 ? `
+                        <p class="text-xs text-outline italic text-center py-4">No hay familiares registrados.</p>
+                    ` : family.map(f => `
+                        <div class="flex items-center gap-3 p-2 rounded-lg border ${f.authorized ? 'border-outline-variant/20 bg-white':'border-red-200 bg-red-50/30 opacity-70'}">
+                            <div class="w-10 h-10 rounded-lg overflow-hidden bg-surface-container-low border border-outline-variant/20 flex-shrink-0">
+                                <img src="${f.photo || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=100'}" class="w-full h-full object-cover"/>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-xs font-bold text-on-surface truncate">${f.name}</p>
+                                <p class="text-[10px] text-on-surface-variant font-medium">${f.relationship} · Tel: ${f.phone || 'S/N'}</p>
+                            </div>
+                            <div>
+                                <span class="px-2 py-0.5 rounded-full text-[8px] font-bold ${f.authorized ? 'bg-green-100 text-green-800':'bg-red-100 text-red-800'}">
+                                    ${f.authorized ? 'AUTORIZADO' : 'NO AUTORIZADO'}
+                                </span>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            overlay.appendChild(box);
+            document.body.appendChild(overlay);
+        }
+
+        // Estadísticas numéricas superiores en monitor
+        function updateStatsCount() {
+            const inf = students.filter(s => s.status === 'EN_FILA').length;
+            const m5 = students.filter(s => s.status === '5_MIN').length;
+            const m10 = students.filter(s => s.status === '10_MIN').length;
+
+            const elFila = document.getElementById('stat-in-fila-count');
+            const el5 = document.getElementById('stat-5-min-count');
+            const el10 = document.getElementById('stat-10-min-count');
+
+            if (elFila) elFila.innerText = inf;
+            if (el5) el5.innerText = m5;
+            if (el10) el10.innerText = m10;
+        }
+
+        // Confirmar entrega de alumno
+        function confirmPickup(studentId) {
+            const student = students.find(s => s.id === studentId);
+            if (!student) return;
+
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false });
+
+            // Persistir la confirmación diaria
+            saveConfirmedToStorage(studentId);
+            student.status = 'CONFIRMADO';
+            
+            // Emitir evento al Padre
+            channel.postMessage({
+                type: 'ADMIN_CONFIRM',
+                studentId: studentId,
+                time: timeStr
+            });
+
+            // Animación de salida de la tarjeta
+            const cardEl = document.getElementById(`card-${studentId}`);
+            if (cardEl) {
+                cardEl.style.transform = 'scale(0.8) translateY(20px)';
+                cardEl.style.opacity = '0';
+                cardEl.style.transition = 'all 0.4s ease';
+
+                setTimeout(() => {
+                    renderStudents();
+                    addToDispatchedList(student, timeStr);
+                    updateStatsCount();
+                    renderGroups();
+                }, 400);
+            } else {
+                renderStudents();
+                addToDispatchedList(student, timeStr);
+                updateStatsCount();
+                renderGroups();
+            }
+            
+            showToast('Alumno Entregado', `${student.name} ha sido entregado exitosamente.`, student.avatar);
+        }
+
+        function addToDispatchedList(student, timeStr) {
+            const list = document.getElementById('dispatched-list');
+            if (!list) return;
+
+            // Eliminar placeholders iniciales si existen
+            const placeholders = list.querySelectorAll('.placeholder-dispatch');
+            placeholders.forEach(p => p.remove());
+
+            const item = document.createElement('div');
+            item.className = 'bg-white p-3 rounded-lg border border-outline-variant/40 shadow-sm flex items-center gap-3 group hover:border-primary transition-all duration-300 opacity-0 -translate-y-2 cursor-default';
+            item.innerHTML = `
+                <div class="w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center overflow-hidden border border-outline-variant/20">
+                    <img class="object-cover w-full h-full" src="${student.avatar}" alt="${student.name}"/>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-bold text-on-surface truncate uppercase">${student.name}</p>
+                    <p class="text-[10px] text-on-surface-variant uppercase">${timeStr} · Puerta Principal</p>
+                </div>
+                <span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+            `;
+
+            list.insertBefore(item, list.firstChild);
+
+            // Mantener solo los últimos 5
+            while (list.children.length > 5) {
+                list.removeChild(list.lastChild);
+            }
+
+            setTimeout(() => {
+                item.classList.remove('opacity-0', '-translate-y-2');
+            }, 50);
+        }
+
+        // Alertas Urgentes
+        function addUrgent(student, data) {
+            urgentAlerts[student.id] = data;
+            renderUrgentAlerts();
+        }
+
+        function removeUrgent(studentId) {
+            delete urgentAlerts[studentId];
+            const student = students.find(s => s.id === studentId);
+            if (student && student.status === 'URGENTE') {
+                student.status = 'EN_FILA'; // Regresa al estado de fila
+            }
+            renderUrgentAlerts();
+            renderStudents();
+            updateStatsCount();
+        }
+
+        function renderUrgentAlerts() {
+            const container = document.getElementById('urgent-alerts-list');
+            const badge = document.getElementById('urgent-count-badge');
+            if (!container) return;
+            container.innerHTML = '';
+            
+            const list = Object.values(urgentAlerts);
+            if (badge) badge.innerText = list.length;
+
+            if (list.length === 0) {
+                container.innerHTML = '<div class="text-xs text-on-error-container">Sin reportes de demora</div>';
+                return;
+            }
+
+            list.forEach(alert => {
+                const item = document.createElement('div');
+                item.className = 'bg-white p-2.5 rounded-lg border border-red-200 flex items-center justify-between gap-2 shadow-sm animate-pulse';
+                item.innerHTML = `
+                    <div class="flex-1 min-w-0">
+                        <p class="text-xs font-bold text-red-700 truncate uppercase">${alert.studentName}</p>
+                        <p class="text-[9px] text-on-error-container uppercase font-semibold">Demora a las ${alert.time}</p>
+                    </div>
+                    <button onclick="removeUrgent('${alert.studentId}')" class="text-red-700 hover:text-red-900 flex-shrink-0">
+                        <span class="material-symbols-outlined text-sm font-bold">cancel</span>
+                    </button>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        // Sintetizar tono melódico (arpegio de arpa en C major)
+        function playNotificationSound() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                const now = audioCtx.currentTime;
+
+                notes.forEach((freq, index) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, now + index * 0.08);
+
+                    gain.gain.setValueAtTime(0, now + index * 0.08);
+                    gain.gain.linearRampToValueAtTime(0.12, now + index * 0.08 + 0.02);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, now + index * 0.08 + 0.35);
+
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+
+                    osc.start(now + index * 0.08);
+                    osc.stop(now + index * 0.08 + 0.35);
+                });
+            } catch (e) {
+                console.warn('AudioContext no soportado:', e);
+            }
+        }
+
+        function showToast(title, message, avatarUrl) {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const toast = document.createElement('div');
+
+            toast.className = 'bg-white/95 backdrop-blur-sm border-l-4 border-secondary p-4 rounded-r-xl shadow-xl flex items-center gap-4 min-w-[320px] max-w-[400px] pointer-events-auto transition-all duration-500 transform translate-y-10 opacity-0 z-[100] border border-outline-variant/30';
+
+            toast.innerHTML = `
+                ${avatarUrl ? `
+                <div class="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border border-outline-variant/30 shadow-sm">
+                    <img src="${avatarUrl}" class="w-full h-full object-cover" />
+                </div>` : `
+                <span class="material-symbols-outlined text-secondary text-2xl">notifications</span>
+                `}
+                <div class="flex-1 min-w-0">
+                    <h4 class="font-bold text-xs text-primary uppercase truncate">${title}</h4>
+                    <p class="text-xs text-on-surface-variant font-medium mt-0.5">${message}</p>
+                </div>
+                <button class="text-outline hover:text-primary transition-colors flex-shrink-0" onclick="this.parentElement.remove()">
+                    <span class="material-symbols-outlined text-sm">close</span>
+                </button>
+            `;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-10', 'opacity-0');
+            }, 50);
+
+            playNotificationSound();
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'scale-95');
+                setTimeout(() => {
+                    toast.remove();
+                }, 500);
+            }, 6000);
+        }
+
+        // Inicialización de Gráficos del Dashboard (Chart.js)
+        function initCharts() {
+            const levelFilter = document.getElementById('kpi-level-filter').value;
+            const timeFilter = document.getElementById('kpi-time-filter').value;
+
+            // Modificador simulado según filtros
+            let timeFactor = 1.0;
+            if (levelFilter === 'KINDER') timeFactor = 0.8;
+            else if (levelFilter === 'PRIMARIA') timeFactor = 1.1;
+            else if (levelFilter === 'SECUNDARIA') timeFactor = 0.9;
+
+            if (timeFilter === 'WEEK') timeFactor *= 0.95;
+            else if (timeFilter === 'MONTH') timeFactor *= 1.05;
+
+            // Configurar textos de los KPIs
+            const avgTimeEl = document.getElementById('kpi-avg-time');
+            const deliveredEl = document.getElementById('kpi-delivered');
+            const deliveredPctEl = document.getElementById('kpi-delivered-pct');
+
+            if (avgTimeEl) avgTimeEl.innerText = (7.8 * timeFactor).toFixed(1) + ' min';
+            if (deliveredEl) {
+                const count = Math.round(18 * (levelFilter === 'ALL' ? 1.0 : 0.35));
+                const total = Math.round(25 * (levelFilter === 'ALL' ? 1.0 : 0.35));
+                deliveredEl.innerText = `${count} / ${total}`;
+                if (deliveredPctEl) deliveredPctEl.innerText = `${Math.round(count/total*100)}% del padrón`;
+            }
+
+            // Gráfica 1: Tiempos de Entrega
+            const ctx1 = document.getElementById('chart-delivery-times');
+            if (ctx1) {
+                if (chartDeliveryTimes) chartDeliveryTimes.destroy();
+                
+                const baseManual = [28, 27.5, 29, 28.2];
+                const baseApp = [18.5, 12.2, 9.4, 7.8 * timeFactor];
+
+                chartDeliveryTimes = new Chart(ctx1, {
+                    type: 'line',
+                    data: {
+                        labels: ['Semana 1', 'Semana 2', 'Semana 3', 'Semana 4 (Actual)'],
+                        datasets: [
+                            {
+                                label: 'Entrega Manual Histórica (min)',
+                                data: baseManual,
+                                borderColor: '#ef4444',
+                                backgroundColor: 'rgba(239, 68, 68, 0.05)',
+                                borderDash: [5, 5],
+                                borderWidth: 2,
+                                tension: 0.2,
+                                fill: true
+                            },
+                            {
+                                label: 'Con Stitch Pickup (min)',
+                                data: baseApp,
+                                borderColor: '#1e40af',
+                                backgroundColor: 'rgba(30, 64, 175, 0.1)',
+                                borderWidth: 3,
+                                tension: 0.3,
+                                fill: true
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { labels: { font: { family: 'Hanken Grotesk', size: 11 } } }
+                        },
+                        scales: {
+                            y: { beginAtZero: true, title: { display: true, text: 'Minutos', font: { family: 'Hanken Grotesk', weight: 'bold' } } }
+                        }
+                    }
+                });
+            }
+
+            // Gráfica 2: Throughput
+            const ctx2 = document.getElementById('chart-throughput');
+            if (ctx2) {
+                if (chartThroughput) chartThroughput.destroy();
+
+                const counts = [4, 8, 15, 20, 10, 3].map(v => Math.round(v * (levelFilter === 'ALL' ? 1.0 : 0.35)));
+
+                chartThroughput = new Chart(ctx2, {
+                    type: 'bar',
+                    data: {
+                        labels: ['13:00-13:10', '13:10-13:20', '13:20-13:30', '13:30-13:40', '13:40-13:50', '13:50-14:00'],
+                        datasets: [{
+                            label: 'Alumnos Entregados',
+                            data: counts,
+                            backgroundColor: '#1e40af',
+                            hoverBackgroundColor: '#ef4444',
+                            borderRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        scales: {
+                            y: { beginAtZero: true, title: { display: true, text: 'Alumnos', font: { family: 'Hanken Grotesk', weight: 'bold' } } }
+                        }
+                    }
+                });
+            }
+
+            // Gráfica 3: Proximidades
+            const ctx3 = document.getElementById('chart-proximities');
+            if (ctx3) {
+                if (chartProximities) chartProximities.destroy();
+
+                chartProximities = new Chart(ctx3, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['A 10 Minutos', 'A 5 Minutos', 'En Fila / Llegó'],
+                        datasets: [{
+                            data: [
+                                Math.round(45 * timeFactor), 
+                                Math.round(35 / timeFactor), 
+                                20
+                            ],
+                            backgroundColor: ['#eab308', '#f97316', '#ef4444'],
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'right', labels: { font: { family: 'Hanken Grotesk', size: 12 } } }
+                        }
+                    }
+                });
+            }
+        }
+
+        function updateKpiCharts() {
+            if (currentModule === 'KPIS') {
+                initCharts();
+            }
+        }
+
+        // Gestión de Grupos Escolares (Administración)
+        function renderGroupsConfig() {
+            const levels = ['KINDER', 'PRIMARIA', 'SECUNDARIA'];
+            levels.forEach(lvl => {
+                const listEl = document.getElementById(`group-list-${lvl.toLowerCase()}`);
+                if (!listEl) return;
+                listEl.innerHTML = '';
+                
+                const groups = levelGroups[lvl] || [];
+                groups.forEach(g => {
+                    const chip = document.createElement('span');
+                    chip.className = "inline-flex items-center gap-1.5 px-3 py-1 bg-primary-container text-on-primary-container font-bold rounded-full text-xs shadow-sm hover:border-secondary border border-transparent transition-all";
+                    chip.innerHTML = `
+                        <span>${g}</span>
+                        <button onclick="removeGroup('${lvl}', '${g}')" class="text-primary hover:text-secondary focus:outline-none">
+                            <span class="material-symbols-outlined text-[12px] font-bold">close</span>
+                        </button>
+                    `;
+                    listEl.appendChild(chip);
+                });
+            });
+        }
+
+        function addGroup(level) {
+            const input = document.getElementById(`new-group-${level.toLowerCase()}`);
+            if (!input) return;
+            const gName = input.value.trim().toUpperCase();
+            if (!gName) return;
+            
+            if (!levelGroups[level]) levelGroups[level] = [];
+            
+            if (levelGroups[level].includes(gName)) {
+                showToast('Grupo Duplicado', `El grupo ${gName} ya existe en ${level}.`, null);
+                return;
+            }
+
+            levelGroups[level].push(gName);
+            // Ordenar alfabéticamente
+            levelGroups[level].sort();
+            
+            saveStoredGroups(levelGroups);
+            input.value = '';
+            renderGroupsConfig();
+            renderGroups();
+            showToast('Grupo Agregado', `Se añadió el grupo ${gName} a ${level}.`, null);
+            
+            // Notificar cambios a otras ventanas
+            channel.postMessage({ type: 'DATABASE_UPDATED' });
+        }
+
+        function removeGroup(level, group) {
+            if (!levelGroups[level]) return;
+            
+            levelGroups[level] = levelGroups[level].filter(g => g !== group);
+            saveStoredGroups(levelGroups);
+            
+            renderGroupsConfig();
+            renderGroups();
+            showToast('Grupo Eliminado', `Se removió el grupo ${group} de ${level}.`, null);
+            
+            channel.postMessage({ type: 'DATABASE_UPDATED' });
+        }
+
+        // CRUD de Alumnos
+        function resetCrudPageAndRender() {
+            crudCurrentPage = 1;
+            renderCrudStudents();
+        }
+
+        function changeCrudPageSize(size) {
+            crudPageSize = parseInt(size, 10);
+            crudCurrentPage = 1;
+            renderCrudStudents();
+        }
+
+        function renderCrudPagination(totalItems) {
+            const infoEl = document.getElementById('student-crud-pagination-info');
+            const buttonsEl = document.getElementById('student-crud-pagination-buttons');
+            if (!infoEl || !buttonsEl) return;
+
+            const totalPages = Math.ceil(totalItems / crudPageSize) || 1;
+            
+            // Ajustar página si se sale de los límites
+            if (crudCurrentPage > totalPages) {
+                crudCurrentPage = totalPages;
+            }
+            if (crudCurrentPage < 1) {
+                crudCurrentPage = 1;
+            }
+
+            const startIdx = totalItems === 0 ? 0 : (crudCurrentPage - 1) * crudPageSize + 1;
+            const endIdx = Math.min(crudCurrentPage * crudPageSize, totalItems);
+
+            infoEl.innerText = `Mostrando ${startIdx} - ${endIdx} de ${totalItems} alumnos`;
+
+            buttonsEl.innerHTML = '';
+
+            // Botón Anterior
+            const prevBtn = document.createElement('button');
+            prevBtn.className = `p-1 px-2 rounded-lg border border-outline-variant/30 hover:bg-surface-container transition-all flex items-center justify-center font-bold text-xs ${crudCurrentPage === 1 ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`;
+            prevBtn.innerHTML = `<span class="material-symbols-outlined text-[14px]">chevron_left</span>`;
+            if (crudCurrentPage > 1) {
+                prevBtn.onclick = () => { crudCurrentPage--; renderCrudStudents(); };
+            } else {
+                prevBtn.disabled = true;
+            }
+            buttonsEl.appendChild(prevBtn);
+
+            // Números de página
+            const maxVisible = 5;
+            let startPage = Math.max(1, crudCurrentPage - Math.floor(maxVisible / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+            if (endPage - startPage + 1 < maxVisible) {
+                startPage = Math.max(1, endPage - maxVisible + 1);
+            }
+
+            for (let p = startPage; p <= endPage; p++) {
+                const btn = document.createElement('button');
+                btn.className = `w-7 h-7 rounded-lg border font-bold text-xs flex items-center justify-center transition-all ${p === crudCurrentPage ? 'bg-primary text-on-primary border-primary' : 'bg-white border-outline-variant/30 text-on-surface hover:bg-surface-container'}`;
+                btn.innerText = p;
+                btn.onclick = () => { crudCurrentPage = p; renderCrudStudents(); };
+                buttonsEl.appendChild(btn);
+            }
+
+            // Botón Siguiente
+            const nextBtn = document.createElement('button');
+            nextBtn.className = `p-1 px-2 rounded-lg border border-outline-variant/30 hover:bg-surface-container transition-all flex items-center justify-center font-bold text-xs ${crudCurrentPage === totalPages ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`;
+            nextBtn.innerHTML = `<span class="material-symbols-outlined text-[14px]">chevron_right</span>`;
+            if (crudCurrentPage < totalPages) {
+                nextBtn.onclick = () => { crudCurrentPage++; renderCrudStudents(); };
+            } else {
+                nextBtn.disabled = true;
+            }
+            buttonsEl.appendChild(nextBtn);
+        }
+
+        function renderCrudStudents() {
+            const tbody = document.getElementById('student-crud-tbody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            const searchVal = document.getElementById('student-crud-search').value.toLowerCase().trim();
+            const levelVal = document.getElementById('student-crud-level').value;
+
+            let filtered = students.filter(s => {
+                const matchesSearch = s.name.toLowerCase().includes(searchVal) || s.parent.toLowerCase().includes(searchVal);
+                const matchesLevel = (levelVal === 'ALL' || s.level === levelVal);
+                return matchesSearch && matchesLevel;
+            });
+
+            // Sincronizar info de paginado
+            renderCrudPagination(filtered.length);
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="p-8 text-center text-outline italic">No se encontraron alumnos en la base de datos.</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            // Obtener trozo paginado
+            const startIdx = (crudCurrentPage - 1) * crudPageSize;
+            const endIdx = startIdx + crudPageSize;
+            const paginated = filtered.slice(startIdx, endIdx);
+
+            paginated.forEach(student => {
+                const family = student.family || [];
+                const primaryFam = family[0] || { name: 'S/N', relationship: 'N/A', photo: '' };
+                const otherFamCount = Math.max(0, family.length - 1);
+
+                const tr = document.createElement('tr');
+                tr.className = "border-b border-outline-variant/20 hover:bg-surface-container-low transition-all";
+                tr.innerHTML = `
+                    <td class="p-3">
+                        <img src="${student.avatar}" class="w-9 h-9 rounded-full object-cover border border-outline-variant/30 shadow-sm" alt="${student.name}"/>
+                    </td>
+                    <td class="p-3 font-bold text-primary text-xs uppercase">${student.name}</td>
+                    <td class="p-3 font-medium uppercase">${student.level} · ${student.grade} · ${student.group || 'S/G'}</td>
+                    <td class="p-3 text-on-surface-variant font-medium">${student.birthday || 'No registrado'}</td>
+                    <td class="p-3">
+                        <div class="flex items-center gap-2">
+                            ${primaryFam.photo ? `<img src="${primaryFam.photo}" class="w-6 h-6 rounded object-cover" />` : ''}
+                            <div>
+                                <p class="font-bold text-[11px]">${primaryFam.name}</p>
+                                <p class="text-[9px] text-outline">${primaryFam.relationship}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="p-3 font-medium text-on-surface-variant">
+                        ${otherFamCount > 0 ? `+${otherFamCount} familiar(es) adicional(es)` : 'Ninguno registrado'}
+                    </td>
+                    <td class="p-3 text-center">
+                        <div class="flex items-center justify-center gap-2">
+                            <button onclick="openStudentModal('${student.id}')" class="p-1 hover:bg-primary/10 text-primary rounded-full transition-colors" title="Editar">
+                                <span class="material-symbols-outlined text-sm">edit</span>
+                            </button>
+                            <button onclick="deleteStudent('${student.id}')" class="p-1 hover:bg-secondary/10 text-secondary rounded-full transition-colors" title="Eliminar">
+                                <span class="material-symbols-outlined text-sm">delete</span>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function deleteStudent(studentId) {
+            const student = students.find(s => s.id === studentId);
+            if (!student) return;
+
+            if (confirm(`¿Está seguro de que desea eliminar al alumno ${student.name}?`)) {
+                students = students.filter(s => s.id !== studentId);
+                saveStoredStudents(students);
+                
+                renderCrudStudents();
+                renderStudents();
+                updateStatsCount();
+                renderGroups();
+
+                showToast('Alumno Eliminado', `Se removió a ${student.name} del sistema.`, null);
+                
+                channel.postMessage({ type: 'DATABASE_UPDATED' });
+            }
+        }
+
+        // Lógica de Formulario Modal de Alumno
+        let modalFamiliarIndex = 0;
+
+        function openStudentModal(studentId = '') {
+            const modal = document.getElementById('student-modal');
+            const title = document.getElementById('modal-student-title');
+            
+            // Reset de inputs
+            document.getElementById('modal-student-id').value = studentId;
+            document.getElementById('m-stud-name').value = '';
+            document.getElementById('m-stud-birthday').value = '';
+            document.getElementById('m-stud-avatar').value = '';
+            document.getElementById('modal-familiares-container').innerHTML = '';
+            modalFamiliarIndex = 0;
+
+            if (studentId) {
+                // Editar estudiante
+                const student = students.find(s => s.id === studentId);
+                if (!student) return;
+
+                title.innerText = "Editar Registro de Alumno";
+                document.getElementById('m-stud-name').value = student.name;
+                document.getElementById('m-stud-birthday').value = student.birthday || '';
+                document.getElementById('m-stud-avatar').value = student.avatar;
+                
+                // Nivel y luego cargar combos
+                document.getElementById('m-stud-level').value = student.level;
+                updateModalGradesAndGroups(student.grade, student.group);
+
+                // Cargar familiares
+                const family = student.family || [];
+                family.forEach(f => addModalFamiliarRow(f));
+            } else {
+                // Nuevo estudiante
+                title.innerText = "Nuevo Registro de Alumno";
+                document.getElementById('m-stud-level').value = 'KINDER';
+                updateModalGradesAndGroups();
+                setRandomAvatar('m-stud-avatar');
+
+                // Por defecto, añadir 3 familiares vacíos para incitar el registro completo
+                addModalFamiliarRow({ name: '', relationship: 'Madre', phone: '', photo: '', authorized: true });
+                addModalFamiliarRow({ name: '', relationship: 'Padre', phone: '', photo: '', authorized: true });
+                addModalFamiliarRow({ name: '', relationship: 'Tutor', phone: '', photo: '', authorized: true });
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeStudentModal() {
+            document.getElementById('student-modal').classList.add('hidden');
+        }
+
+        function updateModalGradesAndGroups(selectedGrade = '', selectedGroup = '') {
+            const lvl = document.getElementById('m-stud-level').value;
+            const comboGrade = document.getElementById('m-stud-grade');
+            const comboGroup = document.getElementById('m-stud-group');
+            
+            comboGrade.innerHTML = '';
+            comboGroup.innerHTML = '';
+
+            // Definir grados
+            let grades = [];
+            if (lvl === 'KINDER') grades = ['1º KÍNDER', '2º KÍNDER', '3º KÍNDER'];
+            else if (lvl === 'PRIMARIA') grades = ['1º PRIMARIA', '2º PRIMARIA', '3º PRIMARIA', '4º PRIMARIA', '5º PRIMARIA', '6º PRIMARIA'];
+            else if (lvl === 'SECUNDARIA') grades = ['1º SECUNDARIA', '2º SECUNDARIA', '3º SECUNDARIA'];
+
+            grades.forEach(g => {
+                const opt = document.createElement('option');
+                opt.value = g;
+                opt.innerText = g;
+                if (g === selectedGrade) opt.selected = true;
+                comboGrade.appendChild(opt);
+            });
+
+            // Definir grupos desde base de datos de grupos
+            const groups = levelGroups[lvl] || [];
+            groups.forEach(g => {
+                const opt = document.createElement('option');
+                opt.value = g;
+                opt.innerText = g;
+                if (g === selectedGroup) opt.selected = true;
+                comboGroup.appendChild(opt);
+            });
+
+            if (groups.length === 0) {
+                const opt = document.createElement('option');
+                opt.value = '';
+                opt.innerText = 'Sin grupos configurados';
+                comboGroup.appendChild(opt);
+            }
+        }
+
+        function addModalFamiliarRow(famData = { name: '', relationship: 'Madre', phone: '', photo: '', authorized: true }) {
+            const container = document.getElementById('modal-familiares-container');
+            const index = modalFamiliarIndex++;
+
+            const card = document.createElement('div');
+            card.className = "p-4 rounded-xl border border-outline-variant/30 bg-surface-container-low flex flex-col gap-3 relative";
+            card.id = `modal-familiar-row-${index}`;
+            card.innerHTML = `
+                <button type="button" onclick="document.getElementById('modal-familiar-row-${index}').remove()" class="absolute top-2 right-2 text-outline hover:text-secondary">
+                    <span class="material-symbols-outlined text-sm font-bold">delete</span>
+                </button>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="flex flex-col gap-1">
+                        <label class="text-[10px] font-bold text-outline uppercase">Nombre del Familiar</label>
+                        <input type="text" value="${famData.name}" placeholder="Ej: Sofía Estrada" class="fam-name bg-white border border-outline-variant rounded p-2 text-xs focus:outline-none focus:border-primary"/>
+                    </div>
+                    <div class="flex grid grid-cols-2 gap-2">
+                        <div class="flex flex-col gap-1">
+                            <label class="text-[10px] font-bold text-outline uppercase">Parentesco</label>
+                            <select class="fam-rel bg-white border border-outline-variant rounded p-2 text-xs focus:outline-none focus:border-primary">
+                                <option value="Madre" ${famData.relationship==='Madre'?'selected':''}>Madre</option>
+                                <option value="Padre" ${famData.relationship==='Padre'?'selected':''}>Padre</option>
+                                <option value="Abuelo/a" ${famData.relationship==='Abuelo/a'?'selected':''}>Abuelo/a</option>
+                                <option value="Tío/a" ${famData.relationship==='Tío/a'?'selected':''}>Tío/a</option>
+                                <option value="Tutor" ${famData.relationship==='Tutor'?'selected':''}>Tutor</option>
+                                <option value="Hermano/a" ${famData.relationship==='Hermano/a'?'selected':''}>Hermano/a</option>
+                            </select>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <label class="text-[10px] font-bold text-outline uppercase">Teléfono</label>
+                            <input type="text" value="${famData.phone}" placeholder="10 dígitos" class="fam-phone bg-white border border-outline-variant rounded p-2 text-xs focus:outline-none focus:border-primary"/>
+                        </div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
+                    <div class="flex flex-col gap-1">
+                        <label class="text-[10px] font-bold text-outline uppercase">Foto URL (Familiar)</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="fam-pic-${index}" value="${famData.photo}" placeholder="https://..." class="fam-photo bg-white border border-outline-variant rounded p-2 text-xs flex-1 focus:outline-none focus:border-primary"/>
+                            <button type="button" onclick="setRandomAvatar('fam-pic-${index}')" class="bg-surface-container border border-outline-variant text-primary px-3 rounded text-xs font-bold hover:bg-surface-container-high">Aleatorio</button>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 mt-4">
+                        <input type="checkbox" id="fam-auth-${index}" class="fam-auth w-4 h-4 text-primary bg-white border-outline-variant rounded focus:ring-primary" ${famData.authorized ? 'checked' : ''}/>
+                        <label for="fam-auth-${index}" class="text-xs font-bold text-primary uppercase">Autorizado para Pickup</label>
+                    </div>
+                </div>
+            `;
+            container.appendChild(card);
+        }
+
+        // Generar Avatares aleatorios bonitos de personas/estudiantes desde Unsplash
+        function setRandomAvatar(inputId) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            
+            const isStudent = inputId === 'm-stud-avatar';
+            const randomNum = Math.floor(Math.random() * 100);
+            
+            // Curated list de retratos para niños o adultos
+            let url = "";
+            if (isStudent) {
+                const studIds = [
+                    "photo-1544005313-94ddf0286df2", "photo-1506794778202-cad84cf45f1d", "photo-1517841905240-472988babdf9",
+                    "photo-1507003211169-0a1dd7228f2d", "photo-1534528741775-53994a69daeb", "photo-1492562080023-ab3db95bfbce",
+                    "photo-1539571696357-5a69c17a67c6", "photo-1501196354995-cbb51c65aaea", "photo-1519085360753-af0119f7cbe7"
+                ];
+                url = `https://images.unsplash.com/${studIds[randomNum % studIds.length]}?auto=format&fit=crop&q=80&w=150`;
+            } else {
+                const adultIds = [
+                    "photo-1544005313-94ddf0286df2", "photo-1506794778202-cad84cf45f1d", "photo-1517841905240-472988babdf9",
+                    "photo-1507003211169-0a1dd7228f2d", "photo-1534528741775-53994a69daeb", "photo-1580489944761-15a19d654956",
+                    "photo-1551836022-d5d88e9218df", "photo-1472099645785-5658abf4ff4e", "photo-1500648767791-00dcc994a43e"
+                ];
+                url = `https://images.unsplash.com/${adultIds[randomNum % adultIds.length]}?auto=format&fit=crop&q=80&w=150`;
+            }
+            input.value = url;
+        }
+
+        function saveStudentModal() {
+            const studentId = document.getElementById('modal-student-id').value;
+            const name = document.getElementById('m-stud-name').value.trim().toUpperCase();
+            const birthday = document.getElementById('m-stud-birthday').value;
+            const level = document.getElementById('m-stud-level').value;
+            const grade = document.getElementById('m-stud-grade').value;
+            const group = document.getElementById('m-stud-group').value;
+            const avatar = document.getElementById('m-stud-avatar').value.trim() || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150';
+
+            if (!name) {
+                showToast('Error', 'El nombre completo del alumno es obligatorio.', null);
+                return;
+            }
+
+            // Recopilar familiares autorizados
+            const family = [];
+            const rows = document.getElementById('modal-familiares-container').children;
+            
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                const famName = row.querySelector('.fam-name').value.trim();
+                const famRel = row.querySelector('.fam-rel').value;
+                const famPhone = row.querySelector('.fam-phone').value.trim();
+                let famPhoto = row.querySelector('.fam-photo').value.trim();
+                const famAuth = row.querySelector('.fam-auth').checked;
+
+                if (famName) {
+                    if (!famPhoto) {
+                        famPhoto = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100'; // Default avatar
+                    }
+                    family.push({
+                        name: famName,
+                        relationship: famRel,
+                        phone: famPhone,
+                        photo: famPhoto,
+                        authorized: famAuth
+                    });
+                }
+            }
+
+            if (family.length === 0) {
+                showToast('Falta Familiar', 'Debe registrar al menos un familiar responsable.', null);
+                return;
+            }
+
+            const primaryParent = family[0].name;
+
+            if (studentId) {
+                // Editar registro existente
+                const student = students.find(s => s.id === studentId);
+                if (student) {
+                    student.name = name;
+                    student.birthday = birthday;
+                    student.level = level;
+                    student.grade = grade;
+                    student.group = group;
+                    student.avatar = avatar;
+                    student.parent = primaryParent;
+                    student.family = family;
+                }
+                showToast('Alumno Actualizado', `Se guardaron los cambios de ${name}.`, avatar);
+            } else {
+                // Crear nuevo registro
+                const newId = 'stud_' + Date.now();
+                students.push({
+                    id: newId,
+                    name: name,
+                    birthday: birthday,
+                    level: level,
+                    grade: grade,
+                    group: group,
+                    avatar: avatar,
+                    parent: primaryParent,
+                    family: family,
+                    status: null,
+                    lastUpdate: null
+                });
+                showToast('Alumno Creado', `Se dio de alta a ${name} en el sistema.`, avatar);
+            }
+
+            saveStoredStudents(students);
+            closeStudentModal();
+            renderCrudStudents();
+            renderStudents();
+            updateStatsCount();
+            renderGroups();
+
+            // Emitir evento para refrescar app de Padres en tiempo real
+            channel.postMessage({ type: 'DATABASE_UPDATED' });
+        }
+
+        // Lógica de Carga Masiva (CSV / Excel)
+        let parsedCsvData = [];
+
+        // Generar y descargar plantilla
+        function downloadCsvTemplate() {
+            const headers = [
+                'nombre_alumno', 'nivel_escolar', 'grado', 'grupo', 'cumpleanos', 'foto_alumno',
+                'parentesco_1', 'nombre_1', 'telefono_1', 'foto_1', 'autorizado_1',
+                'parentesco_2', 'nombre_2', 'telefono_2', 'foto_2', 'autorizado_2',
+                'parentesco_3', 'nombre_3', 'telefono_3', 'foto_3', 'autorizado_3'
+            ];
+            
+            const rowSample = [
+                'PABLO RUIZ HERNANDEZ', 'PRIMARIA', '4º PRIMARIA', '4º A', '2016-04-12', 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150',
+                'Madre', 'Beatriz Hernandez', '7225559876', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=w=150', 'SI',
+                'Padre', 'Esteban Ruiz', '7225554321', 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=w=150', 'SI',
+                'Abuelo', 'Mario Hernandez', '7225551111', '', 'NO'
+            ];
+
+            const csvContent = "\uFEFF" + [headers.join(','), rowSample.join(',')].join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", "plantilla_carga_masiva_alumnos.csv");
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Configuración de zona Drag & Drop
+        document.addEventListener('DOMContentLoaded', () => {
+            const zone = document.getElementById('drag-drop-zone');
+            const fileInput = document.getElementById('csv-file-input');
+            const uploadBox = document.getElementById('upload-icon-box');
+
+            if (!zone || !fileInput) return;
+
+            zone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                zone.classList.add('border-primary', 'bg-surface-container-low/60');
+            });
+
+            zone.addEventListener('dragleave', () => {
+                zone.classList.remove('border-primary', 'bg-surface-container-low/60');
+            });
+
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                zone.classList.remove('border-primary', 'bg-surface-container-low/60');
+                if (e.dataTransfer.files.length > 0) {
+                    processCsvFile(e.dataTransfer.files[0]);
+                }
+            });
+
+            fileInput.addEventListener('change', () => {
+                if (fileInput.files.length > 0) {
+                    processCsvFile(fileInput.files[0]);
+                }
+            });
+        });
+
+        function processCsvFile(file) {
+            if (!file.name.endsWith('.csv')) {
+                showToast('Formato Inválido', 'Solo se permiten archivos en formato CSV.', null);
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const text = e.target.result;
+                parseCsvContent(text);
+            };
+            reader.readAsText(file, 'UTF-8');
+        }
+
+        function parseCsvContent(text) {
+            const lines = text.split(/\r?\n/);
+            if (lines.length < 2) {
+                showToast('Archivo Vacío', 'El archivo no contiene filas de datos.', null);
+                return;
+            }
+
+            const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+            const dataRows = [];
+
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+                
+                // Expresión regular para separar por comas respetando comillas
+                const matches = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || line.split(',');
+                const values = matches.map(v => v.trim().replace(/^"|"$/g, ''));
+                
+                if (values.length === 0) continue;
+
+                const record = {};
+                headers.forEach((header, index) => {
+                    record[header] = values[index] || '';
+                });
+                dataRows.push(record);
+            }
+
+            parsedCsvData = dataRows;
+            renderCsvPreview();
+        }
+
+        function renderCsvPreview() {
+            const container = document.getElementById('csv-preview-container');
+            const tbody = document.getElementById('csv-preview-tbody');
+            const countLabel = document.getElementById('csv-record-count');
+
+            if (!container || !tbody) return;
+            tbody.innerHTML = '';
+
+            countLabel.innerText = `Se encontraron ${parsedCsvData.length} filas para importar`;
+
+            parsedCsvData.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.className = "border-b border-outline-variant/20 hover:bg-surface-container-low transition-all";
+                tr.innerHTML = `
+                    <td class="p-3 font-bold text-primary truncate max-w-[150px] uppercase">${row.nombre_alumno || 'SIN NOMBRE'}</td>
+                    <td class="p-3 font-medium uppercase">${row.nivel_escolar || 'N/A'}</td>
+                    <td class="p-3 font-medium uppercase">${row.grado || 'N/A'}</td>
+                    <td class="p-3 font-medium uppercase">${row.grupo || 'S/G'}</td>
+                    <td class="p-3 truncate max-w-[120px]">${row.nombre_1 ? `${row.nombre_1} (${row.parentesco_1})` : 'N/A'}</td>
+                    <td class="p-3 truncate max-w-[120px]">${row.nombre_2 ? `${row.nombre_2} (${row.parentesco_2})` : 'N/A'}</td>
+                    <td class="p-3 truncate max-w-[120px]">${row.nombre_3 ? `${row.nombre_3} (${row.parentesco_3})` : 'N/A'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            container.classList.remove('hidden');
+        }
+
+        function cancelCsvImport() {
+            parsedCsvData = [];
+            const container = document.getElementById('csv-preview-container');
+            if (container) container.classList.add('hidden');
+            const fileInput = document.getElementById('csv-file-input');
+            if (fileInput) fileInput.value = '';
+        }
+
+        function confirmCsvImport() {
+            if (parsedCsvData.length === 0) return;
+
+            let importedCount = 0;
+            let skippedCount = 0;
+
+            parsedCsvData.forEach(row => {
+                const name = (row.nombre_alumno || '').trim().toUpperCase();
+                const level = (row.nivel_escolar || '').trim().toUpperCase();
+                const grade = (row.grado || '').trim().toUpperCase();
+                const group = (row.grupo || '').trim().toUpperCase();
+                const birthday = (row.cumpleanos || '').trim();
+                const avatar = (row.foto_alumno || '').trim() || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150';
+
+                // Validaciones básicas
+                if (!name || !['KINDER', 'PRIMARIA', 'SECUNDARIA'].includes(level)) {
+                    skippedCount++;
+                    return;
+                }
+
+                // Generar familiares
+                const family = [];
+                for (let idx = 1; idx <= 3; idx++) {
+                    const fName = row[`nombre_${idx}`];
+                    const fRel = row[`parentesco_${idx}`] || 'Tutor';
+                    const fPhone = row[`telefono_${idx}`];
+                    const fPhoto = row[`foto_${idx}`] || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100';
+                    const fAuth = (row[`autorizado_${idx}`] || 'SI').toUpperCase() === 'SI';
+
+                    if (fName && fName.trim()) {
+                        family.push({
+                            name: fName.trim(),
+                            relationship: fRel,
+                            phone: fPhone || '',
+                            photo: fPhoto,
+                            authorized: fAuth
+                        });
+                    }
+                }
+
+                if (family.length === 0) {
+                    // Si no cargó familiares, asociamos un tutor por defecto
+                    family.push({
+                        name: 'Tutor de ' + name,
+                        relationship: 'Tutor',
+                        phone: '',
+                        photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100',
+                        authorized: true
+                    });
+                }
+
+                const primaryParent = family[0].name;
+
+                // Crear y agregar estudiante
+                const newId = 'stud_' + Date.now() + '_' + Math.round(Math.random() * 1000);
+                students.push({
+                    id: newId,
+                    name: name,
+                    birthday: birthday,
+                    level: level,
+                    grade: grade,
+                    group: group,
+                    avatar: avatar,
+                    parent: primaryParent,
+                    family: family,
+                    status: null,
+                    lastUpdate: null
+                });
+
+                // Auto-agregar grupos si no existen en el sistema
+                if (group) {
+                    if (!levelGroups[level]) levelGroups[level] = [];
+                    if (!levelGroups[level].includes(group)) {
+                        levelGroups[level].push(group);
+                        levelGroups[level].sort();
+                    }
+                }
+
+                importedCount++;
+            });
+
+            // Guardar bases de datos
+            saveStoredStudents(students);
+            saveStoredGroups(levelGroups);
+
+            showToast('Importación Completa', `Se cargaron ${importedCount} alumnos. Saltados: ${skippedCount}.`, null);
+            
+            // Limpiar área de importación y volver a listado
+            cancelCsvImport();
+            switchAdminTab('ALUMNOS');
+
+            // Refrescar vistas locales
+            renderStudents();
+            updateStatsCount();
+            renderGroups();
+
+            // Notificar a otras pestañas
+            channel.postMessage({ type: 'DATABASE_UPDATED' });
+        }
+
+        // BroadcastChannel - Procesar reportes del Padre en tiempo real
+        channel.onmessage = (event) => {
+            const data = event.data;
+            if (data.type === 'PARENT_UPDATE') {
+                const student = students.find(s => s.id === data.studentId);
+                if (student) {
+                    const incomingStatus = (data.status || '').toString().trim().toUpperCase();
+                    const prevStatus = student.status;
+
+                    let finalStatus = incomingStatus;
+                    if (incomingStatus === 'EN_FILA' && prevStatus === 'EN_FILA') {
+                        finalStatus = 'URGENTE';
+                    }
+
+                    student.status = finalStatus;
+                    student.lastUpdate = data.time;
+
+                    if (finalStatus === 'URGENTE') {
+                        addUrgent(student, data);
+                        showToast(`ALERTA URGENTE`, `${data.parentName} reporta demora de ${data.studentName}.`, data.avatar);
+                    } else {
+                        let statusLabel = '';
+                        if (finalStatus === '10_MIN') statusLabel = 'está a 10 minutos';
+                        else if (finalStatus === '5_MIN') statusLabel = 'está a 5 minutos';
+                        else if (finalStatus === 'EN_FILA') statusLabel = '¡ha llegado a la fila!';
+
+                        showToast(
+                            `Actualización de Recogida`,
+                            `${data.parentName} reporta que ${data.studentName} ${statusLabel}.`,
+                            data.avatar
+                        );
+                    }
+
+                    renderGroups();
+                    renderStudents();
+                    updateStatsCount();
+                }
+            } else if (data.type === 'DATABASE_UPDATED') {
+                // Alguien más actualizó los datos, recargar localmente
+                initData();
+                if (currentModule === 'MONITOR') {
+                    renderGroups();
+                    renderStudents();
+                    updateStatsCount();
+                } else if (currentModule === 'ADMIN') {
+                    renderGroupsConfig();
+                    renderCrudStudents();
+                }
+            }
+        };
+
+        // Renderizado del padrón inicial al cargar la página
+        document.addEventListener('DOMContentLoaded', () => {
+            initData();
+            switchModule('MONITOR');
+        });
+    </script>
+</body>
+
+</html>
