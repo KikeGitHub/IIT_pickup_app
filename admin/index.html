@@ -145,92 +145,92 @@
     </script>
 </head>
 
-<body class="bg-surface-container-lowest text-on-background font-body-md overflow-hidden h-screen flex flex-col">
-    <!-- TopAppBar - Brightened to white -->
+<body class="bg-gradient-to-br from-slate-100 to-slate-200 text-on-background font-body-md overflow-hidden h-screen flex flex-col">
+    <!-- TopAppBar - Premium Dark Navy Blue with White/Blue contrast -->
     <header
-        class="bg-white text-primary font-headline-md text-headline-md docked full-width top-0 shadow-sm border-b border-outline-variant/30 flex justify-between items-center w-full px-6 py-4 z-50">
+        class="bg-gradient-to-r from-[#0a122c] via-[#122252] to-[#0a122c] text-white font-headline-md text-headline-md docked full-width top-0 shadow-lg border-b border-blue-900/60 flex justify-between items-center w-full px-6 py-4 z-50">
         <div class="flex items-center gap-4">
-            <img alt="IIT Logo" class="w-10 h-10 object-contain rounded-full border border-outline-variant/40"
+            <img alt="IIT Logo" class="w-10 h-10 object-contain rounded-full border border-blue-400/30"
                 src="../logo_IIT.jpg" />
-            <div class="font-headline-md text-headline-md font-bold text-primary">Control de Entregas</div>
+            <div class="font-headline-md text-headline-md font-bold text-white tracking-wide">Control de Entregas</div>
         </div>
         <div class="flex flex-col items-center">
-            <div class="font-headline-lg text-headline-lg leading-none tracking-tight text-primary" id="digital-clock">
+            <div class="font-headline-lg text-headline-lg leading-none tracking-tight text-white" id="digital-clock">
                 20:48</div>
-            <div class="font-label-md text-label-md opacity-60 uppercase tracking-widest text-on-surface-variant"
+            <div class="font-label-md text-label-md text-blue-200/70 uppercase tracking-widest mt-1"
                 id="current-date">miércoles, 3 de junio</div>
         </div>
         <div class="flex items-center gap-stack-md">
             <div class="flex flex-col items-end">
-                <span class="text-[10px] font-bold opacity-60 text-on-surface-variant">ZONA ACTUAL</span>
+                <span class="text-[10px] font-bold text-blue-200/60">ZONA ACTUAL</span>
                 <div
-                    class="flex items-center gap-2 bg-surface-container-low px-4 py-2 rounded-lg cursor-pointer hover:bg-surface-container transition-colors border border-outline-variant">
-                    <span class="material-symbols-outlined text-primary">location_on</span>
-                    <span class="font-label-md text-label-md text-primary">Puerta Principal</span>
-                    <span class="material-symbols-outlined text-primary">expand_more</span>
+                    class="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-lg cursor-pointer hover:bg-white/15 transition-colors border border-white/10 text-white shadow-sm">
+                    <span class="material-symbols-outlined text-blue-300">location_on</span>
+                    <span class="font-label-md text-label-md text-white font-bold">Puerta Principal</span>
+                    <span class="material-symbols-outlined text-white">expand_more</span>
                 </div>
             </div>
             <div class="flex gap-2">
                 <button
-                    class="p-2 hover:bg-surface-container-low text-on-surface-variant rounded-full transition-colors"><span
+                    class="p-2 hover:bg-white/10 text-white rounded-full transition-colors"><span
                         class="material-symbols-outlined">schedule</span></button>
                 <button
-                    class="p-2 hover:bg-surface-container-low text-on-surface-variant rounded-full transition-colors"><span
+                    class="p-2 hover:bg-white/10 text-white rounded-full transition-colors"><span
                         class="material-symbols-outlined">settings</span></button>
             </div>
         </div>
     </header>
     <div class="flex flex-1 overflow-hidden">
-        <!-- SideNavBar - Lightened background, Navy active state -->
+        <!-- SideNavBar - Light Slate Gray Background with High Contrast Divider -->
         <aside
-            class="bg-surface-container-lowest flex flex-col h-full w-72 p-4 gap-stack-md border-r border-outline-variant flex-shrink-0">
+            class="bg-slate-50 flex flex-col h-full w-72 p-4 gap-stack-md border-r border-slate-200 flex-shrink-0">
             <!-- Selector de Módulo -->
             <div class="mb-2">
-                <h2 class="font-label-md text-label-md text-outline uppercase tracking-wider mb-2 px-2">Módulos</h2>
+                <h2 class="font-label-md text-label-md text-slate-400 uppercase tracking-wider mb-2 px-2">Módulos</h2>
                 <nav class="flex flex-col gap-1">
-                    <button id="mod-monitor" onclick="switchModule('MONITOR')" class="flex items-center gap-3 px-4 py-2.5 bg-primary text-on-primary font-bold rounded-lg transition-all w-full text-left">
+                    <button id="mod-monitor" onclick="switchModule('MONITOR')" class="flex items-center gap-3 px-4 py-2.5 bg-primary text-white font-bold rounded-lg transition-all w-full text-left">
                         <span class="material-symbols-outlined text-lg">monitor</span>
                         <span class="font-label-md text-label-md">Pantalla de Entrega</span>
                     </button>
-                    <button id="mod-kpis" onclick="switchModule('KPIS')" class="flex items-center gap-3 px-4 py-2.5 text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-all w-full text-left">
+                    <button id="mod-kpis" onclick="switchModule('KPIS')" class="flex items-center gap-3 px-4 py-2.5 text-slate-600 hover:bg-slate-200 hover:text-slate-900 rounded-lg transition-all w-full text-left">
                         <span class="material-symbols-outlined text-lg">analytics</span>
                         <span class="font-label-md text-label-md">Dashboard KPIs</span>
                     </button>
-                    <button id="mod-admin" onclick="switchModule('ADMIN')" class="flex items-center gap-3 px-4 py-2.5 text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-all w-full text-left">
+                    <button id="mod-admin" onclick="switchModule('ADMIN')" class="flex items-center gap-3 px-4 py-2.5 text-slate-600 hover:bg-slate-200 hover:text-slate-900 rounded-lg transition-all w-full text-left">
                         <span class="material-symbols-outlined text-lg">admin_panel_settings</span>
                         <span class="font-label-md text-label-md">Super Admin</span>
                     </button>
                 </nav>
             </div>
             
-            <div class="border-t border-outline-variant/30 my-1"></div>
+            <div class="border-t border-slate-200 my-1"></div>
 
             <!-- Filtros de Monitoreo (Niveles y Grupos) - Visibles solo en MONITOR y ADMIN -->
             <div id="sidebar-filters" class="flex flex-col gap-stack-md flex-1 overflow-y-auto">
                 <div>
                     <h2 class="font-headline-sm text-headline-sm text-primary">Niveles</h2>
-                    <p class="font-label-md text-label-md text-on-surface-variant">Ciclo Escolar 2026</p>
+                    <p class="font-label-md text-label-md text-slate-500">Ciclo Escolar 2026</p>
                 </div>
                 <nav class="flex flex-col gap-2">
-                    <button id="lvl-general" onclick="setActiveLevel('GENERAL')" class="flex items-center gap-4 px-4 py-3 text-on-primary bg-primary font-bold rounded-lg transition-colors">
+                    <button id="lvl-general" onclick="setActiveLevel('GENERAL')" class="flex items-center gap-4 px-4 py-3 text-white bg-primary font-bold rounded-lg transition-colors">
                         <span class="material-symbols-outlined">public</span>
                         <span class="font-label-md text-label-md">GENERAL</span>
                     </button>
-                    <button id="lvl-kinder" onclick="setActiveLevel('KINDER')" class="flex items-center gap-4 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-colors">
+                    <button id="lvl-kinder" onclick="setActiveLevel('KINDER')" class="flex items-center gap-4 px-4 py-3 text-slate-600 hover:bg-slate-200 hover:text-slate-900 rounded-lg transition-colors">
                         <span class="material-symbols-outlined">child_care</span>
                         <span class="font-label-md text-label-md uppercase">KÍNDER</span>
                     </button>
-                    <button id="lvl-primaria" onclick="setActiveLevel('PRIMARIA')" class="flex items-center gap-4 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-colors">
+                    <button id="lvl-primaria" onclick="setActiveLevel('PRIMARIA')" class="flex items-center gap-4 px-4 py-3 text-slate-600 hover:bg-slate-200 hover:text-slate-900 rounded-lg transition-colors">
                         <span class="material-symbols-outlined">school</span>
                         <span class="font-label-md text-label-md uppercase">PRIMARIA</span>
                     </button>
-                    <button id="lvl-secundaria" onclick="setActiveLevel('SECUNDARIA')" class="flex items-center gap-4 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-colors">
+                    <button id="lvl-secundaria" onclick="setActiveLevel('SECUNDARIA')" class="flex items-center gap-4 px-4 py-3 text-slate-600 hover:bg-slate-200 hover:text-slate-900 rounded-lg transition-colors">
                         <span class="material-symbols-outlined">menu_book</span>
                         <span class="font-label-md text-label-md uppercase">SECUNDARIA</span>
                     </button>
                 </nav>
                 <div class="mt-4">
-                    <h3 class="font-label-md text-label-md text-outline mb-2 px-2 uppercase tracking-wider">Grupos Activos</h3>
+                    <h3 class="font-label-md text-label-md text-slate-400 mb-2 px-2 uppercase tracking-wider">Grupos Activos</h3>
                     <div class="flex flex-col gap-1" id="groups-container">
                         <!-- Grupos generados dinámicamente -->
                     </div>
@@ -241,12 +241,12 @@
             <div id="sidebar-kpis-filters" class="flex flex-col gap-stack-md flex-1 hidden">
                 <div>
                     <h2 class="font-headline-sm text-headline-sm text-primary">Filtros KPI</h2>
-                    <p class="font-label-md text-label-md text-on-surface-variant">Analíticas globales</p>
+                    <p class="font-label-md text-label-md text-slate-500">Analíticas globales</p>
                 </div>
                 <div class="flex flex-col gap-3 px-2">
                     <div class="flex flex-col gap-1">
-                        <label class="text-xs font-bold text-outline uppercase">Nivel Escolar</label>
-                        <select id="kpi-level-filter" onchange="updateKpiCharts()" class="w-full bg-surface-container-low border border-outline-variant rounded-lg p-2 text-sm text-primary">
+                        <label class="text-[10px] font-bold text-slate-400 uppercase">Nivel Escolar</label>
+                        <select id="kpi-level-filter" onchange="updateKpiCharts()" class="w-full bg-white border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:outline-none focus:border-primary">
                             <option value="ALL">Todos los Niveles</option>
                             <option value="KINDER">Kínder</option>
                             <option value="PRIMARIA">Primaria</option>
@@ -254,8 +254,8 @@
                         </select>
                     </div>
                     <div class="flex flex-col gap-1">
-                        <label class="text-xs font-bold text-outline uppercase">Rango Temporal</label>
-                        <select id="kpi-time-filter" onchange="updateKpiCharts()" class="w-full bg-surface-container-low border border-outline-variant rounded-lg p-2 text-sm text-primary">
+                        <label class="text-[10px] font-bold text-slate-400 uppercase">Rango Temporal</label>
+                        <select id="kpi-time-filter" onchange="updateKpiCharts()" class="w-full bg-white border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:outline-none focus:border-primary">
                             <option value="TODAY">Hoy</option>
                             <option value="WEEK">Esta Semana</option>
                             <option value="MONTH">Último Mes</option>
@@ -264,16 +264,16 @@
                 </div>
             </div>
 
-            <div class="mt-auto pt-4 border-t border-outline-variant flex flex-col gap-2">
+            <div class="mt-auto pt-4 border-t border-slate-200 flex flex-col gap-2">
                 <button onclick="logoutAdmin()"
-                    class="flex items-center gap-4 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low rounded-lg w-full text-left text-error">
+                    class="flex items-center gap-4 px-4 py-3 text-red-600 hover:bg-red-50 hover:text-red-700 rounded-lg w-full text-left">
                     <span class="material-symbols-outlined">logout</span>
-                    <span class="font-label-md text-label-md">Cerrar Sesión</span>
+                    <span class="font-label-md text-label-md font-bold">Cerrar Sesión</span>
                 </button>
             </div>
         </aside>
-        <!-- Main Content - Brighter background -->
-        <main class="flex-1 p-6 overflow-y-auto bg-surface-bright relative">
+        <!-- Main Content - Premium Gray Gradient Background -->
+        <main class="flex-1 p-6 overflow-y-auto bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200 relative">
             
             <!-- 1. VISTA MONITOR -->
             <div id="view-monitor" class="flex flex-col gap-6">
@@ -434,10 +434,14 @@
                         <p class="text-on-surface-variant">Gestión de alumnos, grupos y carga masiva</p>
                     </div>
                     <!-- Pestañas Administrativas -->
-                    <div class="bg-surface-container-low p-1.5 rounded-xl border border-outline-variant flex gap-2">
+                    <div class="bg-surface-container-low p-1.5 rounded-xl border border-outline-variant flex gap-2 flex-wrap">
                         <button id="admin-tab-alumnos" onclick="switchAdminTab('ALUMNOS')" class="px-4 py-2 bg-primary text-on-primary font-bold text-xs rounded-lg transition-all flex items-center gap-2">
                             <span class="material-symbols-outlined text-sm">group</span>
                             Alumnos y Familiares
+                        </button>
+                        <button id="admin-tab-usuarios" onclick="switchAdminTab('USUARIOS')" class="px-4 py-2 text-on-surface-variant font-bold text-xs rounded-lg hover:bg-surface-container transition-all flex items-center gap-2">
+                            <span class="material-symbols-outlined text-sm">manage_accounts</span>
+                            Usuarios Padres
                         </button>
                         <button id="admin-tab-masiva" onclick="switchAdminTab('MASIVA')" class="px-4 py-2 text-on-surface-variant font-bold text-xs rounded-lg hover:bg-surface-container transition-all flex items-center gap-2">
                             <span class="material-symbols-outlined text-sm">upload_file</span>
@@ -573,7 +577,50 @@
                     </div>
                 </div>
 
-                <!-- SUB-PESTAÑA 2: CARGA MASIVA -->
+                <!-- SUB-PESTAÑA 2: USUARIOS PADRES -->
+                <div id="admin-subview-usuarios" class="flex flex-col gap-6 hidden">
+                    <div class="bg-white p-5 rounded-xl border border-outline-variant/30 shadow-sm flex flex-col gap-4">
+                        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-outline-variant/20 pb-3">
+                            <div>
+                                <h3 class="font-bold text-primary text-sm flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-lg">manage_accounts</span>
+                                    Usuarios de Acceso para Padres de Familia
+                                </h3>
+                                <p class="text-xs text-on-surface-variant">Credenciales de email y contraseña para la app mobile</p>
+                            </div>
+                            <button onclick="openParentModal()" class="bg-primary text-on-primary px-4 py-2 rounded-lg font-button-text text-xs hover:bg-primary-container hover:text-on-primary-container transition-all flex items-center gap-2 shadow-sm">
+                                <span class="material-symbols-outlined text-sm">person_add</span>
+                                NUEVO USUARIO PADRE
+                            </button>
+                        </div>
+
+                        <!-- Búsqueda -->
+                        <div class="relative">
+                            <span class="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant text-sm">search</span>
+                            <input id="parent-users-search" oninput="renderParentUsers()" type="text" placeholder="Buscar por nombre o correo..." class="w-full bg-surface-container-low border border-outline-variant rounded-lg pl-9 pr-3 py-2 text-xs focus:outline-none focus:border-primary"/>
+                        </div>
+
+                        <!-- Tabla Usuarios -->
+                        <div class="overflow-x-auto overflow-y-auto max-h-[480px] border border-outline-variant/20 rounded-xl relative">
+                            <table class="w-full text-left border-collapse">
+                                <thead class="sticky top-0 bg-surface-container-high z-10">
+                                    <tr class="text-xs font-bold text-outline border-b border-outline-variant/30">
+                                        <th class="p-3">Usuario</th>
+                                        <th class="p-3">Correo</th>
+                                        <th class="p-3">Hijos Vinculados</th>
+                                        <th class="p-3">Estado</th>
+                                        <th class="p-3">Última Conexión</th>
+                                        <th class="p-3 text-center">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="parent-users-tbody" class="text-xs text-on-surface">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUB-PESTAÑA 3: CARGA MASIVA -->
                 <div id="admin-subview-masiva" class="flex flex-col gap-6 hidden">
                     <div class="bg-white p-5 rounded-xl border border-outline-variant/30 shadow-sm flex flex-col gap-6">
                         <div>
@@ -657,8 +704,8 @@
 
         </main>
         
-        <!-- Right Lateral Panel - Brighter and cleaner -->
-        <aside id="right-panel-monitor" class="w-80 bg-white flex flex-col border-l border-outline-variant/30 flex-shrink-0">
+        <!-- Right Lateral Panel - Slate gradient for higher contrast -->
+        <aside id="right-panel-monitor" class="w-80 bg-gradient-to-b from-slate-50 to-slate-100 flex flex-col border-l border-slate-200 flex-shrink-0 shadow-inner">
             <div class="p-6">
                 <h2 class="font-headline-sm text-headline-sm text-primary mb-4 flex items-center gap-2">
                     <span class="material-symbols-outlined">assignment_turned_in</span>
@@ -757,6 +804,16 @@
                                 <button onclick="setRandomAvatar('m-stud-avatar')" class="bg-surface-container border border-outline-variant text-primary px-3 rounded-lg text-xs font-bold hover:bg-surface-container-high">Aleatorio</button>
                             </div>
                         </div>
+                        <div class="flex flex-col gap-1">
+                            <label class="text-xs font-bold text-outline uppercase flex items-center gap-1">
+                                <span class="material-symbols-outlined text-xs">manage_accounts</span>
+                                Vincular a Usuario Padre (App Mobile)
+                            </label>
+                            <select id="m-stud-parent-user" class="bg-white border border-outline-variant rounded-lg p-2.5 text-xs text-primary focus:outline-none focus:border-primary">
+                                <option value="">— Sin vincular (crear usuario después) —</option>
+                            </select>
+                            <p class="text-[9px] text-on-surface-variant mt-0.5">El padre seleccionado verá a este alumno en su app mobile.</p>
+                        </div>
                     </div>
 
                     <!-- Sección 2: Familiares Autorizados -->
@@ -787,6 +844,88 @@
             </div>
         </div>
     </div>
+
+    <!-- MODAL: USUARIO PADRE -->
+    <div id="parent-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-[99] hidden p-4">
+        <div class="bg-white rounded-2xl border border-outline-variant/30 shadow-2xl w-full max-w-xl max-h-[90vh] overflow-hidden flex flex-col">
+            <!-- Header -->
+            <div class="p-6 border-b border-outline-variant/20 flex justify-between items-center bg-gradient-to-r from-primary to-blue-700 text-white">
+                <div>
+                    <h3 class="text-lg font-bold" id="modal-parent-title">Nuevo Usuario Padre</h3>
+                    <p class="text-xs text-blue-100">Credenciales de acceso a la app mobile</p>
+                </div>
+                <button onclick="closeParentModal()" class="text-white hover:bg-white/10 p-1.5 rounded-full transition-all">
+                    <span class="material-symbols-outlined text-lg">close</span>
+                </button>
+            </div>
+            <!-- Body -->
+            <div class="p-6 overflow-y-auto flex flex-col gap-5 flex-1 bg-surface-container-lowest">
+                <input type="hidden" id="modal-parent-id"/>
+
+                <!-- Datos Personales -->
+                <div class="flex flex-col gap-4">
+                    <h4 class="font-bold text-primary text-xs uppercase tracking-wider flex items-center gap-1.5 border-b border-outline-variant/20 pb-2">
+                        <span class="material-symbols-outlined text-sm">person</span>
+                        Datos del Padre / Tutor
+                    </h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="flex flex-col gap-1">
+                            <label class="text-xs font-bold text-outline uppercase">Nombre Completo</label>
+                            <input id="m-par-nombre" type="text" placeholder="Ej: Sofía de Estrada" class="bg-white border border-outline-variant rounded-lg p-2.5 text-xs text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"/>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <label class="text-xs font-bold text-outline uppercase">Teléfono</label>
+                            <input id="m-par-phone" type="tel" placeholder="10 dígitos" class="bg-white border border-outline-variant rounded-lg p-2.5 text-xs text-primary focus:outline-none focus:border-primary"/>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Credenciales -->
+                <div class="flex flex-col gap-4">
+                    <h4 class="font-bold text-primary text-xs uppercase tracking-wider flex items-center gap-1.5 border-b border-outline-variant/20 pb-2">
+                        <span class="material-symbols-outlined text-sm">lock</span>
+                        Credenciales de Acceso App Mobile
+                    </h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="flex flex-col gap-1">
+                            <label class="text-xs font-bold text-outline uppercase">Correo Electrónico (Usuario)</label>
+                            <input id="m-par-email" type="email" placeholder="correo@ejemplo.com" class="bg-white border border-outline-variant rounded-lg p-2.5 text-xs text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"/>
+                        </div>
+                        <div class="flex flex-col gap-1" id="m-par-password-field">
+                            <label class="text-xs font-bold text-outline uppercase">Contraseña Inicial</label>
+                            <div class="flex gap-2">
+                                <input id="m-par-password" type="text" placeholder="mín. 6 caracteres" class="bg-white border border-outline-variant rounded-lg p-2.5 text-xs text-primary flex-1 focus:outline-none focus:border-primary"/>
+                                <button type="button" onclick="generateParentPassword()" class="bg-surface-container border border-outline-variant text-primary px-2 rounded-lg text-[10px] font-bold hover:bg-surface-container-high whitespace-nowrap">Generar</button>
+                            </div>
+                            <p class="text-[9px] text-on-surface-variant">El padre deberá cambiarla en su primer acceso.</p>
+                        </div>
+                    </div>
+                    <div id="m-par-edit-password-note" class="hidden bg-yellow-50 border border-yellow-300 rounded-lg p-3 text-xs text-yellow-800 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm text-yellow-600">info</span>
+                        Para resetear la contraseña usa el botón "Resetear" en la tabla. Aquí solo puedes modificar nombre, email y alumnos vinculados.
+                    </div>
+                </div>
+
+                <!-- Alumnos Vinculados -->
+                <div class="flex flex-col gap-3">
+                    <h4 class="font-bold text-primary text-xs uppercase tracking-wider flex items-center gap-1.5 border-b border-outline-variant/20 pb-2">
+                        <span class="material-symbols-outlined text-sm">school</span>
+                        Alumnos Vinculados a esta Cuenta
+                    </h4>
+                    <p class="text-[10px] text-on-surface-variant">Selecciona los hijos que podrá gestionar este padre desde la app mobile.</p>
+                    <div id="m-par-students-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
+                        <!-- Generado dinámicamente -->
+                    </div>
+                </div>
+            </div>
+            <!-- Footer -->
+            <div class="p-6 border-t border-outline-variant/20 flex justify-end gap-3 bg-surface-container-low">
+                <button onclick="closeParentModal()" class="bg-white border border-outline-variant text-on-surface-variant px-5 py-2.5 rounded-lg text-xs font-bold hover:bg-surface-container transition-all">Cancelar</button>
+                <button onclick="saveParentModal()" class="bg-primary text-on-primary px-6 py-2.5 rounded-lg text-xs font-bold hover:bg-primary-container transition-all shadow-md">Guardar Usuario</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Container for Notifications -->
     <div id="toast-container" class="fixed bottom-6 left-80 flex flex-col gap-3 z-50 pointer-events-none"></div>
 
@@ -863,15 +1002,15 @@
         function switchModule(moduleName) {
             currentModule = moduleName;
             
-            // Actualizar botones de navegación en sidebar
+            // Actualizar botones de navegación en sidebar (Light sidebar compatible)
             ['mod-monitor', 'mod-kpis', 'mod-admin'].forEach(id => {
                 const btn = document.getElementById(id);
                 if (!btn) return;
                 const mName = id.replace('mod-', '').toUpperCase();
                 if (mName === moduleName) {
-                    btn.className = "flex items-center gap-3 px-4 py-2.5 bg-primary text-on-primary font-bold rounded-lg transition-all w-full text-left";
+                    btn.className = "flex items-center gap-3 px-4 py-2.5 bg-primary text-white font-bold rounded-lg transition-all w-full text-left shadow-md";
                 } else {
-                    btn.className = "flex items-center gap-3 px-4 py-2.5 text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-all w-full text-left";
+                    btn.className = "flex items-center gap-3 px-4 py-2.5 text-slate-600 hover:bg-slate-200 hover:text-slate-900 rounded-lg transition-all w-full text-left";
                 }
             });
 
@@ -934,6 +1073,7 @@
             }
         }
 
+        // Logout
         function logoutAdmin() {
             sessionStorage.removeItem('superadmin_logged');
             switchModule('MONITOR');
@@ -943,24 +1083,37 @@
         // Cambio de pestañas en panel Super Admin
         function switchAdminTab(tabName) {
             currentAdminTab = tabName;
-            const btnAlumnos = document.getElementById('admin-tab-alumnos');
-            const btnMasiva = document.getElementById('admin-tab-masiva');
-            const viewAlumnos = document.getElementById('admin-subview-alumnos');
-            const viewMasiva = document.getElementById('admin-subview-masiva');
+            const tabConfigs = {
+                ALUMNOS:   'admin-tab-alumnos',
+                USUARIOS:  'admin-tab-usuarios',
+                MASIVA:    'admin-tab-masiva'
+            };
+            const viewConfigs = {
+                ALUMNOS:  'admin-subview-alumnos',
+                USUARIOS: 'admin-subview-usuarios',
+                MASIVA:   'admin-subview-masiva'
+            };
+            const activeClass = 'px-4 py-2 bg-primary text-white font-bold text-xs rounded-lg transition-all flex items-center gap-2 shadow-sm';
+            const inactiveClass = 'px-4 py-2 text-on-surface-variant font-bold text-xs rounded-lg hover:bg-surface-container transition-all flex items-center gap-2';
+
+            // Update all tabs
+            Object.entries(tabConfigs).forEach(([key, id]) => {
+                const el = document.getElementById(id);
+                if (el) el.className = key === tabName ? activeClass : inactiveClass;
+            });
+            // Show/hide views
+            Object.entries(viewConfigs).forEach(([key, id]) => {
+                const el = document.getElementById(id);
+                if (el) el.classList.toggle('hidden', key !== tabName);
+            });
 
             if (tabName === 'ALUMNOS') {
-                btnAlumnos.className = "px-4 py-2 bg-primary text-on-primary font-bold text-xs rounded-lg transition-all flex items-center gap-2";
-                btnMasiva.className = "px-4 py-2 text-on-surface-variant font-bold text-xs rounded-lg hover:bg-surface-container transition-all flex items-center gap-2";
-                viewAlumnos.classList.remove('hidden');
-                viewMasiva.classList.add('hidden');
                 renderCrudStudents();
                 renderGroupsConfig();
-            } else {
-                btnAlumnos.className = "px-4 py-2 text-on-surface-variant font-bold text-xs rounded-lg hover:bg-surface-container transition-all flex items-center gap-2";
-                btnMasiva.className = "px-4 py-2 bg-primary text-on-primary font-bold text-xs rounded-lg transition-all flex items-center gap-2";
-                viewAlumnos.classList.add('hidden');
-                viewMasiva.classList.remove('hidden');
-                cancelCsvImport(); // Reset del área de importación
+            } else if (tabName === 'USUARIOS') {
+                renderParentUsers();
+            } else if (tabName === 'MASIVA') {
+                cancelCsvImport();
             }
         }
 
@@ -974,9 +1127,9 @@
                 if (!el) return;
                 const isActive = (id === `lvl-${level.toLowerCase()}`) || (level === 'GENERAL' && id === 'lvl-general');
                 if (isActive) {
-                    el.className = "flex items-center gap-4 px-4 py-3 text-on-primary bg-primary font-bold rounded-lg transition-colors w-full text-left";
+                    el.className = "flex items-center gap-4 px-4 py-3 text-white bg-primary font-bold rounded-lg transition-colors w-full text-left shadow-sm";
                 } else {
-                    el.className = "flex items-center gap-4 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-colors w-full text-left";
+                    el.className = "flex items-center gap-4 px-4 py-3 text-slate-600 hover:bg-slate-200 hover:text-slate-900 rounded-lg transition-colors w-full text-left";
                 }
             });
             renderGroups();
@@ -995,15 +1148,15 @@
             }
 
             if (groups.length === 0) {
-                container.innerHTML = '<div class="text-xs text-on-surface-variant px-2 italic">Sin grupos registrados</div>';
+                container.innerHTML = '<div class="text-xs text-slate-400 px-2 italic">Sin grupos registrados</div>';
                 return;
             }
 
             groups.forEach(g => {
                 const count = students.filter(s => s.group === g && s.status && s.status !== 'CONFIRMADO').length;
                 const btn = document.createElement('button');
-                btn.className = `flex justify-between items-center px-4 py-2 w-full text-left rounded-lg transition-colors ${activeGroupFilter === g ? 'bg-primary text-on-primary font-bold' : 'text-on-surface-variant hover:bg-surface-container-low'}`;
-                btn.innerHTML = `<span>${g}</span><span class="px-2 py-0.5 rounded-full text-[10px] ${count ? 'bg-secondary text-on-secondary' : 'bg-surface-dim text-on-surface'}">${count}</span>`;
+                btn.className = `flex justify-between items-center px-4 py-2 w-full text-left rounded-lg transition-colors ${activeGroupFilter === g ? 'bg-primary text-white font-bold shadow-sm' : 'text-slate-600 hover:bg-slate-200 hover:text-slate-900'}`;
+                btn.innerHTML = `<span>${g}</span><span class="px-2 py-0.5 rounded-full text-[10px] ${count ? 'bg-secondary text-white font-bold' : 'bg-slate-200 text-slate-600 font-bold'}">${count}</span>`;
                 btn.onclick = () => { activeGroupFilter = activeGroupFilter === g ? null : g; renderStudents(); renderGroups(); };
                 container.appendChild(btn);
             });
@@ -1787,12 +1940,16 @@
                 // Cargar familiares
                 const family = student.family || [];
                 family.forEach(f => addModalFamiliarRow(f));
+
+                // Cargar vinculación a padre
+                populateParentUserDropdown(student.parentUserId || '');
             } else {
                 // Nuevo estudiante
                 title.innerText = "Nuevo Registro de Alumno";
                 document.getElementById('m-stud-level').value = 'KINDER';
                 updateModalGradesAndGroups();
                 setRandomAvatar('m-stud-avatar');
+                populateParentUserDropdown('');
 
                 // Por defecto, añadir 3 familiares vacíos para incitar el registro completo
                 addModalFamiliarRow({ name: '', relationship: 'Madre', phone: '', photo: '', authorized: true });
@@ -1973,10 +2130,14 @@
 
             const primaryParent = family[0].name;
 
+            // Leer vinculación a usuario padre
+            const parentUserId = (document.getElementById('m-stud-parent-user').value || '').trim();
+
             if (studentId) {
                 // Editar registro existente
                 const student = students.find(s => s.id === studentId);
                 if (student) {
+                    const oldParentUserId = student.parentUserId;
                     student.name = name;
                     student.birthday = birthday;
                     student.level = level;
@@ -1985,6 +2146,9 @@
                     student.avatar = avatar;
                     student.parent = primaryParent;
                     student.family = family;
+                    student.parentUserId = parentUserId || null;
+                    // Sync UserService
+                    _syncStudentToParentUser(studentId, oldParentUserId, parentUserId);
                 }
                 showToast('Alumno Actualizado', `Se guardaron los cambios de ${name}.`, avatar);
             } else {
@@ -2000,9 +2164,12 @@
                     avatar: avatar,
                     parent: primaryParent,
                     family: family,
+                    parentUserId: parentUserId || null,
                     status: null,
                     lastUpdate: null
                 });
+                // Sync new student to parent user
+                if (parentUserId) _syncStudentToParentUser(newId, null, parentUserId);
                 showToast('Alumno Creado', `Se dio de alta a ${name} en el sistema.`, avatar);
             }
 
@@ -2015,6 +2182,228 @@
 
             // Emitir evento para refrescar app de Padres en tiempo real
             channel.postMessage({ type: 'DATABASE_UPDATED' });
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        //  GESTIÓN DE USUARIOS PADRES  (Fase 3)
+        // ═══════════════════════════════════════════════════════════
+
+        function renderParentUsers() {
+            const tbody = document.getElementById('parent-users-tbody');
+            if (!tbody) return;
+            const search = (document.getElementById('parent-users-search').value || '').toLowerCase().trim();
+            const users = UserService.getAll().filter(u =>
+                u.nombre.toLowerCase().includes(search) || u.email.toLowerCase().includes(search)
+            );
+
+            tbody.innerHTML = '';
+            if (users.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-outline italic">No hay usuarios registrados.</td></tr>`;
+                return;
+            }
+
+            users.forEach(user => {
+                const linkedStudents = students.filter(s => (user.studentIds || []).includes(s.id));
+                const lastLogin = user.lastLogin ? new Date(user.lastLogin).toLocaleString('es-MX', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }) : 'Nunca';
+
+                const tr = document.createElement('tr');
+                tr.className = 'border-b border-outline-variant/20 hover:bg-surface-container-low transition-all';
+                tr.innerHTML = `
+                    <td class="p-3">
+                        <div class="flex items-center gap-2">
+                            <img src="${user.avatar}" class="w-8 h-8 rounded-full object-cover border border-outline-variant/30" alt="" />
+                            <div>
+                                <p class="font-bold text-primary text-xs">${user.nombre}</p>
+                                ${user.tempPassword ? '<span class="text-[9px] bg-yellow-100 text-yellow-700 font-bold px-1.5 py-0.5 rounded-full">CONTRASEÑA TEMPORAL</span>' : ''}
+                            </div>
+                        </div>
+                    </td>
+                    <td class="p-3 text-on-surface-variant font-mono text-[10px]">${user.email}</td>
+                    <td class="p-3">
+                        <div class="flex flex-wrap gap-1">
+                            ${linkedStudents.length === 0
+                                ? '<span class="text-outline italic text-[10px]">Sin alumnos</span>'
+                                : linkedStudents.map(s => `<span class="px-2 py-0.5 bg-blue-50 border border-blue-200 text-primary rounded-full text-[9px] font-bold uppercase">${s.name.split(' ')[0]}</span>`).join('')
+                            }
+                        </div>
+                    </td>
+                    <td class="p-3">
+                        <span class="px-2 py-1 rounded-full text-[9px] font-bold ${user.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                            ${user.active ? 'ACTIVO' : 'INACTIVO'}
+                        </span>
+                    </td>
+                    <td class="p-3 text-on-surface-variant text-[10px]">${lastLogin}</td>
+                    <td class="p-3">
+                        <div class="flex items-center justify-center gap-1 flex-wrap">
+                            <button onclick="openParentModal('${user.id}')" class="p-1 hover:bg-primary/10 text-primary rounded-full transition-colors" title="Editar">
+                                <span class="material-symbols-outlined text-sm">edit</span>
+                            </button>
+                            <button onclick="resetParentPassword('${user.id}')" class="p-1 hover:bg-yellow-100 text-yellow-600 rounded-full transition-colors" title="Resetear contraseña">
+                                <span class="material-symbols-outlined text-sm">key</span>
+                            </button>
+                            <button onclick="toggleParentActive('${user.id}')" class="p-1 hover:bg-orange-100 text-orange-600 rounded-full transition-colors" title="Activar/Desactivar">
+                                <span class="material-symbols-outlined text-sm">${user.active ? 'block' : 'check_circle'}</span>
+                            </button>
+                            <button onclick="deleteParentUser('${user.id}')" class="p-1 hover:bg-secondary/10 text-secondary rounded-full transition-colors" title="Eliminar">
+                                <span class="material-symbols-outlined text-sm">delete</span>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function openParentModal(userId = '') {
+            const modal = document.getElementById('parent-modal');
+            const title = document.getElementById('modal-parent-title');
+            const pwField = document.getElementById('m-par-password-field');
+            const editNote = document.getElementById('m-par-edit-password-note');
+
+            document.getElementById('modal-parent-id').value = userId;
+            document.getElementById('m-par-nombre').value = '';
+            document.getElementById('m-par-email').value = '';
+            document.getElementById('m-par-phone').value = '';
+            document.getElementById('m-par-password').value = '';
+
+            // Populate student checkboxes
+            const grid = document.getElementById('m-par-students-grid');
+            grid.innerHTML = '';
+            students.forEach(s => {
+                const div = document.createElement('label');
+                div.className = 'flex items-center gap-2 p-2 rounded-lg border border-outline-variant/20 bg-white cursor-pointer hover:bg-surface-container-low transition-all text-xs';
+                div.innerHTML = `
+                    <input type="checkbox" data-student-id="${s.id}" class="par-student-check w-3.5 h-3.5 text-primary rounded border-outline-variant focus:ring-primary" />
+                    <img src="${s.avatar}" class="w-7 h-7 rounded-full object-cover flex-shrink-0" />
+                    <div class="min-w-0">
+                        <p class="font-bold text-primary text-[10px] truncate">${s.name.split(' ').slice(0,2).join(' ')}</p>
+                        <p class="text-[9px] text-on-surface-variant">${s.grade} · ${s.group || ''}</p>
+                    </div>
+                `;
+                grid.appendChild(div);
+            });
+
+            if (userId) {
+                // Edit mode
+                title.innerText = 'Editar Usuario Padre';
+                const user = UserService.getAll().find(u => u.id === userId);
+                if (!user) return;
+                document.getElementById('m-par-nombre').value = user.nombre;
+                document.getElementById('m-par-email').value = user.email;
+                document.getElementById('m-par-phone').value = user.phone || '';
+                pwField.classList.add('hidden');
+                editNote.classList.remove('hidden');
+                // Check linked students
+                grid.querySelectorAll('.par-student-check').forEach(cb => {
+                    cb.checked = (user.studentIds || []).includes(cb.dataset.studentId);
+                });
+            } else {
+                title.innerText = 'Nuevo Usuario Padre';
+                pwField.classList.remove('hidden');
+                editNote.classList.add('hidden');
+                generateParentPassword();
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeParentModal() {
+            document.getElementById('parent-modal').classList.add('hidden');
+        }
+
+        function generateParentPassword() {
+            const words = ['Puma','León','Tigre','Águila','Sol','Luna','Mar','Rio','Flor','Roca'];
+            const nums = Math.floor(1000 + Math.random() * 9000);
+            const word = words[Math.floor(Math.random() * words.length)];
+            document.getElementById('m-par-password').value = word + nums;
+        }
+
+        function saveParentModal() {
+            const userId = document.getElementById('modal-parent-id').value;
+            const nombre = document.getElementById('m-par-nombre').value.trim();
+            const email = document.getElementById('m-par-email').value.trim();
+            const phone = document.getElementById('m-par-phone').value.trim();
+            const password = document.getElementById('m-par-password').value.trim();
+
+            if (!nombre || !email) {
+                showToast('Datos Incompletos', 'Nombre y correo son obligatorios.', null);
+                return;
+            }
+
+            // Collect checked students
+            const checkedStudents = [];
+            document.querySelectorAll('.par-student-check:checked').forEach(cb => {
+                checkedStudents.push(cb.dataset.studentId);
+            });
+
+            let result;
+            if (userId) {
+                result = UserService.update(userId, { nombre, email, phone, studentIds: checkedStudents });
+            } else {
+                if (!password || password.length < 6) {
+                    showToast('Contraseña Inválida', 'La contraseña debe tener al menos 6 caracteres.', null);
+                    return;
+                }
+                result = UserService.create({ nombre, email, password, phone, studentIds: checkedStudents });
+            }
+
+            if (!result.success) {
+                showToast('Error', result.error, null);
+                return;
+            }
+
+            closeParentModal();
+            renderParentUsers();
+            // Also refresh student-parent dropdown in student modal
+            populateParentUserDropdown('');
+            const action = userId ? 'actualizado' : 'creado';
+            showToast(`Usuario ${action}`, `${nombre} (${email}) fue ${action} correctamente.`, null);
+            channel.postMessage({ type: 'DATABASE_UPDATED' });
+        }
+
+        function resetParentPassword(userId) {
+            const user = UserService.getAll().find(u => u.id === userId);
+            if (!user) return;
+            const result = UserService.resetPassword(userId);
+            if (result.success) {
+                renderParentUsers();
+                showToast('Contraseña Reseteada',
+                    `Nueva contraseña temporal para ${user.nombre}: "${result.tempPassword}". El padre deberá cambiarla en su próximo acceso.`,
+                    null);
+            }
+        }
+
+        function toggleParentActive(userId) {
+            const result = UserService.toggleActive(userId);
+            if (result.success) {
+                renderParentUsers();
+                showToast('Cuenta Actualizada', `La cuenta fue ${result.active ? 'activada' : 'desactivada'}.`, null);
+                channel.postMessage({ type: 'DATABASE_UPDATED' });
+            }
+        }
+
+        function deleteParentUser(userId) {
+            const user = UserService.getAll().find(u => u.id === userId);
+            if (!user) return;
+            if (confirm(`¿Eliminar al usuario ${user.nombre} (${user.email})? Esta acción no se puede deshacer.`)) {
+                UserService.delete(userId);
+                renderParentUsers();
+                showToast('Usuario Eliminado', `Se eliminó a ${user.nombre} del sistema.`, null);
+            }
+        }
+
+        // Populate the parent-user dropdown inside student modal
+        function populateParentUserDropdown(selectedId) {
+            const sel = document.getElementById('m-stud-parent-user');
+            if (!sel) return;
+            sel.innerHTML = '<option value="">— Sin vincular (crear usuario después) —</option>';
+            UserService.getAll().forEach(u => {
+                const opt = document.createElement('option');
+                opt.value = u.id;
+                opt.innerText = `${u.nombre} (${u.email})`;
+                if (u.id === selectedId) opt.selected = true;
+                sel.appendChild(opt);
+            });
         }
 
         // Lógica de Carga Masiva (CSV / Excel)
@@ -2311,6 +2700,26 @@
                 }
             }
         };
+
+        // Helper: keeps UserService.studentIds in sync when student is assigned/removed from parent
+        function _syncStudentToParentUser(studentId, oldParentUserId, newParentUserId) {
+            if (oldParentUserId && oldParentUserId !== newParentUserId) {
+                const oldUser = UserService.getAll().find(u => u.id === oldParentUserId);
+                if (oldUser) {
+                    UserService.update(oldParentUserId, {
+                        studentIds: (oldUser.studentIds || []).filter(id => id !== studentId)
+                    });
+                }
+            }
+            if (newParentUserId) {
+                const newUser = UserService.getAll().find(u => u.id === newParentUserId);
+                if (newUser) {
+                    const ids = new Set(newUser.studentIds || []);
+                    ids.add(studentId);
+                    UserService.update(newParentUserId, { studentIds: Array.from(ids) });
+                }
+            }
+        }
 
         // Renderizado del padrón inicial al cargar la página
         document.addEventListener('DOMContentLoaded', () => {
