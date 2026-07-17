@@ -324,68 +324,8 @@
                 <span class="material-symbols-outlined text-yellow-600 text-sm flex-shrink-0">chevron_right</span>
             </div>
 
-            <!-- Welcome Card -->
-            <section class="bg-white rounded-2xl border border-outline-variant/30 shadow-sm p-4">
-                <div class="flex justify-between items-center mb-3">
-                    <div>
-                        <p class="text-on-surface-variant font-bold text-[10px] uppercase tracking-widest">Bienvenido,</p>
-                        <h2 class="text-headline-sm font-headline-sm text-primary" id="welcome-name">–</h2>
-                    </div>
-                    <div class="relative">
-                        <select id="student-selector"
-                            class="bg-surface-container-low border border-outline-variant rounded-xl px-3 py-1.5 font-bold text-xs text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer shadow-sm"
-                            onchange="changeStudent(this.value)">
-                        </select>
-                    </div>
-                </div>
-                <div class="flex items-center gap-3 bg-gradient-to-r from-blue-50 to-indigo-50 p-3 rounded-xl border-l-4 border-primary transition-all" id="student-card-info">
-                    <img id="student-avatar" src="" class="w-12 h-12 rounded-full object-cover border-2 border-primary/20 shadow-sm" alt="Student avatar" />
-                    <div class="flex-1 min-w-0">
-                        <p class="font-bold text-sm text-on-surface truncate" id="student-name">–</p>
-                        <p class="text-on-surface-variant text-xs font-medium" id="student-grade">–</p>
-                    </div>
-                    <div id="student-status-chip" class="hidden px-2 py-1 rounded-full text-[10px] font-bold"></div>
-                </div>
-            </section>
-
-            <!-- Action Panel -->
-            <section class="flex flex-col gap-3">
-                <p class="text-[10px] font-bold text-outline uppercase tracking-widest px-1">Avisar a la escuela</p>
-
-                <button class="w-full h-20 bg-primary text-white font-bold rounded-2xl flex items-center justify-between px-5 shadow-md transition-all active:scale-95 active:brightness-90 disabled:opacity-50 disabled:cursor-not-allowed"
-                    id="btn-10" onclick="handleAction('10_MIN', 'btn-10')">
-                    <span class="flex flex-col items-start">
-                        <span class="text-blue-200 text-[10px] uppercase font-bold tracking-widest">Distancia Media</span>
-                        <span class="text-base font-bold">Estoy a 10 minutos</span>
-                    </span>
-                    <div class="w-12 h-12 rounded-xl bg-white/15 flex items-center justify-center">
-                        <span class="material-symbols-outlined text-3xl">timer_10</span>
-                    </div>
-                </button>
-
-                <button class="w-full h-20 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold rounded-2xl flex items-center justify-between px-5 shadow-md transition-all active:scale-95 active:brightness-90 disabled:opacity-50 disabled:cursor-not-allowed"
-                    id="btn-5" onclick="handleAction('5_MIN', 'btn-5')">
-                    <span class="flex flex-col items-start">
-                        <span class="text-orange-100 text-[10px] uppercase font-bold tracking-widest">Próxima Llegada</span>
-                        <span class="text-base font-bold">Estoy a 5 minutos</span>
-                    </span>
-                    <div class="w-12 h-12 rounded-xl bg-white/15 flex items-center justify-center">
-                        <span class="material-symbols-outlined text-3xl">timer_3</span>
-                    </div>
-                </button>
-
-                <button class="w-full h-28 bg-gradient-to-r from-secondary to-red-600 text-white font-bold rounded-2xl flex items-center justify-between px-5 shadow-xl border border-white/10 transition-all active:scale-95 active:brightness-90 disabled:opacity-50 disabled:cursor-not-allowed"
-                    id="btn-now" onclick="handleAction('EN_FILA', 'btn-now')">
-                    <span class="flex flex-col items-start">
-                        <span class="text-red-100 text-[10px] uppercase font-bold tracking-widest">Acción Inmediata</span>
-                        <span class="text-xl font-bold leading-tight">Ya estoy en fila</span>
-                        <span class="text-sm text-red-100 font-medium">/ Ya llegué</span>
-                    </span>
-                    <div class="w-14 h-14 rounded-xl bg-white/15 flex items-center justify-center">
-                        <span class="material-symbols-outlined text-5xl" style="font-variation-settings: 'FILL' 1;">directions_car</span>
-                    </div>
-                </button>
-            </section>
+            <!-- Contenedor dinámico de Hijos -->
+            <div id="students-dashboard-container" class="flex flex-col gap-6"></div>
 
             <!-- Status Card -->
             <section>
@@ -523,6 +463,8 @@ let currentUser = null;         // AuthService session
 let allStudents = [];           // From db.js
 let myStudents = [];            // Only this parent's students
 let currentStudentId = null;
+let selectedPickupMode = 'CAR';  // 'CAR' o 'WALK'
+let activeConfirmStudentId = null; // Alumno esperando que el padre confirme recibido
 const reportedStates = {};      // studentId → status code
 const channel = new BroadcastChannel('stitch_pickup_channel');
 const dayHistory = [];          // { studentId, studentName, status, time }
@@ -546,7 +488,6 @@ function bootApp(session) {
     myStudents = allStudents.filter(s => session.studentIds.includes(s.id));
 
     if (myStudents.length === 0) {
-        // Fallback: show all if no students linked (demo safety)
         myStudents = allStudents;
     }
 
@@ -558,7 +499,6 @@ function bootApp(session) {
     // Header
     document.getElementById('header-parent-name').innerText = session.nombre;
     document.getElementById('header-avatar').src = session.avatar || '';
-    document.getElementById('welcome-name').innerText = session.nombre.split(' ')[0];
 
     // Temp password warning
     if (session.tempPassword) {
@@ -569,13 +509,12 @@ function bootApp(session) {
     const confirmed = loadConfirmedFromStorage();
     confirmed.forEach(id => reportedStates[id] = 'CONFIRMADO');
 
-    populateSelector();
+    // Inicializar modalidad por defecto para cada estudiante
+    myStudents.forEach(student => {
+        selectedPickupModes[student.id] = 'CAR';
+    });
 
-    if (myStudents.length > 0) {
-        const firstId = myStudents[0].id;
-        currentStudentId = firstId;
-        changeStudent(firstId);
-    }
+    renderStudentsDashboard();
 }
 
 // ═══════════════════════════════════════════════════════
@@ -758,85 +697,149 @@ function closeProfilePanel() {
 }
 
 // ═══════════════════════════════════════════════════════
-//  STUDENT SELECTOR
+//  DASHBOARD MULTI-HIJOS (NUEVO)
 // ═══════════════════════════════════════════════════════
-function populateSelector() {
-    const selector = document.getElementById('student-selector');
-    const savedValue = selector.value || currentStudentId;
-    selector.innerHTML = '';
+const selectedPickupModes = {}; // studentId -> 'CAR' | 'WALK'
+
+function renderStudentsDashboard() {
+    const container = document.getElementById('students-dashboard-container');
+    if (!container) return;
+    container.innerHTML = '';
 
     myStudents.forEach(student => {
-        const opt = document.createElement('option');
-        opt.value = student.id;
-        opt.innerText = student.name.split(' ')[0] + (student.name.split(' ')[1] ? ' ' + student.name.split(' ')[1] : '') + ` (${student.grade.split(' ')[0]})`;
-        if (student.id === savedValue) opt.selected = true;
-        selector.appendChild(opt);
+        const isConfirmed = reportedStates[student.id] === 'CONFIRMADO';
+        const st = reportedStates[student.id];
+
+        // Definir badges de estado y botones
+        let method = selectedPickupModes[student.id] || 'CAR';
+        let carActive = method === 'CAR';
+        
+        const card = document.createElement('div');
+        card.className = 'bg-white rounded-3xl border border-outline-variant/30 shadow-md p-5 flex flex-col gap-4';
+        card.id = `dashboard-card-${student.id}`;
+        
+        card.innerHTML = `
+            <!-- Ficha del Alumno -->
+            <div class="flex items-center gap-3 bg-gradient-to-r from-blue-50/50 to-indigo-50/50 p-3 rounded-2xl border-l-4 border-primary shadow-sm">
+                <img src="${student.avatar}" class="w-12 h-12 rounded-full object-cover border-2 border-primary/20 shadow" alt="" />
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2">
+                        <p class="font-bold text-sm text-primary truncate uppercase">${student.name}</p>
+                        ${myStudents.length > 1 ? `
+                            <span class="px-2 py-0.5 bg-indigo-100 text-indigo-800 text-[8px] font-bold rounded-full uppercase tracking-wider">Hermano(a)</span>
+                        ` : ''}
+                    </div>
+                    <p class="text-on-surface-variant text-xs font-semibold uppercase">${student.grade} · ${student.group || ''}</p>
+                </div>
+                <div id="student-status-chip-${student.id}" class="hidden px-2.5 py-1 rounded-full text-[9px] font-bold uppercase"></div>
+            </div>
+
+            <!-- Modalidad de Recogida -->
+            <div class="flex flex-col gap-1.5" id="mode-selector-container-${student.id}">
+                <span class="text-[9px] font-bold text-outline uppercase tracking-widest px-1">Modalidad de Recogida</span>
+                <div class="grid grid-cols-2 gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
+                    <button id="mode-car-${student.id}" onclick="setStudentPickupMode('${student.id}', 'CAR')" type="button"
+                        class="flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all ${carActive ? 'bg-white text-primary shadow-sm' : 'text-on-surface-variant hover:bg-slate-200/50'}">
+                        <span class="material-symbols-outlined text-[15px]">directions_car</span>
+                        En Carrusel (Auto)
+                    </button>
+                    <button id="mode-walk-${student.id}" onclick="setStudentPickupMode('${student.id}', 'WALK')" type="button"
+                        class="flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all ${!carActive ? 'bg-white text-primary shadow-sm' : 'text-on-surface-variant hover:bg-slate-200/50'}">
+                        <span class="material-symbols-outlined text-[15px]">directions_walk</span>
+                        En Puerta (A pie)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Acciones -->
+            <div class="flex flex-col gap-2" id="action-buttons-container-${student.id}">
+                <p class="text-[9px] font-bold text-outline uppercase tracking-widest px-1">Avisar a la escuela</p>
+                <div class="grid grid-cols-2 gap-2">
+                    <button class="h-14 bg-primary text-white font-bold rounded-xl flex items-center justify-between px-4 shadow-sm transition-all active:scale-95 disabled:opacity-40 disabled:pointer-events-none"
+                        id="btn-10-${student.id}" onclick="handleStudentAction('${student.id}', '10_MIN', 'btn-10-${student.id}')" ${isConfirmed ? 'disabled':''}>
+                        <span class="flex flex-col items-start leading-none gap-0.5">
+                            <span class="text-blue-200 text-[8px] uppercase font-bold tracking-wider">Distancia</span>
+                            <span class="text-[11px] font-bold">Estoy a 10 min</span>
+                        </span>
+                        <span class="material-symbols-outlined text-lg">timer_10</span>
+                    </button>
+                    <button class="h-14 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold rounded-xl flex items-center justify-between px-4 shadow-sm transition-all active:scale-95 disabled:opacity-40 disabled:pointer-events-none"
+                        id="btn-5-${student.id}" onclick="handleStudentAction('${student.id}', '5_MIN', 'btn-5-${student.id}')" ${isConfirmed ? 'disabled':''}>
+                        <span class="flex flex-col items-start leading-none gap-0.5">
+                            <span class="text-orange-100 text-[8px] uppercase font-bold tracking-wider">Cercano</span>
+                            <span class="text-[11px] font-bold">Estoy a 5 min</span>
+                        </span>
+                        <span class="material-symbols-outlined text-lg">timer_3</span>
+                    </button>
+                </div>
+                <button class="w-full h-16 bg-gradient-to-r from-secondary to-red-600 text-white font-bold rounded-xl flex items-center justify-between px-5 shadow border border-white/10 transition-all active:scale-95 disabled:opacity-40 disabled:pointer-events-none"
+                    id="btn-now-${student.id}" onclick="handleStudentAction('${student.id}', 'EN_FILA', 'btn-now-${student.id}')" ${isConfirmed ? 'disabled':''}>
+                    <span class="flex flex-col items-start leading-none gap-1">
+                        <span class="text-red-100 text-[8px] uppercase font-bold tracking-wider font-mono">Fila / Llegada</span>
+                        <span class="text-xs font-bold">Ya estoy en fila / Llegué</span>
+                    </span>
+                    <span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">directions_car</span>
+                </button>
+            </div>
+
+            <!-- Status Card & Reset Button -->
+            <div class="flex flex-col gap-2">
+                <div class="bg-surface-container-high rounded-xl p-3 flex items-center gap-2 border border-outline-variant/30 transition-all duration-500" id="status-card-${student.id}">
+                    <span class="material-symbols-outlined text-on-surface-variant flex-shrink-0 text-lg">history</span>
+                    <p class="text-on-surface-variant font-medium text-xs italic flex-1" id="status-text-${student.id}">
+                        Esperando aviso de recogida...
+                    </p>
+                </div>
+                ${isConfirmed ? `
+                    <button onclick="resetStudentDeliveryForTest('${student.id}')" class="w-full py-2 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 text-xs font-bold rounded-xl shadow-sm transition-all active:scale-95 flex items-center justify-center gap-1.5">
+                        <span class="material-symbols-outlined text-sm">restart_alt</span>
+                        Nueva Entrega (Reiniciar Prueba)
+                    </button>
+                ` : ''}
+            </div>
+        `;
+        container.appendChild(card);
+        restoreStudentStatusCard(student.id);
+        disableStudentActionButtons(student.id, isConfirmed);
     });
 }
 
-function changeStudent(id) {
-    currentStudentId = id;
-    const student = myStudents.find(s => s.id === id);
-    if (!student) return;
+function setStudentPickupMode(studentId, mode) {
+    selectedPickupModes[studentId] = mode;
+    const carBtn = document.getElementById(`mode-car-${studentId}`);
+    const walkBtn = document.getElementById(`mode-walk-${studentId}`);
+    if (!carBtn || !walkBtn) return;
 
-    const infoCard = document.getElementById('student-card-info');
-    infoCard.style.opacity = 0;
-    infoCard.style.transform = 'translateY(5px)';
-
-    setTimeout(() => {
-        document.getElementById('student-name').innerText = capitalize(student.name);
-        document.getElementById('student-grade').innerText = capitalize(student.grade) + (student.group ? ' · ' + student.group : '');
-        document.getElementById('student-avatar').src = student.avatar;
-
-        infoCard.style.opacity = 1;
-        infoCard.style.transform = 'translateY(0)';
-    }, 180);
-
-    // Restore status chip
-    const chip = document.getElementById('student-status-chip');
-    const st = reportedStates[id];
-    if (st && st !== 'CONFIRMADO') {
-        chip.classList.remove('hidden');
-        const labels = { '10_MIN': '10 min', '5_MIN': '5 min', 'EN_FILA': 'En fila', 'URGENTE': '¡Urgente!' };
-        const colors = { '10_MIN': 'bg-yellow-100 text-yellow-800', '5_MIN': 'bg-orange-100 text-orange-800', 'EN_FILA': 'bg-blue-100 text-blue-800', 'URGENTE': 'bg-red-100 text-red-800' };
-        chip.className = `px-2 py-1 rounded-full text-[10px] font-bold ${colors[st] || 'bg-surface-dim text-on-surface'}`;
-        chip.innerText = labels[st] || st;
+    if (mode === 'CAR') {
+        carBtn.className = 'flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all bg-white text-primary shadow-sm';
+        walkBtn.className = 'flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all text-on-surface-variant hover:bg-slate-200/50';
     } else {
-        chip.classList.add('hidden');
+        carBtn.className = 'flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all text-on-surface-variant hover:bg-slate-200/50';
+        walkBtn.className = 'flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all bg-white text-primary shadow-sm';
     }
-
-    // Sync status card
-    restoreStatusCard(id);
-    // Sync buttons
-    const isConfirmed = reportedStates[id] === 'CONFIRMADO';
-    disableActionButtons(isConfirmed);
 }
 
-// ═══════════════════════════════════════════════════════
-//  PICKUP ACTIONS
-// ═══════════════════════════════════════════════════════
-function handleAction(statusCode, btnId) {
-    if (reportedStates[currentStudentId] === 'CONFIRMADO') {
+function handleStudentAction(studentId, statusCode, btnId) {
+    if (reportedStates[studentId] === 'CONFIRMADO') {
         showMobileToast('Este alumno ya fue entregado hoy.', 'info');
         return;
     }
 
-    // URGENTE logic: second "EN_FILA" tap
-    if (statusCode === 'EN_FILA' && reportedStates[currentStudentId] === 'EN_FILA') {
+    if (statusCode === 'EN_FILA' && reportedStates[studentId] === 'EN_FILA') {
         statusCode = 'URGENTE';
     }
 
     const now = new Date();
     const timeStr = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
-    const student = myStudents.find(s => s.id === currentStudentId);
+    const student = myStudents.find(s => s.id === studentId);
     if (!student) return;
 
-    reportedStates[currentStudentId] = statusCode;
+    reportedStates[studentId] = statusCode;
 
-    // Broadcast to admin
+    // Enviar Broadcast a Admin y Maestros
     channel.postMessage({
         type: 'PARENT_UPDATE',
-        studentId: currentStudentId,
+        studentId: studentId,
         studentName: student.name,
         grade: student.grade,
         level: student.level,
@@ -844,31 +847,48 @@ function handleAction(statusCode, btnId) {
         parentName: currentUser.nombre,
         avatar: student.avatar,
         status: statusCode,
+        pickupMethod: selectedPickupModes[studentId] || 'CAR',
         time: timeStr
     });
 
-    // Log to history
-    dayHistory.unshift({ studentId: currentStudentId, studentName: student.name, status: statusCode, time: timeStr });
+    // Registrar en Historial de hoy
+    dayHistory.unshift({ studentId, studentName: student.name, status: statusCode, time: timeStr });
     renderHistory();
 
-    // Update status card
-    updateStatusCard(statusCode, timeStr);
+    // Vibar el celular si aplica
+    if (navigator.vibrate) navigator.vibrate(statusCode === 'URGENTE' ? [100,50,100] : 60);
 
-    // Button ripple
+    // Animación del botón
     const btn = document.getElementById(btnId);
     if (btn) {
         btn.classList.add('ring-4', 'ring-white/40');
         setTimeout(() => btn.classList.remove('ring-4', 'ring-white/40'), 400);
     }
-    if (navigator.vibrate) navigator.vibrate(statusCode === 'URGENTE' ? [100,50,100] : 60);
 
-    // Update chip
-    changeStudent(currentStudentId);
+    // Recargar vista para este estudiante en particular
+    renderStudentStatusChip(studentId, statusCode);
+    updateStudentStatusCard(studentId, statusCode, timeStr);
 }
 
-function updateStatusCard(statusCode, timeStr) {
-    const card = document.getElementById('status-card');
-    const text = document.getElementById('status-text');
+function renderStudentStatusChip(studentId, st) {
+    const chip = document.getElementById(`student-status-chip-${studentId}`);
+    if (!chip) return;
+    if (st && st !== 'CONFIRMADO') {
+        chip.classList.remove('hidden');
+        const labels = { '10_MIN': '10 min', '5_MIN': '5 min', 'EN_FILA': 'En fila', 'URGENTE': '¡Urgente!' };
+        const colors = { '10_MIN': 'bg-yellow-100 text-yellow-800', '5_MIN': 'bg-orange-100 text-orange-800', 'EN_FILA': 'bg-blue-100 text-blue-800', 'URGENTE': 'bg-red-100 text-red-800' };
+        chip.className = `px-2 py-0.5 rounded-full text-[9px] font-bold ${colors[st] || 'bg-surface-dim text-on-surface'}`;
+        chip.innerText = labels[st] || st;
+    } else {
+        chip.classList.add('hidden');
+    }
+}
+
+function updateStudentStatusCard(studentId, statusCode, timeStr) {
+    const card = document.getElementById(`status-card-${studentId}`);
+    const text = document.getElementById(`status-text-${studentId}`);
+    if (!card || !text) return;
+
     const labels = {
         '10_MIN': 'Estoy a 10 minutos',
         '5_MIN': 'Estoy a 5 minutos',
@@ -892,29 +912,31 @@ function updateStatusCard(statusCode, timeStr) {
     }
 }
 
-function restoreStatusCard(studentId) {
+function restoreStudentStatusCard(studentId) {
     const st = reportedStates[studentId];
-    const card = document.getElementById('status-card');
-    const text = document.getElementById('status-text');
+    const card = document.getElementById(`status-card-${studentId}`);
+    const text = document.getElementById(`status-text-${studentId}`);
+    if (!card || !text) return;
 
     if (!st || st === null) {
-        card.className = 'bg-surface-container-high rounded-2xl p-4 flex items-center gap-3 border border-outline-variant/30 transition-all duration-500';
-        text.className = 'text-on-surface-variant font-medium text-sm italic flex-1';
-        text.innerText = 'Esperando actualización de estado...';
+        card.className = 'bg-surface-container-high rounded-xl p-3 flex items-center gap-2 border border-outline-variant/30 transition-all duration-500';
+        text.className = 'text-on-surface-variant font-medium text-xs italic flex-1';
+        text.innerText = 'Esperando aviso de recogida...';
     } else if (st === 'CONFIRMADO') {
-        showConfirmedState();
+        showStudentConfirmedState(studentId);
     } else {
-        updateStatusCard(st, '–');
+        updateStudentStatusCard(studentId, st, '–');
     }
 }
 
-function showConfirmedState(timeStr = '') {
-    const card = document.getElementById('status-card');
-    const text = document.getElementById('status-text');
+function showStudentConfirmedState(studentId, timeStr = '') {
+    const card = document.getElementById(`status-card-${studentId}`);
+    const text = document.getElementById(`status-text-${studentId}`);
+    if (!card || !text) return;
     card.className = 'bg-green-50 border-green-500 rounded-2xl p-4 flex items-center gap-3 border-2 transition-all duration-500 shadow-sm';
-    text.className = 'text-green-800 font-bold text-sm flex-1 not-italic';
+    text.className = 'text-green-800 font-bold text-xs flex-1 not-italic';
     text.innerHTML = `<span class="flex items-center gap-2"><span class="material-symbols-outlined text-green-600">check_circle</span> ¡Entrega confirmada${timeStr ? ' a las ' + timeStr : ''}! Alumno despachado.</span>`;
-    disableActionButtons(true);
+    disableStudentActionButtons(studentId, true);
 }
 
 // ═══════════════════════════════════════════════════════
@@ -947,12 +969,41 @@ function renderHistory() {
 // ═══════════════════════════════════════════════════════
 //  HELPERS
 // ═══════════════════════════════════════════════════════
-function disableActionButtons(disabled) {
-    ['btn-10','btn-5','btn-now'].forEach(id => {
+function disableStudentActionButtons(studentId, disabled) {
+    [`btn-10-${studentId}`, `btn-5-${studentId}`, `btn-now-${studentId}`].forEach(id => {
         const el = document.getElementById(id);
-        if (!el) return;
-        el.disabled = disabled;
+        if (el) el.disabled = disabled;
     });
+}
+
+function resetStudentDeliveryForTest(studentId) {
+    // 1. Eliminar el estado de confirmado de hoy del localStorage del padre
+    try {
+        const key = getTodayKey();
+        let arr = JSON.parse(localStorage.getItem(key) || '[]');
+        arr = arr.filter(id => id !== studentId);
+        localStorage.setItem(key, JSON.stringify(arr));
+    } catch(e) {}
+
+    // 2. Limpiar del estado local del padre
+    reportedStates[studentId] = null;
+
+    // 3. Actualizar la base de datos local para que el alumno vuelva a estar en 'SIN_REPORTE'
+    const storedStudents = getStoredStudents();
+    const studentIdx = storedStudents.findIndex(s => s.id === studentId);
+    if (studentIdx !== -1) {
+        storedStudents[studentIdx].status = 'SIN_REPORTE';
+        storedStudents[studentIdx].pickupMethod = 'CAR';
+        storedStudents[studentIdx].lastUpdate = '';
+        saveStoredStudents(storedStudents);
+    }
+
+    // 4. Notificar a todas las pestañas por Broadcast
+    channel.postMessage({ type: 'DATABASE_UPDATED' });
+
+    // 5. Mostrar aviso y recargar localmente el dashboard del padre
+    showMobileToast('Estado restablecido para una nueva entrega ✓', 'success');
+    renderStudentsDashboard();
 }
 
 function capitalize(str) {
@@ -1000,28 +1051,112 @@ channel.onmessage = (event) => {
     if (data.type === 'ADMIN_CONFIRM') {
         reportedStates[data.studentId] = 'CONFIRMADO';
         saveConfirmedToStorage(data.studentId);
-        dayHistory.unshift({ studentId: data.studentId, studentName: data.studentId, status: 'CONFIRMADO', time: data.time });
+        
+        // Buscar info del estudiante
+        const stud = myStudents.find(s => s.id === data.studentId) || { name: 'Alumno' };
+        
+        dayHistory.unshift({ studentId: data.studentId, studentName: stud.name, status: 'CONFIRMADO', time: data.time });
         renderHistory();
-        if (data.studentId === currentStudentId) {
-            showConfirmedState(data.time);
-            showMobileToast('¡Entrega confirmada por la escuela!', 'success');
-            if (navigator.vibrate) navigator.vibrate([200,100,200]);
-        }
+        
+        // Cambiar estado del estudiante en la pantalla
+        showStudentConfirmedState(data.studentId, data.time);
+        showMobileToast(`¡Entrega confirmada para ${stud.name}!`, 'success');
+        if (navigator.vibrate) navigator.vibrate([200,100,200]);
+        
+        // Lanzar Modal de Confirmación para el Padre
+        openDeliveryConfirmModal(data.studentId, stud.name);
+        
         document.getElementById('notif-badge').classList.remove('hidden');
     } else if (data.type === 'DATABASE_UPDATED') {
         allStudents = getStoredStudents();
         if (currentUser) {
             myStudents = allStudents.filter(s => currentUser.studentIds.includes(s.id));
             if (myStudents.length === 0) myStudents = allStudents;
-            populateSelector();
-            if (!myStudents.find(s => s.id === currentStudentId)) {
-                if (myStudents.length > 0) changeStudent(myStudents[0].id);
-            } else {
-                changeStudent(currentStudentId);
-            }
+            myStudents.forEach(student => {
+                if (!selectedPickupModes[student.id]) {
+                    selectedPickupModes[student.id] = 'CAR';
+                }
+            });
+            renderStudentsDashboard();
         }
     }
 };
+
+// Toggle de modalidad
+function setPickupMode(mode) {
+    selectedPickupMode = mode;
+    const carBtn = document.getElementById('mode-car');
+    const walkBtn = document.getElementById('mode-walk');
+    if (!carBtn || !walkBtn) return;
+    if (mode === 'CAR') {
+        carBtn.className = 'flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all bg-white text-primary shadow-sm';
+        walkBtn.className = 'flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all text-on-surface-variant hover:bg-slate-200/50';
+    } else {
+        carBtn.className = 'flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all text-on-surface-variant hover:bg-slate-200/50';
+        walkBtn.className = 'flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all bg-white text-primary shadow-sm';
+    }
+}
+
+// Modal de confirmación de entrega
+function openDeliveryConfirmModal(studentId, studentName) {
+    activeConfirmStudentId = studentId;
+    const titleEl = document.getElementById('delivery-modal-title');
+    const descEl = document.getElementById('delivery-modal-desc');
+    const modalEl = document.getElementById('delivery-confirm-modal');
+    if (titleEl && descEl && modalEl) {
+        titleEl.innerText = `¡${studentName} Entregado!`;
+        descEl.innerText = `El maestro ha confirmado la entrega de ${studentName}. ¿Confirmas que ya lo tienes contigo?`;
+        modalEl.classList.remove('hidden');
+    }
+}
+
+function closeDeliveryConfirmModal() {
+    const modalEl = document.getElementById('delivery-confirm-modal');
+    if (modalEl) modalEl.classList.add('hidden');
+    activeConfirmStudentId = null;
+}
+
+function confirmParentReceipt() {
+    if (!activeConfirmStudentId) return;
+    
+    // 1. Guardar en la bitácora de la DB local
+    const result = DeliveryLogService.logParentConfirm(activeConfirmStudentId);
+    
+    // 2. Notificar por canal de Broadcast a Maestros y Admin
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false });
+    
+    channel.postMessage({
+        type: 'PARENT_RECEIVE_CONFIRM',
+        studentId: activeConfirmStudentId,
+        time: timeStr,
+        parentName: currentUser.nombre
+    });
+    
+    // 3. Cerrar y avisar al usuario
+    closeDeliveryConfirmModal();
+    showMobileToast('¡Recepción registrada y respaldada! Gracias.', 'success');
+}
 </script>
+
+<!-- MODAL DE CONFIRMACIÓN DE ENTREGA -->
+<div id="delivery-confirm-modal" class="fixed inset-0 z-[350] flex items-center justify-center px-6 hidden">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeDeliveryConfirmModal()"></div>
+    <div class="relative bg-white rounded-3xl shadow-2xl p-6 w-full max-w-sm flex flex-col items-center gap-4 text-center border border-green-200">
+        <div class="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center text-green-600 shadow-inner animate-bounce">
+            <span class="material-symbols-outlined text-4xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+        </div>
+        <div>
+            <h3 class="font-bold text-primary text-lg" id="delivery-modal-title">¡Alumno Entregado!</h3>
+            <p class="text-on-surface-variant text-xs mt-1" id="delivery-modal-desc">
+                El maestro reporta que ya te entregó a tu hijo. ¿Confirmas que ya lo tienes contigo?
+            </p>
+        </div>
+        <button onclick="confirmParentReceipt()" class="w-full bg-primary text-white font-bold rounded-xl py-3.5 text-sm hover:bg-blue-700 active:scale-95 transition-all shadow-md">
+            SÍ, YA LO RECIBÍ
+        </button>
+    </div>
+</div>
+
 </body>
 </html>

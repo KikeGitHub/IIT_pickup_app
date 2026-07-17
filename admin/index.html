@@ -8,6 +8,7 @@
     <title>Control de Entregas - Instituto Inglés de Toluca</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <script src="../db.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700;800&amp;display=swap"
         rel="stylesheet" />
@@ -192,11 +193,11 @@
                         <span class="material-symbols-outlined text-lg">monitor</span>
                         <span class="font-label-md text-label-md">Pantalla de Entrega</span>
                     </button>
-                    <button id="mod-kpis" onclick="switchModule('KPIS')" class="flex items-center gap-3 px-4 py-2.5 text-slate-600 hover:bg-slate-200 hover:text-slate-900 rounded-lg transition-all w-full text-left">
+                    <button id="mod-kpis" onclick="switchModule('KPIS')" class="flex items-center gap-3 px-4 py-2.5 text-slate-600 hover:bg-slate-200 hover:text-slate-900 rounded-lg transition-all w-full text-left hidden">
                         <span class="material-symbols-outlined text-lg">analytics</span>
                         <span class="font-label-md text-label-md">Dashboard KPIs</span>
                     </button>
-                    <button id="mod-admin" onclick="switchModule('ADMIN')" class="flex items-center gap-3 px-4 py-2.5 text-slate-600 hover:bg-slate-200 hover:text-slate-900 rounded-lg transition-all w-full text-left">
+                    <button id="mod-admin" onclick="switchModule('ADMIN')" class="flex items-center gap-3 px-4 py-2.5 text-slate-600 hover:bg-slate-200 hover:text-slate-900 rounded-lg transition-all w-full text-left hidden">
                         <span class="material-symbols-outlined text-lg">admin_panel_settings</span>
                         <span class="font-label-md text-label-md">Super Admin</span>
                     </button>
@@ -265,10 +266,35 @@
             </div>
 
             <div class="mt-auto pt-4 border-t border-slate-200 flex flex-col gap-2">
-                <button onclick="logoutAdmin()"
-                    class="flex items-center gap-4 px-4 py-3 text-red-600 hover:bg-red-50 hover:text-red-700 rounded-lg w-full text-left">
-                    <span class="material-symbols-outlined">logout</span>
-                    <span class="font-label-md text-label-md font-bold">Cerrar Sesión</span>
+                <!-- Shortcut to teacher portal -->
+                <a href="../maestros/index.html" target="_blank"
+                    class="flex items-center gap-3 px-4 py-2.5 text-green-700 hover:bg-green-50 rounded-lg w-full text-left transition-colors">
+                    <span class="material-symbols-outlined text-lg text-green-600">school</span>
+                    <div>
+                        <span class="font-label-md text-label-md font-bold block leading-tight">Portal Maestros</span>
+                        <span class="text-[9px] text-green-600">Abrir en nueva pestaña</span>
+                    </div>
+                </a>
+                <a href="../index.html" target="_blank"
+                    class="flex items-center gap-3 px-4 py-2.5 text-blue-700 hover:bg-blue-50 rounded-lg w-full text-left transition-colors">
+                    <span class="material-symbols-outlined text-lg text-blue-600">smartphone</span>
+                    <div>
+                        <span class="font-label-md text-label-md font-bold block leading-tight">Portal Padres</span>
+                        <span class="text-[9px] text-blue-600">Abrir en nueva pestaña</span>
+                    </div>
+                </a>
+                
+                <!-- Botón de Control de Acceso Directivo -->
+                <button id="btn-director-lock" onclick="switchModule('ADMIN')"
+                    class="flex items-center gap-4 px-4 py-3 bg-slate-200 text-slate-800 hover:bg-slate-300 font-bold rounded-lg w-full text-left transition-all">
+                    <span class="material-symbols-outlined">lock</span>
+                    <span class="font-label-md text-label-md">Acceso Director</span>
+                </button>
+                
+                <button id="btn-director-unlock" onclick="logoutAdmin()"
+                    class="flex items-center gap-4 px-4 py-3 bg-red-50 text-red-700 hover:bg-red-100 font-bold rounded-lg w-full text-left transition-all hidden">
+                    <span class="material-symbols-outlined text-red-600">lock_open</span>
+                    <span class="font-label-md text-label-md">Salir Modo Director</span>
                 </button>
             </div>
         </aside>
@@ -302,9 +328,15 @@
 
             <!-- 2. VISTA DASHBOARD KPIS -->
             <div id="view-kpis" class="flex flex-col gap-6 hidden">
-                <div>
-                    <h1 class="font-headline-md text-headline-md text-primary">Dashboard de Rendimiento</h1>
-                    <p class="text-on-surface-variant">KPIs y tiempos de entrega del alumnado</p>
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-outline-variant/20 pb-4">
+                    <div>
+                        <h1 class="font-headline-md text-headline-md text-primary">Dashboard de Rendimiento</h1>
+                        <p class="text-on-surface-variant font-medium">KPIs y tiempos de entrega del alumnado</p>
+                    </div>
+                    <button onclick="exportTeacherPerformanceToExcel()" class="bg-[#166534] hover:bg-[#14532d] text-white px-4 py-2.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 shadow-sm">
+                        <span class="material-symbols-outlined text-sm">download</span>
+                        EXPORTAR RENDIMIENTO MAESTROS (.XLSX)
+                    </button>
                 </div>
                 
                 <!-- Tarjetas KPI Superiores -->
@@ -428,10 +460,16 @@
 
             <!-- 4. VISTA SUPER ADMIN PANEL -->
             <div id="view-admin-panel" class="flex flex-col gap-6 hidden">
-                <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-                    <div>
-                        <h1 class="font-headline-md text-headline-md text-primary">Panel de Configuración</h1>
-                        <p class="text-on-surface-variant">Gestión de alumnos, grupos y carga masiva</p>
+                <div class="flex flex-col xl:flex-row justify-between xl:items-center gap-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 flex-1">
+                        <div>
+                            <h1 class="font-headline-md text-headline-md text-primary">Panel de Configuración</h1>
+                            <p class="text-on-surface-variant">Gestión de alumnos, grupos y carga masiva</p>
+                        </div>
+                        <button onclick="exportCompleteCatalogsToExcel()" class="bg-white text-primary border border-primary hover:bg-slate-50 px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 shadow-sm">
+                            <span class="material-symbols-outlined text-sm">download</span>
+                            EXPORTAR CATÁLOGOS COMPLETOS (.XLSX)
+                        </button>
                     </div>
                     <!-- Pestañas Administrativas -->
                     <div class="bg-surface-container-low p-1.5 rounded-xl border border-outline-variant flex gap-2 flex-wrap">
@@ -442,6 +480,14 @@
                         <button id="admin-tab-usuarios" onclick="switchAdminTab('USUARIOS')" class="px-4 py-2 text-on-surface-variant font-bold text-xs rounded-lg hover:bg-surface-container transition-all flex items-center gap-2">
                             <span class="material-symbols-outlined text-sm">manage_accounts</span>
                             Usuarios Padres
+                        </button>
+                        <button id="admin-tab-maestros" onclick="switchAdminTab('MAESTROS')" class="px-4 py-2 text-on-surface-variant font-bold text-xs rounded-lg hover:bg-surface-container transition-all flex items-center gap-2">
+                            <span class="material-symbols-outlined text-sm">school</span>
+                            Usuarios Maestros
+                        </button>
+                        <button id="admin-tab-auditoria" onclick="switchAdminTab('AUDITORIA')" class="px-4 py-2 text-on-surface-variant font-bold text-xs rounded-lg hover:bg-surface-container transition-all flex items-center gap-2">
+                            <span class="material-symbols-outlined text-sm">assignment_turned_in</span>
+                            Bitácora de Entregas
                         </button>
                         <button id="admin-tab-masiva" onclick="switchAdminTab('MASIVA')" class="px-4 py-2 text-on-surface-variant font-bold text-xs rounded-lg hover:bg-surface-container transition-all flex items-center gap-2">
                             <span class="material-symbols-outlined text-sm">upload_file</span>
@@ -620,7 +666,49 @@
                     </div>
                 </div>
 
-                <!-- SUB-PESTAÑA 3: CARGA MASIVA -->
+                <!-- SUB-PESTAÑA 3: USUARIOS MAESTROS -->
+                <div id="admin-subview-maestros" class="flex flex-col gap-6 hidden">
+                    <div class="bg-white p-5 rounded-xl border border-outline-variant/30 shadow-sm flex flex-col gap-4">
+                        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-outline-variant/20 pb-3">
+                            <div>
+                                <h3 class="font-bold text-primary text-sm flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-lg">school</span>
+                                    Usuarios de Acceso para Maestros
+                                </h3>
+                                <p class="text-xs text-on-surface-variant">Credenciales para el Portal Maestros · <a href="../maestros/index.html" target="_blank" class="text-green-700 font-bold hover:underline">Abrir Portal →</a></p>
+                            </div>
+                            <button onclick="openTeacherModal()" class="bg-green-700 text-white px-4 py-2 rounded-lg font-bold text-xs hover:bg-green-800 transition-all flex items-center gap-2 shadow-sm">
+                                <span class="material-symbols-outlined text-sm">person_add</span>
+                                NUEVO MAESTRO
+                            </button>
+                        </div>
+                        <!-- Búsqueda -->
+                        <div class="relative">
+                            <span class="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant text-sm">search</span>
+                            <input id="teacher-users-search" oninput="renderTeacherUsers()" type="text" placeholder="Buscar por nombre o correo..." class="w-full bg-surface-container-low border border-outline-variant rounded-lg pl-9 pr-3 py-2 text-xs focus:outline-none focus:border-primary"/>
+                        </div>
+                        <!-- Tabla -->
+                        <div class="overflow-x-auto overflow-y-auto max-h-[480px] border border-outline-variant/20 rounded-xl relative">
+                            <table class="w-full text-left border-collapse">
+                                <thead class="sticky top-0 bg-surface-container-high z-10">
+                                    <tr class="text-xs font-bold text-outline border-b border-outline-variant/30">
+                                        <th class="p-3">Maestro</th>
+                                        <th class="p-3">Correo</th>
+                                        <th class="p-3">Nivel</th>
+                                        <th class="p-3">Grupos Asignados</th>
+                                        <th class="p-3">Estado</th>
+                                        <th class="p-3">Último Acceso</th>
+                                        <th class="p-3 text-center">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="teacher-users-tbody" class="text-xs text-on-surface">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUB-PESTAÑA 4: CARGA MASIVA -->
                 <div id="admin-subview-masiva" class="flex flex-col gap-6 hidden">
                     <div class="bg-white p-5 rounded-xl border border-outline-variant/30 shadow-sm flex flex-col gap-6">
                         <div>
@@ -696,6 +784,50 @@
                                     </tbody>
                                 </table>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUB-PESTAÑA 5: BITÁCORA DE ENTREGAS (AUDITORÍA) -->
+                <div id="admin-subview-auditoria" class="flex flex-col gap-6 hidden">
+                    <div class="bg-white p-5 rounded-xl border border-outline-variant/30 shadow-sm flex flex-col gap-4">
+                        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-outline-variant/20 pb-3">
+                            <div>
+                                <h3 class="font-bold text-primary text-sm flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-lg">assignment_turned_in</span>
+                                    Bitácora de Entregas y Auditoría de Seguridad
+                                </h3>
+                                <p class="text-xs text-on-surface-variant">Respaldos digitales de entrega de alumnos y firmas de recibido por familiares en tiempo real</p>
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="exportAuditBitacoraToExcel()" class="bg-[#166534] hover:bg-[#14532d] text-white px-3.5 py-1.5 rounded-lg font-bold text-xs transition-all flex items-center gap-1.5 shadow-sm">
+                                    <span class="material-symbols-outlined text-sm">download</span>
+                                    EXPORTAR BITÁCORA (.XLSX)
+                                </button>
+                                <button onclick="localStorage.setItem('stitch_delivery_logs', '[]'); renderAuditoriaLogs(); showToast('Bitácora Reiniciada', 'Se borraron los registros de auditoría.', null);" class="text-red-600 border border-red-200 hover:bg-red-50 px-3.5 py-1.5 rounded-lg font-bold text-xs transition-all flex items-center gap-1.5">
+                                    <span class="material-symbols-outlined text-sm">delete_sweep</span>
+                                    REINICIAR BITÁCORA
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Tabla Bitácora -->
+                        <div class="overflow-x-auto overflow-y-auto max-h-[480px] border border-outline-variant/20 rounded-xl relative">
+                            <table class="w-full text-left border-collapse">
+                                <thead class="sticky top-0 bg-surface-container-high z-10">
+                                    <tr class="text-xs font-bold text-outline border-b border-outline-variant/30">
+                                        <th class="p-3">Alumno</th>
+                                        <th class="p-3">Grupo</th>
+                                        <th class="p-3">Entrega Escuela (Maestro/Guardia)</th>
+                                        <th class="p-3">Firma Recibido (Familiar)</th>
+                                        <th class="p-3 text-center">Método</th>
+                                        <th class="p-3 text-center">Estado Auditoría</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="auditoria-tbody" class="text-xs text-on-surface">
+                                    <!-- Rendered dynamically by JS -->
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -926,8 +1058,95 @@
         </div>
     </div>
 
+    <!-- MODAL: USUARIO MAESTRO -->
+    <div id="teacher-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-[99] hidden p-4">
+        <div class="bg-white rounded-2xl border border-outline-variant/30 shadow-2xl w-full max-w-xl max-h-[90vh] overflow-hidden flex flex-col">
+            <!-- Header -->
+            <div class="p-6 border-b border-outline-variant/20 flex justify-between items-center bg-gradient-to-r from-green-800 to-green-600 text-white">
+                <div>
+                    <h3 class="text-lg font-bold" id="modal-teacher-title">Nuevo Maestro</h3>
+                    <p class="text-xs text-green-100">Credenciales de acceso al Portal Maestros</p>
+                </div>
+                <button onclick="closeTeacherModal()" class="text-white hover:bg-white/10 p-1.5 rounded-full transition-all">
+                    <span class="material-symbols-outlined text-lg">close</span>
+                </button>
+            </div>
+            <!-- Body -->
+            <div class="p-6 overflow-y-auto flex flex-col gap-5 flex-1 bg-surface-container-lowest">
+                <input type="hidden" id="modal-teacher-id"/>
+
+                <!-- Datos Personales -->
+                <div class="flex flex-col gap-4">
+                    <h4 class="font-bold text-primary text-xs uppercase tracking-wider flex items-center gap-1.5 border-b border-outline-variant/20 pb-2">
+                        <span class="material-symbols-outlined text-sm">school</span>
+                        Datos del Maestro
+                    </h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="flex flex-col gap-1">
+                            <label class="text-xs font-bold text-outline uppercase">Nombre Completo</label>
+                            <input id="m-tch-nombre" type="text" placeholder="Ej: Ana Reyes" class="bg-white border border-outline-variant rounded-lg p-2.5 text-xs text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"/>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <label class="text-xs font-bold text-outline uppercase">Nivel Educativo</label>
+                            <select id="m-tch-level" onchange="populateTeacherGroupCheckboxes()" class="bg-white border border-outline-variant rounded-lg p-2.5 text-xs text-primary focus:outline-none focus:border-primary">
+                                <option value="">— Seleccionar nivel —</option>
+                                <option value="KINDER">Kínder</option>
+                                <option value="PRIMARIA">Primaria</option>
+                                <option value="SECUNDARIA">Secundaria</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Credenciales -->
+                <div class="flex flex-col gap-4">
+                    <h4 class="font-bold text-primary text-xs uppercase tracking-wider flex items-center gap-1.5 border-b border-outline-variant/20 pb-2">
+                        <span class="material-symbols-outlined text-sm">lock</span>
+                        Credenciales de Acceso Portal Maestros
+                    </h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="flex flex-col gap-1">
+                            <label class="text-xs font-bold text-outline uppercase">Correo Electrónico</label>
+                            <input id="m-tch-email" type="email" placeholder="correo@iit.edu.mx" class="bg-white border border-outline-variant rounded-lg p-2.5 text-xs text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"/>
+                        </div>
+                        <div class="flex flex-col gap-1" id="m-tch-password-field">
+                            <label class="text-xs font-bold text-outline uppercase">Contraseña Inicial</label>
+                            <div class="flex gap-2">
+                                <input id="m-tch-password" type="text" placeholder="mín. 6 caracteres" class="bg-white border border-outline-variant rounded-lg p-2.5 text-xs text-primary flex-1 focus:outline-none focus:border-primary"/>
+                                <button type="button" onclick="generateTeacherPassword()" class="bg-surface-container border border-outline-variant text-primary px-2 rounded-lg text-[10px] font-bold hover:bg-surface-container-high whitespace-nowrap">Generar</button>
+                            </div>
+                            <p class="text-[9px] text-on-surface-variant">El maestro deberá cambiarla en su primer acceso.</p>
+                        </div>
+                    </div>
+                    <div id="m-tch-edit-password-note" class="hidden bg-yellow-50 border border-yellow-300 rounded-lg p-3 text-xs text-yellow-800 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm text-yellow-600">info</span>
+                        Para resetear la contraseña usa el botón "Resetear" en la tabla.
+                    </div>
+                </div>
+
+                <!-- Grupos Asignados -->
+                <div class="flex flex-col gap-3">
+                    <h4 class="font-bold text-primary text-xs uppercase tracking-wider flex items-center gap-1.5 border-b border-outline-variant/20 pb-2">
+                        <span class="material-symbols-outlined text-sm">group</span>
+                        Grupos Asignados
+                    </h4>
+                    <p class="text-[10px] text-on-surface-variant">Selecciona el nivel primero, luego marca los grupos a cargo de este maestro.</p>
+                    <div id="m-tch-groups-grid" class="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-36 overflow-y-auto pr-1">
+                        <p class="text-xs text-outline italic col-span-full">Selecciona un nivel para ver los grupos.</p>
+                    </div>
+                </div>
+            </div>
+            <!-- Footer -->
+            <div class="p-6 border-t border-outline-variant/20 flex justify-end gap-3 bg-surface-container-low">
+                <button onclick="closeTeacherModal()" class="bg-white border border-outline-variant text-on-surface-variant px-5 py-2.5 rounded-lg text-xs font-bold hover:bg-surface-container transition-all">Cancelar</button>
+                <button onclick="saveTeacherModal()" class="bg-green-700 text-white px-6 py-2.5 rounded-lg text-xs font-bold hover:bg-green-800 transition-all shadow-md">Guardar Maestro</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Container for Notifications -->
     <div id="toast-container" class="fixed bottom-6 left-80 flex flex-col gap-3 z-50 pointer-events-none"></div>
+
 
     <script>
         // Sincronización de reloj digital superior
@@ -1057,14 +1276,37 @@
             }
         }
 
+        // Muestra/Oculta pestañas del Director y candados en tiempo real
+        function showDirectorViews(show) {
+            const modKpis = document.getElementById('mod-kpis');
+            const modAdmin = document.getElementById('mod-admin');
+            const lockBtn = document.getElementById('btn-director-lock');
+            const unlockBtn = document.getElementById('btn-director-unlock');
+            
+            if (show) {
+                if (modKpis) modKpis.classList.remove('hidden');
+                if (modAdmin) modAdmin.classList.remove('hidden');
+                if (lockBtn) lockBtn.classList.add('hidden');
+                if (unlockBtn) unlockBtn.classList.remove('hidden');
+            } else {
+                if (modKpis) modKpis.classList.add('hidden');
+                if (modAdmin) modAdmin.classList.add('hidden');
+                if (lockBtn) lockBtn.classList.remove('hidden');
+                if (unlockBtn) unlockBtn.classList.add('hidden');
+            }
+        }
+
         // Login del Super Admin
         function loginAdmin() {
             const input = document.getElementById('admin-pin-input');
             const error = document.getElementById('admin-login-error');
-            if (input.value === 'admin123') {
+            // Clave del Director (Configuración global)
+            if (input.value === 'admin123' || input.value === 'director') {
                 sessionStorage.setItem('superadmin_logged', 'true');
                 error.classList.add('hidden');
+                showDirectorViews(true);
                 switchModule('ADMIN');
+                showToast('Acceso Directivo Autorizado ✓', 'Has ingresado con perfil de Director.', null);
             } else {
                 error.classList.remove('hidden');
                 const box = input.parentElement.parentElement;
@@ -1076,6 +1318,7 @@
         // Logout
         function logoutAdmin() {
             sessionStorage.removeItem('superadmin_logged');
+            showDirectorViews(false);
             switchModule('MONITOR');
             showToast('Sesión Cerrada', 'Has salido del modo administrativo.', null);
         }
@@ -1086,22 +1329,24 @@
             const tabConfigs = {
                 ALUMNOS:   'admin-tab-alumnos',
                 USUARIOS:  'admin-tab-usuarios',
+                MAESTROS:  'admin-tab-maestros',
+                AUDITORIA: 'admin-tab-auditoria',
                 MASIVA:    'admin-tab-masiva'
             };
             const viewConfigs = {
                 ALUMNOS:  'admin-subview-alumnos',
                 USUARIOS: 'admin-subview-usuarios',
+                MAESTROS: 'admin-subview-maestros',
+                AUDITORIA: 'admin-subview-auditoria',
                 MASIVA:   'admin-subview-masiva'
             };
             const activeClass = 'px-4 py-2 bg-primary text-white font-bold text-xs rounded-lg transition-all flex items-center gap-2 shadow-sm';
             const inactiveClass = 'px-4 py-2 text-on-surface-variant font-bold text-xs rounded-lg hover:bg-surface-container transition-all flex items-center gap-2';
 
-            // Update all tabs
             Object.entries(tabConfigs).forEach(([key, id]) => {
                 const el = document.getElementById(id);
                 if (el) el.className = key === tabName ? activeClass : inactiveClass;
             });
-            // Show/hide views
             Object.entries(viewConfigs).forEach(([key, id]) => {
                 const el = document.getElementById(id);
                 if (el) el.classList.toggle('hidden', key !== tabName);
@@ -1112,9 +1357,88 @@
                 renderGroupsConfig();
             } else if (tabName === 'USUARIOS') {
                 renderParentUsers();
+            } else if (tabName === 'MAESTROS') {
+                renderTeacherUsers();
+            } else if (tabName === 'AUDITORIA') {
+                renderAuditoriaLogs();
             } else if (tabName === 'MASIVA') {
                 cancelCsvImport();
             }
+        }
+
+        // Renderizado de logs de auditoría en la tabla
+        function renderAuditoriaLogs() {
+            const tbody = document.getElementById('auditoria-tbody');
+            if (!tbody) return;
+            const logs = DeliveryLogService.getLogs();
+            
+            tbody.innerHTML = '';
+            if (logs.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-outline italic">No hay registros de entrega en la bitácora aún.</td></tr>`;
+                return;
+            }
+
+            logs.forEach(log => {
+                const student = students.find(s => s.id === log.studentId) || { avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150' };
+                
+                let methodBadge = '';
+                if (log.pickupMethod === 'WALK') {
+                    methodBadge = `
+                        <span class="inline-flex items-center gap-0.5 px-2 py-0.5 bg-blue-50 border border-blue-200 text-blue-700 rounded-full text-[9px] font-bold">
+                            <span class="material-symbols-outlined text-[10px]">directions_walk</span> A PIE
+                        </span>`;
+                } else {
+                    methodBadge = `
+                        <span class="inline-flex items-center gap-0.5 px-2 py-0.5 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-full text-[9px] font-bold">
+                            <span class="material-symbols-outlined text-[10px]">directions_car</span> AUTO
+                        </span>`;
+                }
+
+                let auditStatus = '';
+                if (log.parentConfirmed) {
+                    auditStatus = `
+                        <span class="px-2 py-1 rounded-full text-[9px] font-bold bg-green-100 text-green-800 flex items-center justify-center gap-1">
+                            <span class="material-symbols-outlined text-xs" style="font-variation-settings: 'FILL' 1;">verified</span>
+                            RECIBIDO Y RESPALDADO
+                        </span>`;
+                } else {
+                    auditStatus = `
+                        <span class="px-2 py-1 rounded-full text-[9px] font-bold bg-amber-100 text-amber-800 flex items-center justify-center gap-1 animate-pulse">
+                            <span class="material-symbols-outlined text-xs">hourglass_top</span>
+                            ESPERA DE FIRMA PADRE
+                        </span>`;
+                }
+
+                const tr = document.createElement('tr');
+                tr.className = 'border-b border-outline-variant/20 hover:bg-surface-container-low transition-all';
+                tr.innerHTML = `
+                    <td class="p-3">
+                        <div class="flex items-center gap-2">
+                            <img src="${student.avatar}" class="w-8 h-8 rounded-full object-cover border border-outline-variant/30 flex-shrink-0" alt="" />
+                            <div>
+                                <p class="font-bold text-primary text-xs uppercase">${log.studentName}</p>
+                                <p class="text-[9px] text-outline">${log.date}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="p-3 font-bold text-on-surface-variant">${log.group}</td>
+                    <td class="p-3">
+                        <p class="font-bold text-primary text-xs">${log.teacherName}</p>
+                        <p class="text-[9px] text-outline">Despachado a las ${log.timeTeacher}</p>
+                    </td>
+                    <td class="p-3">
+                        ${log.parentConfirmed ? `
+                            <p class="font-bold text-green-800 text-xs">${log.parentConfirmed ? 'Familiar Recogió ✓' : 'Esperando'}</p>
+                            <p class="text-[9px] text-outline">Confirmación: ${log.timeParent}</p>
+                        ` : `
+                            <span class="text-outline italic text-[10px]">Sin firmar de recibido</span>
+                        `}
+                    </td>
+                    <td class="p-3 text-center">${methodBadge}</td>
+                    <td class="p-3 text-center">${auditStatus}</td>
+                `;
+                tbody.appendChild(tr);
+            });
         }
 
         // Lógica de Niveles y Grupos en Monitor
@@ -1212,10 +1536,10 @@
                     badgeClass = 'bg-red-700 text-white';
                     badgeText = '¡URGENTE!';
                     buttonHTML = `
-                        <div class="flex gap-2 w-full">
-                            <button onclick="confirmPickup('${student.id}')" class="w-1/2 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg font-button-text text-xs transition-all shadow-sm">CONFIRMAR</button>
-                            <button onclick="removeUrgent('${student.id}')" class="w-1/2 bg-red-800 hover:bg-red-900 text-white py-2 rounded-lg font-button-text text-xs transition-all shadow-sm">ATENDIDO</button>
-                        </div>`;
+                        <button onclick="confirmPickup('${student.id}')" class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg font-button-text text-xs transition-all shadow-sm flex items-center justify-center gap-1">
+                            CONFIRMAR ENTREGA
+                            <span class="material-symbols-outlined text-sm">check_circle</span>
+                        </button>`;
                     pulseClass = 'animate-pulse shadow-2xl ring-4 ring-red-200';
                     timerIcon = 'warning';
                 } else if (student.status === 'EN_FILA') {
@@ -1247,6 +1571,32 @@
                 card.className = `bg-white border ${borderClass} rounded-xl p-3 shadow-sm relative overflow-hidden ${pulseClass} flex flex-col transition-all hover:shadow-md hover:translate-y-[-2px]`;
                 card.id = `card-${student.id}`;
 
+                let methodBadgeHTML = '';
+                if (student.pickupMethod === 'WALK') {
+                    methodBadgeHTML = `
+                        <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-blue-50 border border-blue-200 text-blue-700 rounded text-[9px] font-bold">
+                            <span class="material-symbols-outlined text-[10px]">directions_walk</span> A PIE
+                        </span>`;
+                } else {
+                    methodBadgeHTML = `
+                        <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded text-[9px] font-bold">
+                            <span class="material-symbols-outlined text-[10px]">directions_car</span> AUTO
+                        </span>`;
+                }
+
+                // Buscar hermanos activos (que compartan el mismo padre)
+                const siblings = students.filter(s => s.id !== student.id && s.parent === student.parent);
+                let siblingBadgeHTML = '';
+                if (siblings.length > 0) {
+                    const siblingNames = siblings.map(s => s.name.split(' ')[0]);
+                    siblingBadgeHTML = `
+                        <div class="mt-1 bg-indigo-50 border border-indigo-200 text-indigo-700 px-2 py-0.5 rounded text-[9px] font-bold flex items-center gap-1 w-fit">
+                            <span class="material-symbols-outlined text-[10px]" style="font-variation-settings: 'FILL' 1;">group</span>
+                            Hermano de: ${siblingNames.join(', ')}
+                        </div>
+                    `;
+                }
+
                 card.innerHTML = `
                     <div class="flex justify-between items-center mb-2">
                         <div class="relative">
@@ -1256,11 +1606,15 @@
                                 <span class="material-symbols-outlined text-[10px] block">${timerIcon}</span>
                             </div>` : ''}
                         </div>
-                        <span class="${badgeClass} px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider">${badgeText}</span>
+                        <div class="flex flex-col items-end gap-1">
+                            <span class="${badgeClass} px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider">${badgeText}</span>
+                            ${methodBadgeHTML}
+                        </div>
                     </div>
                     <div class="mb-2 flex-1">
                         <h3 class="font-bold text-sm text-primary truncate">${student.name}</h3>
                         <p class="text-on-surface-variant text-[10px] font-bold uppercase">${student.grade} · ${student.group || ''}</p>
+                        ${siblingBadgeHTML}
                     </div>
                     
                     <!-- Tarjeta del Padre/Madre -->
@@ -1360,6 +1714,15 @@
             // Persistir la confirmación diaria
             saveConfirmedToStorage(studentId);
             student.status = 'CONFIRMADO';
+            
+            // Registrar en la Bitácora local de la DB
+            DeliveryLogService.logTeacherConfirm(
+                studentId,
+                student.name,
+                student.group,
+                'Administrador / Guardia',
+                student.pickupMethod
+            );
             
             // Emitir evento al Padre
             channel.postMessage({
@@ -2407,6 +2770,221 @@
         }
 
         // Lógica de Carga Masiva (CSV / Excel)
+        // ═══════════════════════════════════════════════════════════
+        //  GESTIÓN DE USUARIOS MAESTROS
+        // ═══════════════════════════════════════════════════════════
+
+        function renderTeacherUsers() {
+            const tbody = document.getElementById('teacher-users-tbody');
+            if (!tbody) return;
+            const search = (document.getElementById('teacher-users-search')?.value || '').toLowerCase().trim();
+            const teachers = TeacherService.getAll().filter(t =>
+                t.nombre.toLowerCase().includes(search) || t.email.toLowerCase().includes(search)
+            );
+
+            tbody.innerHTML = '';
+            if (teachers.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-outline italic">No hay maestros registrados.</td></tr>`;
+                return;
+            }
+
+            teachers.forEach(teacher => {
+                const lastLogin = teacher.lastLogin
+                    ? new Date(teacher.lastLogin).toLocaleString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+                    : 'Nunca';
+
+                const tr = document.createElement('tr');
+                tr.className = 'border-b border-outline-variant/20 hover:bg-surface-container-low transition-all';
+                tr.innerHTML = `
+                    <td class="p-3">
+                        <div class="flex items-center gap-2">
+                            <img src="${teacher.avatar}" class="w-8 h-8 rounded-full object-cover border border-outline-variant/30 flex-shrink-0" alt="" />
+                            <div>
+                                <p class="font-bold text-green-800 text-xs">${teacher.nombre}</p>
+                                ${teacher.tempPassword ? '<span class="text-[9px] bg-yellow-100 text-yellow-700 font-bold px-1.5 py-0.5 rounded-full">CONTRASEÑA TEMPORAL</span>' : ''}
+                            </div>
+                        </div>
+                    </td>
+                    <td class="p-3 text-on-surface-variant font-mono text-[10px]">${teacher.email}</td>
+                    <td class="p-3">
+                        <span class="px-2 py-1 bg-green-50 border border-green-200 text-green-800 rounded-full text-[9px] font-bold uppercase">${teacher.level || '–'}</span>
+                    </td>
+                    <td class="p-3">
+                        <div class="flex flex-wrap gap-1">
+                            ${(teacher.groups || []).length === 0
+                                ? '<span class="text-outline italic text-[10px]">Sin grupos</span>'
+                                : (teacher.groups || []).map(g => `<span class="px-2 py-0.5 bg-green-50 border border-green-200 text-green-800 rounded-full text-[9px] font-bold uppercase">${g}</span>`).join('')
+                            }
+                        </div>
+                    </td>
+                    <td class="p-3">
+                        <span class="px-2 py-1 rounded-full text-[9px] font-bold ${teacher.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                            ${teacher.active ? 'ACTIVO' : 'INACTIVO'}
+                        </span>
+                    </td>
+                    <td class="p-3 text-on-surface-variant text-[10px]">${lastLogin}</td>
+                    <td class="p-3">
+                        <div class="flex items-center justify-center gap-1 flex-wrap">
+                            <button onclick="openTeacherModal('${teacher.id}')" class="p-1 hover:bg-green-100 text-green-800 rounded-full transition-colors" title="Editar">
+                                <span class="material-symbols-outlined text-sm">edit</span>
+                            </button>
+                            <button onclick="resetTeacherPassword('${teacher.id}')" class="p-1 hover:bg-yellow-100 text-yellow-600 rounded-full transition-colors" title="Resetear contraseña">
+                                <span class="material-symbols-outlined text-sm">key</span>
+                            </button>
+                            <button onclick="toggleTeacherActive('${teacher.id}')" class="p-1 hover:bg-orange-100 text-orange-600 rounded-full transition-colors" title="Activar/Desactivar">
+                                <span class="material-symbols-outlined text-sm">${teacher.active ? 'block' : 'check_circle'}</span>
+                            </button>
+                            <button onclick="deleteTeacherUser('${teacher.id}')" class="p-1 hover:bg-red-100 text-red-600 rounded-full transition-colors" title="Eliminar">
+                                <span class="material-symbols-outlined text-sm">delete</span>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function openTeacherModal(teacherId = '') {
+            const modal = document.getElementById('teacher-modal');
+            const title = document.getElementById('modal-teacher-title');
+            const pwField = document.getElementById('m-tch-password-field');
+            const editNote = document.getElementById('m-tch-edit-password-note');
+
+            document.getElementById('modal-teacher-id').value = teacherId;
+            document.getElementById('m-tch-nombre').value = '';
+            document.getElementById('m-tch-email').value = '';
+            document.getElementById('m-tch-password').value = '';
+            document.getElementById('m-tch-level').value = '';
+            document.getElementById('m-tch-groups-grid').innerHTML = '<p class="text-xs text-outline italic col-span-full">Selecciona un nivel para ver los grupos.</p>';
+
+            if (teacherId) {
+                title.innerText = 'Editar Maestro';
+                const teacher = TeacherService.getAll().find(t => t.id === teacherId);
+                if (!teacher) return;
+                document.getElementById('m-tch-nombre').value = teacher.nombre;
+                document.getElementById('m-tch-email').value = teacher.email;
+                document.getElementById('m-tch-level').value = teacher.level || '';
+                pwField.classList.add('hidden');
+                editNote.classList.remove('hidden');
+                populateTeacherGroupCheckboxes(teacher.groups || []);
+            } else {
+                title.innerText = 'Nuevo Maestro';
+                pwField.classList.remove('hidden');
+                editNote.classList.add('hidden');
+                generateTeacherPassword();
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeTeacherModal() {
+            document.getElementById('teacher-modal').classList.add('hidden');
+        }
+
+        function generateTeacherPassword() {
+            const words = ['Clase', 'Escuela', 'Saber', 'Ciencia', 'Libro', 'Lápiz', 'Mente', 'Aula', 'Saber', 'Nota'];
+            const nums = Math.floor(1000 + Math.random() * 9000);
+            const word = words[Math.floor(Math.random() * words.length)];
+            const el = document.getElementById('m-tch-password');
+            if (el) el.value = word + nums;
+        }
+
+        function populateTeacherGroupCheckboxes(selectedGroups = []) {
+            const level = document.getElementById('m-tch-level').value;
+            const grid = document.getElementById('m-tch-groups-grid');
+            grid.innerHTML = '';
+
+            const allGroups = getStoredGroups();
+            const groupsForLevel = allGroups[level] || [];
+
+            if (!level || groupsForLevel.length === 0) {
+                grid.innerHTML = '<p class="text-xs text-outline italic col-span-full">No hay grupos configurados para este nivel.</p>';
+                return;
+            }
+
+            groupsForLevel.forEach(g => {
+                const label = document.createElement('label');
+                label.className = 'flex items-center gap-2 p-2 rounded-lg border border-outline-variant/20 bg-white cursor-pointer hover:bg-surface-container-low transition-all text-xs';
+                label.innerHTML = `
+                    <input type="checkbox" data-group="${g}" class="tch-group-check w-3.5 h-3.5 text-green-700 rounded border-outline-variant" ${selectedGroups.includes(g) ? 'checked' : ''} />
+                    <span class="font-bold text-green-800 text-[10px] uppercase">${g}</span>
+                `;
+                grid.appendChild(label);
+            });
+        }
+
+        function saveTeacherModal() {
+            const teacherId = document.getElementById('modal-teacher-id').value;
+            const nombre = document.getElementById('m-tch-nombre').value.trim();
+            const email = document.getElementById('m-tch-email').value.trim();
+            const level = document.getElementById('m-tch-level').value;
+            const password = document.getElementById('m-tch-password').value.trim();
+
+            if (!nombre || !email) {
+                showToast('Datos Incompletos', 'Nombre y correo son obligatorios.', null);
+                return;
+            }
+
+            // Collect checked groups
+            const checkedGroups = [];
+            document.querySelectorAll('.tch-group-check:checked').forEach(cb => {
+                checkedGroups.push(cb.dataset.group);
+            });
+
+            let result;
+            if (teacherId) {
+                result = TeacherService.update(teacherId, { nombre, email, level, groups: checkedGroups });
+            } else {
+                if (!password || password.length < 6) {
+                    showToast('Contraseña Inválida', 'La contraseña debe tener al menos 6 caracteres.', null);
+                    return;
+                }
+                result = TeacherService.create({ nombre, email, password, level, groups: checkedGroups });
+            }
+
+            if (!result.success) {
+                showToast('Error', result.error, null);
+                return;
+            }
+
+            closeTeacherModal();
+            renderTeacherUsers();
+            const action = teacherId ? 'actualizado' : 'creado';
+            showToast(`Maestro ${action}`, `${nombre} (${email}) fue ${action} correctamente.`, null);
+        }
+
+        function resetTeacherPassword(teacherId) {
+            const teacher = TeacherService.getAll().find(t => t.id === teacherId);
+            if (!teacher) return;
+            const result = TeacherService.resetPassword(teacherId);
+            if (result.success) {
+                renderTeacherUsers();
+                showToast('Contraseña Reseteada',
+                    `Nueva contraseña temporal para ${teacher.nombre}: "${result.tempPassword}". El maestro deberá cambiarla en su próximo acceso.`,
+                    null);
+            }
+        }
+
+        function toggleTeacherActive(teacherId) {
+            const result = TeacherService.toggleActive(teacherId);
+            if (result.success) {
+                renderTeacherUsers();
+                showToast('Cuenta Actualizada', `La cuenta del maestro fue ${result.active ? 'activada' : 'desactivada'}.`, null);
+            }
+        }
+
+        function deleteTeacherUser(teacherId) {
+            const teacher = TeacherService.getAll().find(t => t.id === teacherId);
+            if (!teacher) return;
+            if (confirm(`¿Eliminar al maestro ${teacher.nombre} (${teacher.email})? Esta acción no se puede deshacer.`)) {
+                TeacherService.delete(teacherId);
+                renderTeacherUsers();
+                showToast('Maestro Eliminado', `Se eliminó a ${teacher.nombre} del sistema.`, null);
+            }
+        }
+
+
+
         let parsedCsvData = [];
 
         // Generar y descargar plantilla
@@ -2665,6 +3243,7 @@
                     }
 
                     student.status = finalStatus;
+                    student.pickupMethod = data.pickupMethod || 'CAR';
                     student.lastUpdate = data.time;
 
                     if (finalStatus === 'URGENTE') {
@@ -2724,8 +3303,195 @@
         // Renderizado del padrón inicial al cargar la página
         document.addEventListener('DOMContentLoaded', () => {
             initData();
+            
+            // Verificar si hay sesión directiva guardada
+            const isLogged = sessionStorage.getItem('superadmin_logged') === 'true';
+            showDirectorViews(isLogged);
+            
             switchModule('MONITOR');
         });
+
+        // ═══════════════════════════════════════════════════════
+        //  EXPORTS TO EXCEL (SHEETJS - ADMIN)
+        // ═══════════════════════════════════════════════════════
+        function exportTeacherPerformanceToExcel() {
+            const teachersList = TeacherService.getAll();
+            const logs = DeliveryLogService.getLogs();
+
+            if (teachersList.length === 0) {
+                showToast('Reporte Vacío', 'No hay maestros registrados en el sistema.', null);
+                return;
+            }
+
+            const rows = teachersList.map(t => {
+                // Filtrar logs de este maestro
+                const myLogs = logs.filter(l => l.teacherName.toLowerCase() === t.nombre.toLowerCase() || l.teacherName.includes(t.nombre));
+                const totalDelivered = myLogs.length;
+                
+                // Calcular tiempo promedio
+                let avgWait = 0;
+                let waitTimes = [];
+                let parentConfirmedCount = 0;
+
+                myLogs.forEach(l => {
+                    if (l.parentConfirmed) parentConfirmedCount++;
+                    if (l.parentConfirmed && l.timeTeacher && l.timeParent) {
+                        const [h1, m1] = l.timeTeacher.split(':').map(Number);
+                        const [h2, m2] = l.timeParent.split(':').map(Number);
+                        waitTimes.push((h2*60 + m2) - (h1*60 + m1));
+                    }
+                });
+
+                if (waitTimes.length > 0) {
+                    avgWait = (waitTimes.reduce((a,b) => a+b, 0) / waitTimes.length).toFixed(1);
+                }
+
+                const adherence = totalDelivered > 0 ? ((parentConfirmedCount / totalDelivered) * 100).toFixed(1) + '%' : '0%';
+
+                return {
+                    'ID Maestro': t.id,
+                    'Nombre Completo': t.nombre,
+                    'Nivel Principal': t.level || 'N/A',
+                    'Grupos a Cargo': (t.groups || []).join(', '),
+                    'Total Entregas': totalDelivered,
+                    'Firmadas de Recibido': parentConfirmedCount,
+                    'Tasa Confirmación': adherence,
+                    'Tiempo Promedio Despacho (min)': totalDelivered > 0 && avgWait > 0 ? `${avgWait} min` : 'N/A'
+                };
+            });
+
+            const worksheet = XLSX.utils.json_to_sheet(rows);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Rendimiento Maestros');
+
+            // Auto-ajustar ancho de columnas
+            const maxLens = {};
+            rows.forEach(row => {
+                Object.entries(row).forEach(([col, val]) => {
+                    const strVal = String(val || '');
+                    maxLens[col] = Math.max(maxLens[col] || col.length, strVal.length);
+                });
+            });
+            worksheet['!cols'] = Object.keys(maxLens).map(col => ({ wch: maxLens[col] + 3 }));
+
+            XLSX.writeFile(workbook, 'Reporte_Rendimiento_Maestros.xlsx');
+            showToast('Reporte Descargado ✓', 'Métricas de maestros exportadas exitosamente.', null);
+        }
+
+        function exportAuditBitacoraToExcel() {
+            const logs = DeliveryLogService.getLogs();
+
+            if (logs.length === 0) {
+                showToast('Reporte Vacío', 'No hay registros de entregas en la bitácora aún.', null);
+                return;
+            }
+
+            const rows = logs.map(l => {
+                let waitTime = 'N/A';
+                if (l.parentConfirmed && l.timeTeacher && l.timeParent) {
+                    const [h1, m1] = l.timeTeacher.split(':').map(Number);
+                    const [h2, m2] = l.timeParent.split(':').map(Number);
+                    waitTime = `${(h2*60 + m2) - (h1*60 + m1)} min`;
+                }
+                return {
+                    'Fecha de Operación': l.date,
+                    'Nombre del Alumno': l.studentName,
+                    'Grado y Grupo': l.group,
+                    'Método de Recogida': l.pickupMethod === 'WALK' ? 'A PIE (PUERTA)' : 'AUTO (CARRUSEL)',
+                    'Despachó (Personal)': l.teacherName,
+                    'Hora Entrega Escuela': l.timeTeacher || 'N/A',
+                    'Hora Confirmación Familiar': l.timeParent || 'Esperando',
+                    'Tiempo de Espera': waitTime,
+                    'Respaldo Digital': l.parentConfirmed ? 'ENTREGA RESPALDADA' : 'PENDIENTE'
+                };
+            });
+
+            const worksheet = XLSX.utils.json_to_sheet(rows);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Bitácora Completa');
+
+            // Auto-ajustar ancho de columnas
+            const maxLens = {};
+            rows.forEach(row => {
+                Object.entries(row).forEach(([col, val]) => {
+                    const strVal = String(val || '');
+                    maxLens[col] = Math.max(maxLens[col] || col.length, strVal.length);
+                });
+            });
+            worksheet['!cols'] = Object.keys(maxLens).map(col => ({ wch: maxLens[col] + 3 }));
+
+            XLSX.writeFile(workbook, 'Bitacora_Auditoria_Entregas.xlsx');
+            showToast('Bitácora Exportada ✓', 'El historial se exportó exitosamente.', null);
+        }
+
+        function exportCompleteCatalogsToExcel() {
+            // Cargar datos
+            const allStudentsList = getStoredStudents();
+            const parentUsersList = getStoredParentUsers();
+            const teacherUsersList = TeacherService.getAll();
+
+            const workbook = XLSX.utils.book_new();
+
+            // 1. Hoja Alumnos
+            const studentRows = allStudentsList.map(s => ({
+                'ID Alumno': s.id,
+                'Nombre Completo': s.name,
+                'Nivel Escolar': s.level,
+                'Grado': s.grade,
+                'Grupo': s.group,
+                'Fecha Cumpleaños': s.birthday,
+                'Padre Vinculado': s.parent || 'No vinculado',
+                'Total Familiares Autorizados': s.family ? s.family.length : 0
+            }));
+            const wsStudents = XLSX.utils.json_to_sheet(studentRows);
+            XLSX.utils.book_append_sheet(workbook, wsStudents, 'Alumnos');
+
+            // 2. Hoja Padres
+            const parentRows = parentUsersList.map(p => {
+                // Obtener nombres de hijos vinculados
+                const kidsNames = allStudentsList.filter(s => (p.studentIds || []).includes(s.id)).map(s => s.name);
+                return {
+                    'ID Padre': p.id,
+                    'Nombre Completo': p.nombre,
+                    'Correo Electrónico': p.email,
+                    'Teléfono Contacto': p.phone || 'N/A',
+                    'Alumnos Vinculados': kidsNames.join(', '),
+                    'Estado': p.active ? 'ACTIVO' : 'INACTIVO',
+                    'Último Acceso': p.lastLogin ? p.lastLogin.slice(0, 10) + ' ' + p.lastLogin.slice(11, 16) : 'Nunca'
+                };
+            });
+            const wsParents = XLSX.utils.json_to_sheet(parentRows);
+            XLSX.utils.book_append_sheet(workbook, wsParents, 'Padres y Tutores');
+
+            // 3. Hoja Maestros
+            const teacherRows = teacherUsersList.map(t => ({
+                'ID Maestro': t.id,
+                'Nombre Completo': t.nombre,
+                'Correo Electrónico': t.email,
+                'Nivel Educativo': t.level,
+                'Grupos Asignados': (t.groups || []).join(', '),
+                'Estado': t.active ? 'ACTIVO' : 'INACTIVO',
+                'Último Acceso': t.lastLogin ? t.lastLogin.slice(0, 10) + ' ' + t.lastLogin.slice(11, 16) : 'Nunca'
+            }));
+            const wsTeachers = XLSX.utils.json_to_sheet(teacherRows);
+            XLSX.utils.book_append_sheet(workbook, wsTeachers, 'Maestros');
+
+            // Auto-ajustar ancho de todas las hojas
+            [wsStudents, wsParents, wsTeachers].forEach((ws, idx) => {
+                const data = idx === 0 ? studentRows : idx === 1 ? parentRows : teacherRows;
+                const maxLens = {};
+                data.forEach(row => {
+                    Object.entries(row).forEach(([col, val]) => {
+                        const strVal = String(val || '');
+                        maxLens[col] = Math.max(maxLens[col] || col.length, strVal.length);
+                    });
+                });
+                ws['!cols'] = Object.keys(maxLens).map(col => ({ wch: maxLens[col] + 3 }));
+            });
+
+            XLSX.writeFile(workbook, 'Catalogos_Generales_Escuela.xlsx');
+            showToast('Catálogos Descargados ✓', 'Se descargó el archivo multi-hoja de catálogos.', null);
+        }
     </script>
 </body>
 
