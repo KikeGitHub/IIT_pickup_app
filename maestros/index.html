@@ -962,6 +962,9 @@ function tConfirmPickup(studentId) {
     const now = new Date();
     const timeStr = now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false });
 
+    // Encontrar en el array general de estudiantes y actualizar su estatus
+    const generalStudent = tAllStudents.find(s => s.id === studentId);
+    if (generalStudent) generalStudent.status = 'CONFIRMADO';
     student.status = 'CONFIRMADO';
     tDeliveredCount++;
 
@@ -974,8 +977,13 @@ function tConfirmPickup(studentId) {
         student.pickupMethod
     );
 
-    // 2. Notificar por Broadcast a las demás pantallas
+    // 2. Guardar en la base de datos de estudiantes y confirmación diaria para persistencia
+    saveConfirmedToStorage(studentId);
+    saveStoredStudents(tAllStudents);
+
+    // 3. Notificar por Broadcast a las demás pantallas (Padre y Administrador)
     tChannel.postMessage({ type: 'ADMIN_CONFIRM', studentId, time: timeStr });
+    tChannel.postMessage({ type: 'DATABASE_UPDATED' });
 
     const cardEl = document.getElementById(`t-card-${studentId}`);
     if (cardEl) {
@@ -1279,6 +1287,22 @@ function tRenderKpiDispatchList() {
         `;
         list.appendChild(item);
     });
+}
+
+// Helpers persistencia diaria
+function getTodayKey() {
+    return 'confirmed_' + new Date().toISOString().slice(0, 10);
+}
+
+function saveConfirmedToStorage(studentId) {
+    try {
+        const key = getTodayKey();
+        const arr = JSON.parse(localStorage.getItem(key) || '[]');
+        if (!arr.includes(studentId)) {
+            arr.push(studentId);
+            localStorage.setItem(key, JSON.stringify(arr));
+        }
+    } catch (e) { }
 }
 
 function tShowToast(title, message, avatarUrl) {

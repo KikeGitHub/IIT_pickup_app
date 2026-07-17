@@ -1715,6 +1715,9 @@
             saveConfirmedToStorage(studentId);
             student.status = 'CONFIRMADO';
             
+            // Guardar en la base de datos local para que los cambios persistan y se reflejen en maestros
+            saveStoredStudents(students);
+            
             // Registrar en la Bitácora local de la DB
             DeliveryLogService.logTeacherConfirm(
                 studentId,
@@ -1724,12 +1727,13 @@
                 student.pickupMethod
             );
             
-            // Emitir evento al Padre
+            // Emitir evento al Padre y notificar la actualización de BD a los maestros
             channel.postMessage({
                 type: 'ADMIN_CONFIRM',
                 studentId: studentId,
                 time: timeStr
             });
+            channel.postMessage({ type: 'DATABASE_UPDATED' });
 
             // Animación de salida de la tarjeta
             const cardEl = document.getElementById(`card-${studentId}`);
