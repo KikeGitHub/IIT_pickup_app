@@ -40,6 +40,12 @@
     flex-shrink: 0;
   }
 
+  .brand-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
   .title-row {
     display: flex;
     align-items: center;
@@ -61,17 +67,76 @@
     color: #86efac;
     border-radius: v.$radius-full;
     font-size: 10px;
-    font-weight: bold;
-    text-transform: uppercase;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+
+    &--admin {
+      background: rgba(99, 102, 241, 0.2);
+      border-color: rgba(99, 102, 241, 0.4);
+      color: #c7d2fe;
+    }
   }
 
-  .brand-sub {
-    margin: 0;
+  .brand-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
     font-size: 12px;
-    color: rgba(255, 255, 255, 0.7);
 
-    strong { color: #f8fafc; }
-    .groups-sub { color: #93c5fd; font-weight: 500; }
+    .teacher-name {
+      color: #f8fafc;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .groups-pills {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .header-group-pill {
+      padding: 1px 7px;
+      background: rgba(59, 130, 246, 0.2);
+      border: 1px solid rgba(59, 130, 246, 0.35);
+      color: #93c5fd;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .header-level-pill {
+      padding: 1px 7px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #e2e8f0;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .header-time-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 1px 7px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 4px;
+      color: rgba(255, 255, 255, 0.85);
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+
+      .time-icon {
+        width: 12px;
+        height: 12px;
+        color: #94a3b8;
+      }
+    }
   }
 }
 

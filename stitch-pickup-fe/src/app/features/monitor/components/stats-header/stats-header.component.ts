@@ -35,13 +35,8 @@ export class StatsHeaderComponent {
     return new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
   }
 
-  get teacherGroupsLabel(): string {
+  get teacherGroups(): string[] {
     const user = this.authService.currentUser();
-    if (!user) return '';
-    if (user.role === 'ADMIN') return 'Super Admin (Todos los Niveles)';
-    if (user.groups && user.groups.length > 0) {
-      return 'Grupos: ' + user.groups.join(', ');
-    }
-    return user.level || 'Personal Escolar';
+    return user?.groups || [];
   }
 }
