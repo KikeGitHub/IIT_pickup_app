@@ -48,30 +48,35 @@ export class WebSocketService implements OnDestroy {
 
   // ─── Public API ─────────────────────────────────────────────────────────────
 
-  connect(token: string): void {
+  connect(token?: string): void {
     if (this.stompClient?.active) {
       return;
     }
 
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
     this.stompClient = new Client({
       webSocketFactory: () => new SockJS(`${environment.wsUrl}`),
-      connectHeaders: {
-        Authorization: `Bearer ${token}`,
-      },
+      connectHeaders: headers,
       debug: (msg: string) => {
         if (!environment.production) console.debug('[STOMP]', msg);
       },
-      reconnectDelay: 5000,
+      reconnectDelay: 3000,
       heartbeatIncoming: 4000,
       heartbeatOutgoing: 4000,
     });
 
     this.stompClient.onConnect = () => {
+      console.info('[WebSocket] ✅ Conectado exitosamente al broker STOMP.');
       this.connected$.next(true);
       this.subscribeToTopics();
     };
 
     this.stompClient.onDisconnect = () => {
+      console.warn('[WebSocket] ⚠️ Desconectado del broker.');
       this.connected$.next(false);
     };
 
@@ -102,7 +107,7 @@ export class WebSocketService implements OnDestroy {
   // ─── Private ────────────────────────────────────────────────────────────────
 
   private subscribeToTopics(): void {
-    if (!this.stompClient) return;
+    if (!this.stompClient || !this.stompClient.connected) return;
 
     // School alerts topic
     const alertSub = this.stompClient.subscribe(
@@ -110,6 +115,7 @@ export class WebSocketService implements OnDestroy {
       (message: IMessage) => {
         try {
           const event = JSON.parse(message.body) as ParentAlertEvent;
+          console.info('[WebSocket] 🔔 Nueva Alerta Recibida por Broadcast:', event);
           this.parentAlert$.next(event);
         } catch (e) {
           console.error('[STOMP] Failed to parse alert event', e);
@@ -124,6 +130,7 @@ export class WebSocketService implements OnDestroy {
       (message: IMessage) => {
         try {
           const event = JSON.parse(message.body) as DeliveryDispatchedEvent;
+          console.info('[WebSocket] 🚗 Evento de Entrega Recibido:', event);
           this.deliveryEvent$.next(event);
         } catch (e) {
           console.error('[STOMP] Failed to parse delivery event', e);

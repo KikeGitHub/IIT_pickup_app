@@ -148,22 +148,34 @@ export class MonitorService {
     ).subscribe();
   }
 
-  // ─── Private: WebSocket ──────────────────────────────────────────────────
   private subscribeToWebSocket(): void {
     // 1. Listen for new parent proximity alerts
     this.ws.onParentAlert().subscribe(event => {
+      console.info('[MonitorService] 🔔 Evaluando alerta en monitor:', event);
       const currentUser = this.auth.currentUser();
 
       // STRICT TEACHER GROUP FILTERING:
       // If user is a TEACHER, verify if student belongs to one of their assigned groups
       if (currentUser && currentUser.role === 'TEACHER') {
         const teacherGroups: string[] = currentUser.groups || [];
-        const matchesGroup = teacherGroups.some(g =>
-          g.trim().toLowerCase() === (event.groupName || '').trim().toLowerCase()
-        );
+        const eventGroup = (event.groupName || '').trim().toLowerCase();
+        const eventLevelGroup = `${event.level}-${event.groupName}`.trim().toLowerCase();
+
+        // Match if no groups specified, or if matches group name, or LEVEL-GROUP format
+        const matchesGroup = teacherGroups.length === 0 || teacherGroups.some(g => {
+          const gNorm = g.trim().toLowerCase();
+          return (
+            gNorm === eventGroup ||
+            gNorm === eventLevelGroup ||
+            gNorm.endsWith(`-${eventGroup}`) ||
+            gNorm.includes(eventGroup)
+          );
+        }) || (currentUser.level && currentUser.level.toUpperCase() === event.level.toUpperCase());
+
+        console.info(`[MonitorService] Alerta Alumno: "${event.studentName}" (Grupo: "${event.groupName}", Nivel: "${event.level}"). Grupos Docente:`, teacherGroups, `=> Coincide: ${matchesGroup}`);
 
         if (!matchesGroup) {
-          // Ignore alert from another teacher's group completely
+          console.info('[MonitorService] ⏭️ Alerta ignorada (no pertenece a los grupos de este maestro).');
           return;
         }
       }
