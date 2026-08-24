@@ -65,6 +65,29 @@ public class AuthController {
 
     // ─── Cambio de Contraseña ─────────────────────────────────────────────────
 
+    @PostMapping("/change-password")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(
+        summary = "Cambiar contraseña (unificado)",
+        description = "Permite a cualquier usuario autenticado (Padre, Maestro, Admin) cambiar su contraseña temporal o actual."
+    )
+    public ResponseEntity<Map<String, String>> changePassword(
+            @Valid @RequestBody ChangePasswordRequest request,
+            HttpServletRequest httpRequest) {
+
+        String token = extractRawToken(httpRequest);
+        UUID userId = UUID.fromString(tokenProvider.getUserIdFromToken(token));
+        String role = tokenProvider.getRoleFromToken(token);
+
+        if ("PARENT".equals(role)) {
+            authService.changePasswordParent(userId, request);
+        } else {
+            authService.changePasswordTeacher(userId, request);
+        }
+
+        return ResponseEntity.ok(Map.of("message", "Contraseña actualizada exitosamente."));
+    }
+
     @PostMapping("/parent/change-password")
     @PreAuthorize("hasRole('PARENT')")
     @SecurityRequirement(name = "bearerAuth")
