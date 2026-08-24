@@ -59,7 +59,6 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
   readonly editingStudent = signal<Student | null>(null);
   editAvatarUrl = '';
   editBirthday = '';
-  editTutors: Array<{ name: string; relationship: string; phone: string; authorized: boolean }> = [];
   editError = '';
   isSavingStudent = signal<boolean>(false);
 
@@ -145,22 +144,10 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
     this.pendingDelivery.set(null);
   }
 
-  // ─── Edit Student Profile by Parent ──────────────────────────────────────
   onEditStudent(student: Student): void {
     this.editingStudent.set(student);
     this.editAvatarUrl = student.avatarUrl || '';
     this.editBirthday = '';
-    this.editTutors = student.familyMembers ? student.familyMembers.map(m => ({
-      name: m.name,
-      relationship: m.relationship,
-      phone: m.phone || '',
-      authorized: m.authorized !== false
-    })) : [];
-
-    while (this.editTutors.length < 2) {
-      this.editTutors.push({ name: '', relationship: 'Familiar', phone: '', authorized: true });
-    }
-
     this.editError = '';
     this.showEditModal.set(true);
   }
@@ -190,16 +177,6 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
     this.editingStudent.set(null);
   }
 
-  addTutorRow(): void {
-    if (this.editTutors.length < 3) {
-      this.editTutors.push({ name: '', relationship: 'Familiar', phone: '', authorized: true });
-    }
-  }
-
-  removeTutorRow(index: number): void {
-    this.editTutors.splice(index, 1);
-  }
-
   saveStudentProfile(): void {
     const student = this.editingStudent();
     if (!student) return;
@@ -207,19 +184,16 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
     this.isSavingStudent.set(true);
     this.editError = '';
 
-    const validTutors = this.editTutors.filter(t => t.name.trim().length > 0);
-
     const payload = {
       avatarUrl: this.editAvatarUrl.trim() || undefined,
-      birthday: this.editBirthday || undefined,
-      familyMembers: validTutors
+      birthday: this.editBirthday || undefined
     };
 
     this.studentService.updateStudentByParent(student.id, payload).subscribe({
       next: () => {
         this.isSavingStudent.set(false);
         this.closeEditModal();
-        this.notification.success('Perfil y fotografía del alumno actualizados.');
+        this.notification.success('Fotografía y fecha de nacimiento actualizadas.');
       },
       error: (err) => {
         this.isSavingStudent.set(false);

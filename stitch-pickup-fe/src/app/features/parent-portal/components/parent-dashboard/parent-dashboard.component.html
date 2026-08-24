@@ -181,40 +181,6 @@
             <label for="pBirthday">Fecha de Nacimiento</label>
             <input id="pBirthday" type="date" [(ngModel)]="editBirthday" class="form-control" />
           </div>
-
-          <div class="tutors-section-parent">
-            <div class="tutors-header-row">
-              <h4>🛡️ Familiares / Tutores Autorizados para Recoger (Máx 3)</h4>
-              <button
-                *ngIf="editTutors.length < 3"
-                type="button"
-                class="btn-add-tutor"
-                (click)="addTutorRow()"
-              >
-                + Agregar Tutor
-              </button>
-            </div>
-
-            @for (t of editTutors; track $index) {
-              <div class="tutor-edit-row">
-                <div class="tutor-fields">
-                  <input type="text" [(ngModel)]="t.name" placeholder="Nombre completo" class="form-control form-control-sm" />
-                  <div class="row-2">
-                    <select [(ngModel)]="t.relationship" class="form-control form-control-sm">
-                      <option value="Padre">Padre</option>
-                      <option value="Madre">Madre</option>
-                      <option value="Abuelo/a">Abuelo/a</option>
-                      <option value="Tío/a">Tío/a</option>
-                      <option value="Tutor">Tutor Legal</option>
-                      <option value="Chofer">Chofer/Transporte</option>
-                    </select>
-                    <input type="tel" [(ngModel)]="t.phone" placeholder="Teléfono" class="form-control form-control-sm" />
-                  </div>
-                </div>
-                <button type="button" class="btn-remove-tutor" (click)="removeTutorRow($index)" title="Eliminar">&times;</button>
-              </div>
-            }
-          </div>
         </div>
 
         <footer class="modal-footer">

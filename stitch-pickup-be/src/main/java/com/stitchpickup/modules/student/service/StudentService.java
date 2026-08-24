@@ -57,27 +57,6 @@ public class StudentService {
         }
 
         Student saved = studentRepository.save(student);
-
-        // Actualizar familiares autorizados si se envían
-        if (request.familyMembers() != null) {
-            List<FamilyMember> existing = familyMemberRepository.findByStudentId(saved.getId());
-            familyMemberRepository.deleteAll(existing);
-
-            for (FamilyMemberRequest fm : request.familyMembers()) {
-                if (fm.name() != null && !fm.name().isBlank()) {
-                    FamilyMember member = FamilyMember.builder()
-                            .student(saved)
-                            .name(fm.name().trim())
-                            .relationship(fm.relationship())
-                            .phone(fm.phone())
-                            .photoUrl(fm.photoUrl())
-                            .authorized(fm.authorized() != null ? fm.authorized() : true)
-                            .build();
-                    familyMemberRepository.save(member);
-                }
-            }
-        }
-
         return mapToStudentResponse(saved);
     }
 
