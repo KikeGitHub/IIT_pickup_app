@@ -15,7 +15,8 @@ export class NotificationSoundService {
 
   private getContext(): AudioContext {
     if (!this.audioContext) {
-      this.audioContext = new AudioContext();
+      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      this.audioContext = new AudioCtx();
     }
     return this.audioContext;
   }
@@ -28,13 +29,10 @@ export class NotificationSoundService {
     try {
       const ctx = this.getContext();
       if (ctx.state === 'suspended') {
-        ctx.resume();
+        ctx.resume().then(() => this.triggerAlertTones(ctx));
+      } else {
+        this.triggerAlertTones(ctx);
       }
-
-      // First tone - C5
-      this.playTone(ctx, 523.25, 0, 0.15, 0.3);
-      // Second tone - E5 (higher, pleasant resolution)
-      this.playTone(ctx, 659.25, 0.15, 0.2, 0.25);
     } catch (e) {
       console.warn('[Sound] Could not play alert sound:', e);
     }
@@ -48,17 +46,28 @@ export class NotificationSoundService {
     try {
       const ctx = this.getContext();
       if (ctx.state === 'suspended') {
-        ctx.resume();
+        ctx.resume().then(() => this.triggerUrgentTones(ctx));
+      } else {
+        this.triggerUrgentTones(ctx);
       }
-
-      // Three rapid urgent tones - descending
-      this.playTone(ctx, 880, 0, 0.12, 0.5);      // A5
-      this.playTone(ctx, 698.46, 0.15, 0.12, 0.5); // F5
-      this.playTone(ctx, 880, 0.30, 0.12, 0.5);    // A5
-      this.playTone(ctx, 698.46, 0.45, 0.12, 0.5); // F5
     } catch (e) {
       console.warn('[Sound] Could not play urgent sound:', e);
     }
+  }
+
+  private triggerAlertTones(ctx: AudioContext): void {
+    // First tone - C5
+    this.playTone(ctx, 523.25, 0, 0.15, 0.3);
+    // Second tone - E5 (higher, pleasant resolution)
+    this.playTone(ctx, 659.25, 0.15, 0.2, 0.25);
+  }
+
+  private triggerUrgentTones(ctx: AudioContext): void {
+    // Four rapid urgent tones - alternating high/mid
+    this.playTone(ctx, 880, 0, 0.12, 0.5);      // A5
+    this.playTone(ctx, 698.46, 0.15, 0.12, 0.5); // F5
+    this.playTone(ctx, 880, 0.30, 0.12, 0.5);    // A5
+    this.playTone(ctx, 698.46, 0.45, 0.12, 0.5); // F5
   }
 
   /**

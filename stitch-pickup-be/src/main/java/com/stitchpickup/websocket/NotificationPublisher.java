@@ -29,9 +29,10 @@ public class NotificationPublisher {
     public void publishAlert(AlertResponse alertResponse) {
         try {
             messagingTemplate.convertAndSend("/topic/school/alerts", alertResponse);
-            log.debug("Alert broadcast → /topic/school/alerts for student: {}", alertResponse.studentName());
+            log.info("[WebSocket] 📢 Alert broadcast → /topic/school/alerts: Alumno={} ({}) Grupo={} Estado={}",
+                    alertResponse.studentName(), alertResponse.level(), alertResponse.groupName(), alertResponse.status());
         } catch (Exception e) {
-            log.warn("Failed to broadcast alert: {}", e.getMessage());
+            log.error("[WebSocket] ❌ Failed to broadcast alert: {}", e.getMessage(), e);
         }
     }
 
@@ -39,9 +40,10 @@ public class NotificationPublisher {
     public void publishDelivery(DeliveryLogResponse delivery) {
         try {
             messagingTemplate.convertAndSend("/topic/deliveries", delivery);
-            log.debug("Delivery broadcast → /topic/deliveries for student: {}", delivery.studentName());
+            log.info("[WebSocket] 📢 Delivery broadcast → /topic/deliveries: Alumno={} ({}) Estado={}",
+                    delivery.studentName(), delivery.level(), delivery.status());
         } catch (Exception e) {
-            log.warn("Failed to broadcast delivery: {}", e.getMessage());
+            log.error("[WebSocket] ❌ Failed to broadcast delivery: {}", e.getMessage(), e);
         }
     }
 
@@ -52,9 +54,10 @@ public class NotificationPublisher {
             messagingTemplate.convertAndSend("/topic/delivery/parent/" + parentId, delivery);
             // Enviar también por cola de usuario
             messagingTemplate.convertAndSendToUser(parentId, "/queue/delivery", delivery);
-            log.debug("Delivery notification sent to parent: {}", parentId);
+            log.info("[WebSocket] 📢 Direct parent delivery notification: ParentId={} Alumno={}",
+                    parentId, delivery.studentName());
         } catch (Exception e) {
-            log.warn("Failed to notify parent {}: {}", parentId, e.getMessage());
+            log.error("[WebSocket] ❌ Failed to notify parent {}: {}", parentId, e.getMessage(), e);
         }
     }
 }
