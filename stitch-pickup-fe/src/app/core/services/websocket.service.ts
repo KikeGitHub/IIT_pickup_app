@@ -6,10 +6,13 @@ import { filter, share } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
 export interface ParentAlertEvent {
-  alertId: string;
+  id: string;
   studentId: string;
   studentName: string;
-  parentNombre: string;
+  parentId: string;
+  parentName: string;
+  level: 'KINDER' | 'PRIMARIA' | 'SECUNDARIA';
+  groupName: string;
   status: 'TEN_MIN' | 'FIVE_MIN' | 'EN_FILA' | 'URGENTE';
   pickupMethod: 'CAR' | 'WALK';
   sentAt: string;

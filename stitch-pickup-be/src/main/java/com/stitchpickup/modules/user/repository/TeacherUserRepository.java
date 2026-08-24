@@ -24,4 +24,8 @@ public interface TeacherUserRepository extends JpaRepository<TeacherUser, UUID> 
     /** Carga maestro con sus grupos asignados */
     @Query("SELECT t FROM TeacherUser t LEFT JOIN FETCH t.groups WHERE t.email = :email")
     Optional<TeacherUser> findByEmailWithGroups(@Param("email") String email);
+
+    /** Carga maestro por ID con sus grupos asignados */
+    @Query("SELECT t FROM TeacherUser t LEFT JOIN FETCH t.groups WHERE t.id = :id")
+    Optional<TeacherUser> findByIdWithGroups(@Param("id") UUID id);
 }

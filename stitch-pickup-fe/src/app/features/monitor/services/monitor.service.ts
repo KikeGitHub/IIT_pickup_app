@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { tap, catchError, of } from 'rxjs';
 import { WebSocketService } from '../../../core/services/websocket.service';
 import { NotificationService } from '../../../core/services/notification.service';
+import { NotificationSoundService } from '../../../core/services/notification-sound.service';
 import { AlertResponse } from '../../../core/models/alert.model';
 import { environment } from '../../../../environments/environment';
 
@@ -18,6 +19,8 @@ export interface MonitorAlert {
   pickupMethod: 'CAR' | 'WALK';
   sentAt: string;
   isDispatched: boolean;
+  /** Flag to trigger highlight animation when a card is updated in real-time */
+  isUpdated: boolean;
 }
 
 export interface DeliveryRecord {
@@ -42,6 +45,7 @@ export class MonitorService {
   private readonly http = inject(HttpClient);
   private readonly ws = inject(WebSocketService);
   private readonly notification = inject(NotificationService);
+  private readonly sound = inject(NotificationSoundService);
 
   private readonly apiUrl = environment.apiUrl;
 
@@ -75,7 +79,7 @@ export class MonitorService {
 
   // ─── Initialization ──────────────────────────────────────────────────────
   initialize(): void {
-    this.loadTodayAlerts();
+    this.loadTodayAlertsGrouped();
     this.loadTodayDeliveries();
     this.subscribeToWebSocket();
   }
@@ -108,9 +112,9 @@ export class MonitorService {
     ).subscribe();
   }
 
-  // ─── Private: HTTP Load ──────────────────────────────────────────────────
-  private loadTodayAlerts(): void {
-    this.http.get<AlertResponse[]>(`${this.apiUrl}/alerts/today`).pipe(
+  // ─── Private: HTTP Load (Grouped — one alert per student) ────────────────
+  private loadTodayAlertsGrouped(): void {
+    this.http.get<AlertResponse[]>(`${this.apiUrl}/alerts/today/grouped`).pipe(
       tap((alerts) => {
         const monitorAlerts: MonitorAlert[] = alerts.map(a => ({
           id: a.id,
@@ -123,17 +127,13 @@ export class MonitorService {
           status: a.status,
           pickupMethod: a.pickupMethod,
           sentAt: a.sentAt,
-          isDispatched: false
+          isDispatched: false,
+          isUpdated: false
         }));
         this.alerts.set(monitorAlerts);
       }),
       catchError(() => {
-        // Demo data offline
-        this.alerts.set([
-          { id: 'demo-1', parentId: 'p1', parentName: 'Carlos Ramírez', studentId: 's1', studentName: 'Sofía Ramírez', level: 'PRIMARIA', groupName: '3A', status: 'EN_FILA', pickupMethod: 'CAR', sentAt: new Date().toISOString(), isDispatched: false },
-          { id: 'demo-2', parentId: 'p2', parentName: 'Ana Torres', studentId: 's3', studentName: 'Isabella Torres', level: 'KINDER', groupName: 'KB', status: 'URGENTE', pickupMethod: 'WALK', sentAt: new Date().toISOString(), isDispatched: false },
-          { id: 'demo-3', parentId: 'p3', parentName: 'Roberto González', studentId: 's2', studentName: 'Mateo González', level: 'PRIMARIA', groupName: '3A', status: 'FIVE_MIN', pickupMethod: 'CAR', sentAt: new Date().toISOString(), isDispatched: false },
-        ]);
+        this.alerts.set([]);
         return of([]);
       })
     ).subscribe();
@@ -150,25 +150,80 @@ export class MonitorService {
   private subscribeToWebSocket(): void {
     // Listen for new parent proximity alerts
     this.ws.onParentAlert().subscribe(event => {
-      const exists = this.alerts().some(a => a.id === event.alertId);
-      if (!exists) {
+      // Dedup by studentId: if a card for this student already exists, UPDATE it
+      const existingIndex = this.alerts().findIndex(a => a.studentId === event.studentId && !a.isDispatched);
+
+      if (existingIndex !== -1) {
+        // UPDATE existing card (same student, new status)
+        this.alerts.update(alerts =>
+          alerts.map((a, i) => {
+            if (i === existingIndex) {
+              return {
+                ...a,
+                id: event.id,
+                status: event.status,
+                pickupMethod: event.pickupMethod,
+                sentAt: event.sentAt,
+                parentName: event.parentName,
+                level: event.level,
+                groupName: event.groupName,
+                isUpdated: true
+              };
+            }
+            return a;
+          })
+        );
+
+        // Clear the isUpdated flag after 2s so animation can replay
+        setTimeout(() => {
+          this.alerts.update(alerts =>
+            alerts.map(a => a.studentId === event.studentId ? { ...a, isUpdated: false } : a)
+          );
+        }, 2000);
+
+        // Sound + notification for update
+        if (event.status === 'URGENTE') {
+          this.sound.playUrgentSound();
+          this.notification.warning(`🚨 ${event.studentName} — URGENTE (actualizado)`);
+        } else {
+          this.sound.playAlertSound();
+          const statusLabel: Record<string, string> = { TEN_MIN: '10 MIN', FIVE_MIN: '5 MIN', EN_FILA: 'EN FILA' };
+          this.notification.info(`📍 ${event.studentName} — ${statusLabel[event.status] || event.status} (actualizado)`);
+        }
+      } else {
+        // NEW card for a new student
         const newAlert: MonitorAlert = {
-          id: event.alertId,
-          parentId: '',
-          parentName: event.parentNombre,
+          id: event.id,
+          parentId: event.parentId,
+          parentName: event.parentName,
           studentId: event.studentId,
           studentName: event.studentName,
-          level: 'PRIMARIA', // will be updated from full alert
-          groupName: '',
+          level: event.level,
+          groupName: event.groupName,
           status: event.status,
           pickupMethod: event.pickupMethod,
           sentAt: event.sentAt,
-          isDispatched: false
+          isDispatched: false,
+          isUpdated: true
         };
         this.alerts.update(alerts => [newAlert, ...alerts]);
 
-        const statusLabel: Record<string, string> = { TEN_MIN: '10 MIN', FIVE_MIN: '5 MIN', EN_FILA: 'EN FILA', URGENTE: '🚨 URGENTE' };
-        this.notification.info(`📍 ${event.studentName} — ${statusLabel[event.status] || event.status}`);
+        // Clear isUpdated flag after animation
+        setTimeout(() => {
+          this.alerts.update(alerts =>
+            alerts.map(a => a.studentId === event.studentId ? { ...a, isUpdated: false } : a)
+          );
+        }, 2000);
+
+        // Sound + notification for new alert
+        if (event.status === 'URGENTE') {
+          this.sound.playUrgentSound();
+          this.notification.warning(`🚨 NUEVA: ${event.studentName} — URGENTE`);
+        } else {
+          this.sound.playAlertSound();
+          const statusLabel: Record<string, string> = { TEN_MIN: '10 MIN', FIVE_MIN: '5 MIN', EN_FILA: 'EN FILA', URGENTE: '🚨 URGENTE' };
+          this.notification.info(`📍 NUEVA: ${event.studentName} — ${statusLabel[event.status] || event.status}`);
+        }
       }
     });
   }

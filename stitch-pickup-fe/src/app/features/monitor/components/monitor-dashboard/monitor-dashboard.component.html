@@ -40,10 +40,11 @@
       </header>
 
       <div class="alerts-grid">
-        @for (alert of monitorService.filteredAlerts(); track alert.id) {
+        @for (alert of monitorService.filteredAlerts(); track alert.studentId) {
           <app-student-monitor-card
             [alert]="alert"
             [isDispatching]="monitorService.dispatchingAlertId() === alert.id"
+            [isUpdated]="alert.isUpdated"
             (dispatch)="onDispatch($event)"
           ></app-student-monitor-card>
         } @empty {

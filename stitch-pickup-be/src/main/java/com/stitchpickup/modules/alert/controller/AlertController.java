@@ -53,4 +53,29 @@ public class AlertController {
     public ResponseEntity<List<AlertResponse>> getTodayAlerts() {
         return ResponseEntity.ok(alertService.getTodayAlerts());
     }
+
+    /**
+     * Endpoint agrupado: devuelve UN solo registro por alumno (la alerta más reciente).
+     * - ADMIN: ve todos los alumnos.
+     * - TEACHER: ve solo los alumnos de sus grupos asignados.
+     */
+    @GetMapping("/today/grouped")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(
+        summary = "Obtener alertas del día agrupadas por alumno",
+        description = "Devuelve la alerta más reciente por cada alumno. ADMIN ve todos; TEACHER ve solo sus grupos asignados."
+    )
+    public ResponseEntity<List<AlertResponse>> getTodayAlertsGrouped(HttpServletRequest request) {
+        String token = request.getHeader("Authorization").substring(7);
+        String role = tokenProvider.getRoleFromToken(token);
+        UUID userId = UUID.fromString(tokenProvider.getUserIdFromToken(token));
+
+        if ("ADMIN".equals(role)) {
+            return ResponseEntity.ok(alertService.getTodayAlertsGrouped());
+        } else {
+            // TEACHER → filtrar por sus grupos asignados
+            return ResponseEntity.ok(alertService.getTodayAlertsGroupedForTeacher(userId));
+        }
+    }
 }

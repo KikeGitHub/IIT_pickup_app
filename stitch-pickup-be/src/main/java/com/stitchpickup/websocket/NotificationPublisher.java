@@ -27,8 +27,8 @@ public class NotificationPublisher {
     /** Broadcast de alerta de proximidad a todos los monitores */
     public void publishAlert(AlertResponse alertResponse) {
         try {
-            messagingTemplate.convertAndSend("/topic/alerts", alertResponse);
-            log.debug("Alert broadcast → /topic/alerts for student: {}", alertResponse.studentName());
+            messagingTemplate.convertAndSend("/topic/school/alerts", alertResponse);
+            log.debug("Alert broadcast → /topic/school/alerts for student: {}", alertResponse.studentName());
         } catch (Exception e) {
             log.warn("Failed to broadcast alert: {}", e.getMessage());
         }

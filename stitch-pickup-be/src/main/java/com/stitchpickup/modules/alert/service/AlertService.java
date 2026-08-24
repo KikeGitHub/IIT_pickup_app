@@ -7,7 +7,9 @@ import com.stitchpickup.modules.alert.repository.AlertRepository;
 import com.stitchpickup.modules.student.entity.Student;
 import com.stitchpickup.modules.student.repository.StudentRepository;
 import com.stitchpickup.modules.user.entity.ParentUser;
+import com.stitchpickup.modules.user.entity.TeacherUser;
 import com.stitchpickup.modules.user.repository.ParentUserRepository;
+import com.stitchpickup.modules.user.repository.TeacherUserRepository;
 import com.stitchpickup.websocket.NotificationPublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +30,7 @@ public class AlertService {
     private final AlertRepository alertRepository;
     private final ParentUserRepository parentUserRepository;
     private final StudentRepository studentRepository;
+    private final TeacherUserRepository teacherUserRepository;
     private final NotificationPublisher publisher;
 
     @Transactional
@@ -63,7 +66,7 @@ public class AlertService {
         Alert saved = alertRepository.save(alert);
         AlertResponse response = mapToResponse(saved);
 
-        // Broadcast a WebSocket /topic/alerts via NotificationPublisher
+        // Broadcast a WebSocket /topic/school/alerts via NotificationPublisher
         publisher.publishAlert(response);
 
         return response;
@@ -76,6 +79,45 @@ public class AlertService {
         Instant endOfDay = LocalDate.now().plusDays(1).atStartOfDay(zone).toInstant();
 
         return alertRepository.findTodayAlerts(startOfDay, endOfDay)
+                .stream().map(this::mapToResponse).toList();
+    }
+
+    /**
+     * Devuelve la última alerta por alumno del día (ADMIN — ve todos los alumnos).
+     */
+    @Transactional(readOnly = true)
+    public List<AlertResponse> getTodayAlertsGrouped() {
+        ZoneId zone = ZoneId.systemDefault();
+        Instant startOfDay = LocalDate.now().atStartOfDay(zone).toInstant();
+        Instant endOfDay = LocalDate.now().plusDays(1).atStartOfDay(zone).toInstant();
+
+        return alertRepository.findLatestAlertPerStudentToday(startOfDay, endOfDay)
+                .stream().map(this::mapToResponse).toList();
+    }
+
+    /**
+     * Devuelve la última alerta por alumno del día filtrada por los grupos
+     * asignados al maestro (TEACHER — solo ve alumnos de sus grupos).
+     */
+    @Transactional(readOnly = true)
+    public List<AlertResponse> getTodayAlertsGroupedForTeacher(UUID teacherId) {
+        TeacherUser teacher = teacherUserRepository.findByIdWithGroups(teacherId)
+                .orElseThrow(() -> new IllegalArgumentException("Maestro no encontrado"));
+
+        List<UUID> groupIds = teacher.getGroups().stream()
+                .map(g -> g.getId())
+                .toList();
+
+        if (groupIds.isEmpty()) {
+            log.warn("Maestro {} no tiene grupos asignados", teacher.getEmail());
+            return List.of();
+        }
+
+        ZoneId zone = ZoneId.systemDefault();
+        Instant startOfDay = LocalDate.now().atStartOfDay(zone).toInstant();
+        Instant endOfDay = LocalDate.now().plusDays(1).atStartOfDay(zone).toInstant();
+
+        return alertRepository.findLatestAlertPerStudentTodayByGroups(startOfDay, endOfDay, groupIds)
                 .stream().map(this::mapToResponse).toList();
     }
 

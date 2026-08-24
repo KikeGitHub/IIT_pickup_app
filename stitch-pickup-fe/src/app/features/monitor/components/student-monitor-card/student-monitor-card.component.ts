@@ -13,6 +13,7 @@ import { MonitorAlert } from '../../services/monitor.service';
 export class StudentMonitorCardComponent {
   @Input({ required: true }) alert!: MonitorAlert;
   @Input() isDispatching: boolean = false;
+  @Input() isUpdated: boolean = false;
   @Output() dispatch = new EventEmitter<string>();
 
   get statusConfig(): { label: string; color: string; bgColor: string; priority: number } {

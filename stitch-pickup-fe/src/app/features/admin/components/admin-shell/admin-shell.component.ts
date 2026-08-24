@@ -7,6 +7,8 @@ import { KpiDashboardComponent } from '../kpi-dashboard/kpi-dashboard.component'
 import { UserManagementComponent } from '../user-management/user-management.component';
 import { CsvImportComponent } from '../csv-import/csv-import.component';
 
+import { RouterLink } from '@angular/router';
+
 export type AdminTab = 'KPIS' | 'USERS' | 'CSV';
 
 @Component({
@@ -14,6 +16,7 @@ export type AdminTab = 'KPIS' | 'USERS' | 'CSV';
   standalone: true,
   imports: [
     CommonModule,
+    RouterLink,
     KpiDashboardComponent,
     UserManagementComponent,
     CsvImportComponent

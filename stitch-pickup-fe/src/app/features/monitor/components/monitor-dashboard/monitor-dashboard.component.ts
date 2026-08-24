@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 // Monitor Dashboard Component for Sprint 4
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
@@ -24,14 +24,24 @@ import { DispatchConfirmationComponent } from '../dispatch-confirmation/dispatch
   styleUrl: './monitor-dashboard.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class MonitorDashboardComponent implements OnInit {
+export class MonitorDashboardComponent implements OnInit, OnDestroy {
   readonly monitorService = inject(MonitorService);
   readonly authService = inject(AuthService);
   readonly ws = inject(WebSocketService);
   private readonly router = inject(Router);
 
   ngOnInit(): void {
+    // Connect WebSocket with JWT token for real-time updates
+    const token = this.authService.getToken();
+    if (token) {
+      this.ws.connect(token);
+    }
+
     this.monitorService.initialize();
+  }
+
+  ngOnDestroy(): void {
+    this.ws.disconnect();
   }
 
   get teacherName(): string {
@@ -51,6 +61,7 @@ export class MonitorDashboardComponent implements OnInit {
   }
 
   logout(): void {
+    this.ws.disconnect();
     this.authService.logout();
     this.router.navigate(['/auth/maestros']);
   }

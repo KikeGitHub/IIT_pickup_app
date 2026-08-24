@@ -1,6 +1,7 @@
 <div
   class="monitor-card"
   [class.monitor-card--urgent]="alert.status === 'URGENTE'"
+  [class.monitor-card--updated]="isUpdated"
   [style.border-left-color]="statusConfig.color"
 >
   <!-- Status Badge -->

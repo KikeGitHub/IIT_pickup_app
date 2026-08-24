@@ -110,6 +110,33 @@
   display: flex;
   align-items: center;
   gap: v.$space-sm;
+
+  .btn-admin-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: rgba(99, 102, 241, 0.18);
+    border: 1px solid rgba(99, 102, 241, 0.4);
+    color: #a5b4fc;
+    border-radius: v.$radius-full;
+    font-size: 12px;
+    font-weight: v.$font-weight-semibold;
+    text-decoration: none;
+    transition: all 0.2s ease;
+
+    .link-icon {
+      width: 14px;
+      height: 14px;
+    }
+
+    &:hover {
+      background: rgba(99, 102, 241, 0.32);
+      border-color: #c7d2fe;
+      color: white;
+      transform: translateY(-1px);
+    }
+  }
 }
 
 .ws-badge {

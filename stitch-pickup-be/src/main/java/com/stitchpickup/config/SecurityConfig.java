@@ -79,6 +79,7 @@ public class SecurityConfig {
                 // TEACHER y ADMIN — monitor de entregas
                 .requestMatchers("/api/v1/deliveries/*/dispatch").hasAnyRole("TEACHER", "ADMIN")
                 .requestMatchers(HttpMethod.GET, "/api/v1/alerts/today").hasAnyRole("TEACHER", "ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/v1/alerts/today/grouped").hasAnyRole("TEACHER", "ADMIN")
                 .requestMatchers(HttpMethod.GET, "/api/v1/deliveries/today").hasAnyRole("TEACHER", "ADMIN")
                 // Solo PARENT — envío de alertas
                 .requestMatchers(HttpMethod.POST, "/api/v1/alerts").hasRole("PARENT")

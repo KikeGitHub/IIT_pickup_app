@@ -11,6 +11,10 @@
     </div>
 
     <div class="header-right">
+      <a routerLink="/monitor" class="btn-monitor-nav" title="Ver Monitor de Entregas en vivo">
+        <svg viewBox="0 0 24 24" fill="none" class="nav-icon"><path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" stroke="currentColor" stroke-width="2"/><line x1="6" y1="1" x2="6" y2="4" stroke="currentColor" stroke-width="2"/><line x1="10" y1="1" x2="10" y2="4" stroke="currentColor" stroke-width="2"/><line x1="14" y1="1" x2="14" y2="4" stroke="currentColor" stroke-width="2"/></svg>
+        <span>🚗 Monitor de Entregas</span>
+      </a>
       <div class="user-info">
         <span class="user-name">{{ authService.currentUser()?.nombre || 'Super Admin' }}</span>
         <span class="user-role">SUPER ADMIN</span>
