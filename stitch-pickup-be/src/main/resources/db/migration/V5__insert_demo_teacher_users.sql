@@ -17,7 +17,7 @@ INSERT INTO teacher_users (id, nombre, email, password_hash, role, level, temp_p
         'c3000000-0000-0000-0000-000000000001',
         'María Fernanda Solis',
         'maestro1@iit.edu.mx',
-        '$2a$12$N7/p4xzDL3gFnYvPPH6EiuRb3yXkuNOcnkVyvKxeJv8mBhMvBV1Wy',
+        '$2a$12$frMiCP8exLbhapvI3AGlB.NMSYEBvG.cbRli1sXzUx4pe31hoAvVC',
         'TEACHER',
         'PRIMARIA',
         false
@@ -26,7 +26,7 @@ INSERT INTO teacher_users (id, nombre, email, password_hash, role, level, temp_p
         'c3000000-0000-0000-0000-000000000002',
         'Luis Alberto Campos',
         'maestro2@iit.edu.mx',
-        '$2a$12$N7/p4xzDL3gFnYvPPH6EiuRb3yXkuNOcnkVyvKxeJv8mBhMvBV1Wy',
+        '$2a$12$frMiCP8exLbhapvI3AGlB.NMSYEBvG.cbRli1sXzUx4pe31hoAvVC',
         'TEACHER',
         'SECUNDARIA',
         false
@@ -35,7 +35,7 @@ INSERT INTO teacher_users (id, nombre, email, password_hash, role, level, temp_p
         'c3000000-0000-0000-0000-000000000003',
         'Director General IIT',
         'admin@iit.edu.mx',
-        '$2a$12$RQh6b9L4YAcgJzWqgJmFW.MZTqHJYPLiOQFNJQn0L1PG1qMPh4Hhi',
+        '$2a$12$3flB4Pu/EGOXaOF2sn7FYuclYMiXRbpOCO8w3nB.GDS8Y.Ne7ip7S',
         'ADMIN',
         NULL,
         false

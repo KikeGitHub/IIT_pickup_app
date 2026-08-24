@@ -16,7 +16,7 @@ INSERT INTO parent_users (id, nombre, email, password_hash, phone, temp_password
         'b2000000-0000-0000-0000-000000000001',
         'Carlos Ramírez Soto',
         'padre1@iit.edu.mx',
-        '$2a$12$N7/p4xzDL3gFnYvPPH6EiuRb3yXkuNOcnkVyvKxeJv8mBhMvBV1Wy',
+        '$2a$12$frMiCP8exLbhapvI3AGlB.NMSYEBvG.cbRli1sXzUx4pe31hoAvVC',
         '+52 722 123 4567',
         false     -- ya completó cambio de contraseña
     ),
@@ -24,7 +24,7 @@ INSERT INTO parent_users (id, nombre, email, password_hash, phone, temp_password
         'b2000000-0000-0000-0000-000000000002',
         'Roberto González Vidal',
         'padre2@iit.edu.mx',
-        '$2a$12$N7/p4xzDL3gFnYvPPH6EiuRb3yXkuNOcnkVyvKxeJv8mBhMvBV1Wy',
+        '$2a$12$frMiCP8exLbhapvI3AGlB.NMSYEBvG.cbRli1sXzUx4pe31hoAvVC',
         '+52 722 345 6789',
         true      -- debe cambiar contraseña al ingresar
     ),
@@ -32,7 +32,7 @@ INSERT INTO parent_users (id, nombre, email, password_hash, phone, temp_password
         'b2000000-0000-0000-0000-000000000003',
         'Ana Torres Mendoza',
         'padre3@iit.edu.mx',
-        '$2a$12$N7/p4xzDL3gFnYvPPH6EiuRb3yXkuNOcnkVyvKxeJv8mBhMvBV1Wy',
+        '$2a$12$frMiCP8exLbhapvI3AGlB.NMSYEBvG.cbRli1sXzUx4pe31hoAvVC',
         '+52 722 456 7890',
         false
     );
