@@ -1,6 +1,6 @@
-<div class="monitor-root">
+<div class="monitor-root" [class.theme-light]="currentTheme() === 'light'" [class.theme-dark]="currentTheme() === 'dark'">
 
-  <!-- Header with Live Stats & WebSocket status -->
+  <!-- Header with Live Stats & Theme Switcher -->
   <app-stats-header
     [totalActive]="monitorService.totalActive()"
     [urgentCount]="monitorService.urgentCount()"
@@ -8,55 +8,186 @@
     [dispatchedCount]="monitorService.dispatchedCount()"
     [isConnected]="true"
     [teacherName]="teacherName"
+    [currentTheme]="currentTheme()"
+    [activeTab]="activeTab()"
+    (toggleTheme)="toggleTheme()"
+    (tabChange)="setTab($event)"
     (logout)="logout()"
   ></app-stats-header>
 
-  <!-- Main Grid Layout -->
-  <main class="monitor-layout">
+  <!-- View 1: Live Monitor View -->
+  @if (activeTab() === 'MONITOR') {
+    <main class="monitor-layout">
 
-    <!-- Left Sidebar: Level Filters -->
-    <aside class="layout-sidebar">
-      <app-level-filter-sidebar
-        [selectedLevel]="monitorService.selectedLevel()"
-        [totalCount]="monitorService.totalActive()"
-        (filterChange)="onFilterChange($event)"
-      ></app-level-filter-sidebar>
+      <!-- Left Sidebar: Level Filters -->
+      <aside class="layout-sidebar">
+        <app-level-filter-sidebar
+          [selectedLevel]="monitorService.selectedLevel()"
+          [totalCount]="monitorService.totalActive()"
+          (filterChange)="onFilterChange($event)"
+        ></app-level-filter-sidebar>
 
-      <!-- History Section on Sidebar for desktop -->
-      <div class="desktop-history">
-        <app-dispatch-confirmation
-          [deliveries]="monitorService.deliveries()"
-        ></app-dispatch-confirmation>
-      </div>
-    </aside>
+        <!-- History Section on Sidebar for desktop -->
+        <div class="desktop-history">
+          <app-dispatch-confirmation
+            [deliveries]="monitorService.deliveries()"
+          ></app-dispatch-confirmation>
+        </div>
+      </aside>
 
-    <!-- Center/Right: Live Alerts Grid -->
-    <section class="layout-content" aria-label="Alertas activas">
-      <header class="content-header">
-        <h2 class="section-title">
-          <span>Alertas Activas</span>
-          <span class="active-badge">{{ monitorService.filteredAlerts().length }}</span>
-        </h2>
-      </header>
-
-      <div class="alerts-grid">
-        @for (alert of monitorService.filteredAlerts(); track alert.studentId) {
-          <app-student-monitor-card
-            [alert]="alert"
-            [isDispatching]="monitorService.dispatchingAlertId() === alert.id"
-            [isUpdated]="alert.isUpdated"
-            (dispatch)="onDispatch($event)"
-          ></app-student-monitor-card>
-        } @empty {
-          <div class="empty-monitor">
-            <div class="empty-icon">🎉</div>
-            <h3>Sin alumnos en espera</h3>
-            <p>No hay alertas activas en este momento para el filtro seleccionado.</p>
+      <!-- Center/Right: Live Alerts Grid -->
+      <section class="layout-content" aria-label="Alertas activas">
+        <header class="content-header">
+          <div class="header-titles">
+            <h2 class="section-title">
+              <span>Alertas Activas</span>
+              <span class="active-badge">{{ monitorService.filteredAlerts().length }}</span>
+            </h2>
+            <p class="section-sub">Tarjetas actualizadas en tiempo real mediante WebSocket</p>
           </div>
+        </header>
+
+        <div class="alerts-grid">
+          @for (alert of monitorService.filteredAlerts(); track alert.studentId) {
+            <app-student-monitor-card
+              [alert]="alert"
+              [isDispatching]="monitorService.dispatchingAlertId() === alert.id"
+              [isUpdated]="alert.isUpdated"
+              (dispatch)="onDispatch($event)"
+            ></app-student-monitor-card>
+          } @empty {
+            <div class="empty-monitor">
+              <div class="empty-icon">🎉</div>
+              <h3>Sin alumnos en espera</h3>
+              <p>No hay alertas activas en este momento para el filtro seleccionado.</p>
+            </div>
+          }
+        </div>
+      </section>
+
+    </main>
+  }
+
+  <!-- View 2: Teacher's Assigned Groups & Students Roster -->
+  @if (activeTab() === 'GROUPS') {
+    <main class="groups-roster-layout">
+      <div class="roster-header-box">
+        <div>
+          <h2>👥 Mis Grupos & Alumnos Asignados</h2>
+          <p class="text-muted">Consulta la lista de alumnos de tus grupos y actualiza sus datos o fotografías</p>
+        </div>
+      </div>
+
+      <!-- Group Selection Tabs -->
+      <div class="group-selector-pills">
+        @for (g of teacherService.myGroups(); track g.id) {
+          <button
+            type="button"
+            class="group-tab-btn"
+            [class.group-tab-btn--active]="selectedGroupId() === g.id"
+            (click)="selectGroup(g.id)"
+          >
+            <span class="g-level">{{ g.level }}</span>
+            <span class="g-name">Grupo {{ g.name }}</span>
+            <span class="g-count">({{ g.students.length }} alumnos)</span>
+          </button>
+        } @empty {
+          <div class="no-groups-notice">No tienes grupos escolares asignados actualmente.</div>
         }
       </div>
-    </section>
 
-  </main>
+      <!-- Student Roster Grid for Selected Group -->
+      @if (currentGroup; as grp) {
+        <div class="roster-grid">
+          @for (s of grp.students; track s.id) {
+            <div class="roster-student-card">
+              <div class="r-card-header">
+                <div class="r-avatar-wrap">
+                  @if (s.avatarUrl) {
+                    <img [src]="s.avatarUrl" [alt]="s.name" class="r-avatar-img" />
+                  } @else {
+                    <span class="r-avatar-initial">{{ s.name.charAt(0) }}</span>
+                  }
+                </div>
+                <div class="r-student-main">
+                  <h3 class="r-name">{{ s.name }}</h3>
+                  <p class="r-meta">{{ s.level }} · {{ s.grade || grp.name }} <span *ngIf="s.birthday">· 🎂 {{ s.birthday }}</span></p>
+                </div>
+              </div>
+
+              <!-- Authorized Pickup Tutors -->
+              <div class="r-tutors-box">
+                <span class="tutors-title">🛡️ Tutores Autorizados para Recoger:</span>
+                <div class="tutors-chips">
+                  @for (t of s.familyMembers; track t.name) {
+                    <span class="tutor-chip" [title]="t.phone ? 'Tel: ' + t.phone : ''">
+                      {{ t.name }} ({{ t.relationship }})
+                    </span>
+                  } @empty {
+                    <span class="text-muted-xs">Sin tutores registrados</span>
+                  }
+                </div>
+              </div>
+
+              <div class="r-card-footer">
+                <button type="button" class="btn-edit-student" (click)="openEditStudentModal(s)">
+                  <span>✏️ Editar Alumno / Foto</span>
+                </button>
+              </div>
+            </div>
+          } @empty {
+            <div class="empty-roster-box">
+              <p>No hay alumnos registrados en el Grupo {{ grp.name }}.</p>
+            </div>
+          }
+        </div>
+      }
+    </main>
+  }
+
+  <!-- Modal: Teacher Edit Student Profile -->
+  @if (showEditModal()) {
+    <div class="modal-backdrop" (click)="closeEditModal()">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <header class="modal-header">
+          <h3>✏️ Editar Datos del Alumno</h3>
+          <button type="button" class="btn-close" (click)="closeEditModal()">&times;</button>
+        </header>
+
+        <div class="modal-body">
+          @if (editError) {
+            <div class="alert-error">{{ editError }}</div>
+          }
+
+          <div class="form-group">
+            <label for="editName">Nombre Completo *</label>
+            <input id="editName" type="text" [(ngModel)]="editName" class="form-control" />
+          </div>
+
+          <div class="form-group">
+            <label for="editGrade">Grado Escolar</label>
+            <input id="editGrade" type="text" [(ngModel)]="editGrade" placeholder="Ej: 3° Primaria" class="form-control" />
+          </div>
+
+          <div class="form-group">
+            <label for="editBirthday">Fecha de Nacimiento</label>
+            <input id="editBirthday" type="date" [(ngModel)]="editBirthday" class="form-control" />
+          </div>
+
+          <div class="form-group">
+            <label for="editAvatarUrl">URL de Fotografía / Avatar</label>
+            <input id="editAvatarUrl" type="url" [(ngModel)]="editAvatarUrl" placeholder="https://..." class="form-control" />
+          </div>
+        </div>
+
+        <footer class="modal-footer">
+          <button type="button" class="btn-secondary" (click)="closeEditModal()">Cancelar</button>
+          <button type="button" class="btn-primary" [disabled]="isSavingStudent()" (click)="saveStudent()">
+            {{ isSavingStudent() ? 'Guardando...' : 'Guardar Cambios' }}
+          </button>
+        </footer>
+      </div>
+    </div>
+  }
 
 </div>

@@ -63,4 +63,12 @@ export class StudentService {
   selectStudent(studentId: string): void {
     this.selectedStudentId.set(studentId);
   }
+
+  updateStudentByParent(studentId: string, payload: any): Observable<Student> {
+    return this.http.put<Student>(`${this.apiUrl}/${studentId}/parent-update`, payload).pipe(
+      tap((updated) => {
+        this.students.update((list) => list.map((s) => (s.id === studentId ? { ...s, ...updated } : s)));
+      })
+    );
+  }
 }

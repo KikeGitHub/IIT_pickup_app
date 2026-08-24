@@ -1,10 +1,11 @@
-import { Component, inject, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
-// Monitor Dashboard Component for Sprint 4
+import { Component, inject, OnInit, OnDestroy, ChangeDetectionStrategy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MonitorService, LevelFilter } from '../../services/monitor.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { WebSocketService } from '../../../../core/services/websocket.service';
+import { TeacherService, TeacherGroup, TeacherStudent } from '../../../../core/services/teacher.service';
 import { StatsHeaderComponent } from '../stats-header/stats-header.component';
 import { LevelFilterSidebarComponent } from '../level-filter-sidebar/level-filter-sidebar.component';
 import { StudentMonitorCardComponent } from '../student-monitor-card/student-monitor-card.component';
@@ -15,6 +16,7 @@ import { DispatchConfirmationComponent } from '../dispatch-confirmation/dispatch
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     StatsHeaderComponent,
     LevelFilterSidebarComponent,
     StudentMonitorCardComponent,
@@ -27,17 +29,44 @@ import { DispatchConfirmationComponent } from '../dispatch-confirmation/dispatch
 export class MonitorDashboardComponent implements OnInit, OnDestroy {
   readonly monitorService = inject(MonitorService);
   readonly authService = inject(AuthService);
+  readonly teacherService = inject(TeacherService);
   readonly ws = inject(WebSocketService);
   private readonly router = inject(Router);
 
+  readonly currentTheme = signal<'light' | 'dark'>(
+    (localStorage.getItem('monitor_theme') as 'light' | 'dark') || 'light'
+  );
+
+  readonly activeTab = signal<'MONITOR' | 'GROUPS'>('MONITOR');
+
+  // Student Edit Modal for Teacher
+  readonly showEditModal = signal<boolean>(false);
+  readonly editingStudent = signal<TeacherStudent | null>(null);
+  editName = '';
+  editGrade = '';
+  editBirthday = '';
+  editAvatarUrl = '';
+  editError = '';
+  isSavingStudent = signal<boolean>(false);
+
+  // Group selection filter in GROUPS tab
+  readonly selectedGroupId = signal<string | null>(null);
+
   ngOnInit(): void {
-    // Connect WebSocket with JWT token for real-time updates
     const token = this.authService.getToken();
     if (token) {
       this.ws.connect(token);
     }
 
     this.monitorService.initialize();
+
+    if (this.authService.userRole() === 'TEACHER' || this.authService.userRole() === 'ADMIN') {
+      this.teacherService.loadMyGroups().subscribe(groups => {
+        if (groups.length > 0 && !this.selectedGroupId()) {
+          this.selectedGroupId.set(groups[0].id);
+        }
+      });
+    }
   }
 
   ngOnDestroy(): void {
@@ -48,8 +77,76 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
     return this.authService.currentUser()?.nombre || '';
   }
 
-  get isConnected(): boolean {
-    return true; // Controlled by WebSocketService state
+  toggleTheme(): void {
+    const newTheme = this.currentTheme() === 'light' ? 'dark' : 'light';
+    this.currentTheme.set(newTheme);
+    localStorage.setItem('monitor_theme', newTheme);
+  }
+
+  setTab(tab: 'MONITOR' | 'GROUPS'): void {
+    this.activeTab.set(tab);
+    if (tab === 'GROUPS') {
+      this.teacherService.loadMyGroups().subscribe(groups => {
+        if (groups.length > 0 && !this.selectedGroupId()) {
+          this.selectedGroupId.set(groups[0].id);
+        }
+      });
+    }
+  }
+
+  selectGroup(groupId: string): void {
+    this.selectedGroupId.set(groupId);
+  }
+
+  get currentGroup(): TeacherGroup | undefined {
+    const gid = this.selectedGroupId();
+    return this.teacherService.myGroups().find(g => g.id === gid) || this.teacherService.myGroups()[0];
+  }
+
+  openEditStudentModal(student: TeacherStudent): void {
+    this.editingStudent.set(student);
+    this.editName = student.name;
+    this.editGrade = student.grade || '';
+    this.editBirthday = student.birthday || '';
+    this.editAvatarUrl = student.avatarUrl || '';
+    this.editError = '';
+    this.showEditModal.set(true);
+  }
+
+  closeEditModal(): void {
+    this.showEditModal.set(false);
+    this.editingStudent.set(null);
+  }
+
+  saveStudent(): void {
+    const s = this.editingStudent();
+    if (!s) return;
+
+    if (!this.editName.trim()) {
+      this.editError = 'El nombre del alumno es obligatorio.';
+      return;
+    }
+
+    this.isSavingStudent.set(true);
+    this.editError = '';
+
+    const payload = {
+      name: this.editName.trim(),
+      grade: this.editGrade.trim() || undefined,
+      birthday: this.editBirthday || undefined,
+      avatarUrl: this.editAvatarUrl.trim() || undefined
+    };
+
+    this.teacherService.updateStudent(s.id, payload).subscribe({
+      next: () => {
+        this.isSavingStudent.set(false);
+        this.closeEditModal();
+      },
+      error: (err) => {
+        this.isSavingStudent.set(false);
+        this.editError = err.error?.message || 'Error al actualizar el alumno.';
+      }
+    });
   }
 
   onFilterChange(level: LevelFilter): void {

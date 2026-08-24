@@ -2,7 +2,7 @@ import { Injectable, OnDestroy } from '@angular/core';
 import { Client, IMessage, StompSubscription } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import { Observable, Subject, BehaviorSubject } from 'rxjs';
-import { filter, share } from 'rxjs/operators';
+import { share } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
 export interface ParentAlertEvent {
@@ -18,26 +18,22 @@ export interface ParentAlertEvent {
   sentAt: string;
 }
 
-export interface AdminConfirmEvent {
+export interface DeliveryDispatchedEvent {
+  id: string;
   studentId: string;
   studentName: string;
+  level: string;
+  groupName: string;
   teacherName: string;
-  confirmedAt: string;
-  message: string;
+  pickupMethod?: string;
+  status: 'ENTREGADO_ESCUELA' | 'RECIBIDO_PADRE';
+  teacherConfirmedAt?: string;
+  parentConfirmedAt?: string;
+  logDate: string;
 }
 
 /**
  * WebSocketService — STOMP over SockJS client with auto-reconnection.
- *
- * Architecture (ADR-003):
- * - Uses @stomp/stompjs v7 (modern, tree-shakeable)
- * - SockJS fallback for environments without native WS
- * - Exposes typed observables per topic
- * - Auto-reconnects with exponential backoff
- *
- * SOLID:
- * - S: Only handles WS connection and message routing
- * - I: Separate observables per event type
  */
 @Injectable({ providedIn: 'root' })
 export class WebSocketService implements OnDestroy {
@@ -46,7 +42,7 @@ export class WebSocketService implements OnDestroy {
 
   private readonly connected$ = new BehaviorSubject<boolean>(false);
   private readonly parentAlert$ = new Subject<ParentAlertEvent>();
-  private readonly adminConfirm$ = new Subject<AdminConfirmEvent>();
+  private readonly deliveryEvent$ = new Subject<DeliveryDispatchedEvent>();
 
   readonly isConnected$ = this.connected$.asObservable();
 
@@ -54,7 +50,7 @@ export class WebSocketService implements OnDestroy {
 
   connect(token: string): void {
     if (this.stompClient?.active) {
-      return; // Already connected
+      return;
     }
 
     this.stompClient = new Client({
@@ -98,9 +94,9 @@ export class WebSocketService implements OnDestroy {
     return this.parentAlert$.asObservable().pipe(share());
   }
 
-  /** Parent: listen for delivery confirmation from admin */
-  onAdminConfirm(): Observable<AdminConfirmEvent> {
-    return this.adminConfirm$.asObservable().pipe(share());
+  /** Parent & Teacher: listen for delivery dispatch/confirmations */
+  onDeliveryEvent(): Observable<DeliveryDispatchedEvent> {
+    return this.deliveryEvent$.asObservable().pipe(share());
   }
 
   // ─── Private ────────────────────────────────────────────────────────────────
@@ -108,7 +104,7 @@ export class WebSocketService implements OnDestroy {
   private subscribeToTopics(): void {
     if (!this.stompClient) return;
 
-    // All authenticated users subscribe to school alerts topic (monitor view)
+    // School alerts topic
     const alertSub = this.stompClient.subscribe(
       '/topic/school/alerts',
       (message: IMessage) => {
@@ -122,21 +118,48 @@ export class WebSocketService implements OnDestroy {
     );
     this.subscriptions.set('school-alerts', alertSub);
 
-    // Parent-specific: delivery confirmation
+    // School deliveries broadcast topic
+    const deliveriesSub = this.stompClient.subscribe(
+      '/topic/deliveries',
+      (message: IMessage) => {
+        try {
+          const event = JSON.parse(message.body) as DeliveryDispatchedEvent;
+          this.deliveryEvent$.next(event);
+        } catch (e) {
+          console.error('[STOMP] Failed to parse delivery event', e);
+        }
+      }
+    );
+    this.subscriptions.set('school-deliveries', deliveriesSub);
+
+    // Parent direct topic & queue
     const userId = this.getUserIdFromToken();
     if (userId) {
-      const deliverySub = this.stompClient.subscribe(
-        `/user/${userId}/queue/delivery`,
+      const parentDeliverySub = this.stompClient.subscribe(
+        `/topic/delivery/parent/${userId}`,
         (message: IMessage) => {
           try {
-            const event = JSON.parse(message.body) as AdminConfirmEvent;
-            this.adminConfirm$.next(event);
+            const event = JSON.parse(message.body) as DeliveryDispatchedEvent;
+            this.deliveryEvent$.next(event);
           } catch (e) {
-            console.error('[STOMP] Failed to parse delivery event', e);
+            console.error('[STOMP] Failed to parse parent delivery event', e);
           }
         }
       );
-      this.subscriptions.set('delivery-confirm', deliverySub);
+      this.subscriptions.set('parent-delivery-topic', parentDeliverySub);
+
+      const userQueueSub = this.stompClient.subscribe(
+        `/user/${userId}/queue/delivery`,
+        (message: IMessage) => {
+          try {
+            const event = JSON.parse(message.body) as DeliveryDispatchedEvent;
+            this.deliveryEvent$.next(event);
+          } catch (e) {
+            console.error('[STOMP] Failed to parse queue delivery event', e);
+          }
+        }
+      );
+      this.subscriptions.set('delivery-queue', userQueueSub);
     }
   }
 

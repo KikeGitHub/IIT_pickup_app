@@ -1,7 +1,7 @@
 <nav class="sidebar" role="navigation" aria-label="Filtro por nivel escolar">
-  <p class="sidebar-label">Nivel</p>
+  <p class="sidebar-label">Nivel Escolar</p>
 
-  @for (f of filters; track f.value) {
+  @for (f of visibleFilters(); track f.value) {
     <button
       type="button"
       class="filter-btn"

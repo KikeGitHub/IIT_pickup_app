@@ -49,6 +49,7 @@
             [students]="studentService.students()"
             [selectedStudentId]="currentStudentId"
             (selectStudent)="onSelectStudent($event)"
+            (editStudent)="onEditStudent($event)"
           ></app-student-card>
         </section>
 
@@ -86,5 +87,114 @@
     }
 
   </main>
+
+  <!-- Bi-directional Modal: Teacher Confirms Student Delivery at Gate -->
+  @if (pendingDelivery(); as d) {
+    <div class="modal-backdrop modal-backdrop--urgent">
+      <div class="modal-delivery-card">
+        <div class="delivery-badge-icon">🚗</div>
+        <h2 class="delivery-title">¡Tu hijo/a ha sido entregado/a!</h2>
+        <p class="delivery-desc">
+          El profesor/a <strong>{{ d.teacherName || 'Docente asignado' }}</strong> ha confirmado que
+          <strong>{{ d.studentName }}</strong> ({{ d.level }} - {{ d.groupName }}) se encuentra en la puerta de salida.
+        </p>
+
+        <div class="delivery-info-box">
+          <span>📍 Entrega en puerta escolar</span>
+          <span>⏰ {{ d.teacherConfirmedAt | date:'shortTime' }}</span>
+        </div>
+
+        <div class="delivery-actions">
+          <button
+            type="button"
+            class="btn-confirm-receipt"
+            [disabled]="isConfirmingDelivery()"
+            (click)="confirmDeliveryReceipt()"
+          >
+            <span *ngIf="!isConfirmingDelivery()">✅ Confirmar que Recibí a mi Hijo</span>
+            <span *ngIf="isConfirmingDelivery()">Confirmando...</span>
+          </button>
+
+          <button
+            type="button"
+            class="btn-dismiss-delivery"
+            (click)="dismissDeliveryModal()"
+          >
+            Cerrar aviso
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Modal: Parent Edit Student Profile & Pickup Tutors -->
+  @if (showEditModal()) {
+    <div class="modal-backdrop" (click)="closeEditModal()">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <header class="modal-header">
+          <h3>✏️ Actualizar Perfil de {{ editingStudent()?.name }}</h3>
+          <button type="button" class="btn-close" (click)="closeEditModal()">&times;</button>
+        </header>
+
+        <div class="modal-body">
+          @if (editError) {
+            <div class="alert-error">{{ editError }}</div>
+          }
+
+          <div class="form-group">
+            <label for="pAvatarUrl">URL de Fotografía del Alumno</label>
+            <input id="pAvatarUrl" type="url" [(ngModel)]="editAvatarUrl" placeholder="https://..." class="form-control" />
+            <small class="form-hint">Ingresa la URL de la foto o avatar de tu hijo/a.</small>
+          </div>
+
+          <div class="form-group">
+            <label for="pBirthday">Fecha de Nacimiento</label>
+            <input id="pBirthday" type="date" [(ngModel)]="editBirthday" class="form-control" />
+          </div>
+
+          <div class="tutors-section-parent">
+            <div class="tutors-header-row">
+              <h4>🛡️ Familiares / Tutores Autorizados para Recoger (Máx 3)</h4>
+              <button
+                *ngIf="editTutors.length < 3"
+                type="button"
+                class="btn-add-tutor"
+                (click)="addTutorRow()"
+              >
+                + Agregar Tutor
+              </button>
+            </div>
+
+            @for (t of editTutors; track $index) {
+              <div class="tutor-edit-row">
+                <div class="tutor-fields">
+                  <input type="text" [(ngModel)]="t.name" placeholder="Nombre completo" class="form-control form-control-sm" />
+                  <div class="row-2">
+                    <select [(ngModel)]="t.relationship" class="form-control form-control-sm">
+                      <option value="Padre">Padre</option>
+                      <option value="Madre">Madre</option>
+                      <option value="Abuelo/a">Abuelo/a</option>
+                      <option value="Tío/a">Tío/a</option>
+                      <option value="Tutor">Tutor Legal</option>
+                      <option value="Chofer">Chofer/Transporte</option>
+                    </select>
+                    <input type="tel" [(ngModel)]="t.phone" placeholder="Teléfono" class="form-control form-control-sm" />
+                  </div>
+                </div>
+                <button type="button" class="btn-remove-tutor" (click)="removeTutorRow($index)" title="Eliminar">&times;</button>
+              </div>
+            }
+          </div>
+        </div>
+
+        <footer class="modal-footer">
+          <button type="button" class="btn-secondary" (click)="closeEditModal()">Cancelar</button>
+          <button type="button" class="btn-primary" [disabled]="isSavingStudent()" (click)="saveStudentProfile()">
+            {{ isSavingStudent() ? 'Guardando...' : 'Guardar Información' }}
+          </button>
+        </footer>
+      </div>
+    </div>
+  }
 
 </div>

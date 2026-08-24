@@ -81,9 +81,12 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/v1/alerts/today").hasAnyRole("TEACHER", "ADMIN")
                 .requestMatchers(HttpMethod.GET, "/api/v1/deliveries/today").hasAnyRole("TEACHER", "ADMIN")
                 .requestMatchers("/api/v1/deliveries/*/dispatch").hasAnyRole("TEACHER", "ADMIN")
-                // Solo PARENT — envío de alertas
+                .requestMatchers("/api/v1/teacher/**").hasAnyRole("TEACHER", "ADMIN")
+                // Solo PARENT — envío de alertas, consulta y confirmación de entregas
                 .requestMatchers(HttpMethod.POST, "/api/v1/alerts").hasRole("PARENT")
                 .requestMatchers(HttpMethod.GET, "/api/v1/students/my-students").hasRole("PARENT")
+                .requestMatchers("/api/v1/students/*/parent-update").hasRole("PARENT")
+                .requestMatchers("/api/v1/deliveries/*/parent-confirm").hasRole("PARENT")
                 // Todo lo demás requiere autenticación
                 .anyRequest().authenticated()
             )

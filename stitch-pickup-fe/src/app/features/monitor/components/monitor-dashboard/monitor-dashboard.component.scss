@@ -2,20 +2,148 @@
 
 .monitor-root {
   min-height: 100dvh;
-  background: #0c0f10;
-  color: white;
+  display: flex;
+  flex-direction: column;
   font-family: v.$font-family-base;
+  transition: background 0.25s ease, color 0.25s ease;
 }
 
+// ─── Theme Light (Default) ──────────────────────────────────────────────────
+.monitor-root.theme-light {
+  background: #f8fafc;
+  color: #0f172a;
+
+  .layout-sidebar {
+    background: transparent;
+  }
+
+  .content-header .section-title {
+    color: #0f172a;
+  }
+
+  .content-header .section-sub {
+    color: #64748b;
+  }
+
+  .empty-monitor {
+    background: white;
+    border: 2px dashed #e2e8f0;
+    color: #64748b;
+    h3 { color: #0f172a; }
+  }
+
+  .roster-header-box {
+    background: white;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    h2 { color: #0f172a; }
+  }
+
+  .group-tab-btn {
+    background: white;
+    border: 1px solid #e2e8f0;
+    color: #334155;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+
+    &:hover { border-color: #2563eb; }
+
+    &--active {
+      background: #2563eb;
+      border-color: #2563eb;
+      color: white;
+      .g-level { color: #bfdbfe; }
+      .g-count { color: #e0e7ff; }
+    }
+  }
+
+  .roster-student-card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+
+    &:hover {
+      box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+      border-color: #cbd5e1;
+    }
+
+    .r-name { color: #0f172a; }
+    .r-meta { color: #64748b; }
+    .r-tutors-box {
+      background: #f8fafc;
+      border: 1px solid #f1f5f9;
+      .tutors-title { color: #475569; }
+      .tutor-chip { background: white; border: 1px solid #e2e8f0; color: #334155; }
+    }
+    .r-card-footer { border-top-color: #f1f5f9; }
+  }
+}
+
+// ─── Theme Dark ─────────────────────────────────────────────────────────────
+.monitor-root.theme-dark {
+  background: #0b0f19;
+  color: #f8fafc;
+
+  .content-header .section-title {
+    color: white;
+  }
+
+  .content-header .section-sub {
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  .empty-monitor {
+    background: rgba(255, 255, 255, 0.03);
+    border: 2px dashed rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.5);
+    h3 { color: white; }
+  }
+
+  .roster-header-box {
+    background: #131c2e;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    h2 { color: white; }
+  }
+
+  .group-tab-btn {
+    background: #131c2e;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #e2e8f0;
+
+    &--active {
+      background: #2563eb;
+      color: white;
+    }
+  }
+
+  .roster-student-card {
+    background: #131c2e;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+
+    .r-name { color: #f8fafc; }
+    .r-meta { color: rgba(255, 255, 255, 0.5); }
+    .r-tutors-box {
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      .tutors-title { color: rgba(255, 255, 255, 0.6); }
+      .tutor-chip { background: rgba(255, 255, 255, 0.06); color: #cbd5e1; border-color: rgba(255, 255, 255, 0.1); }
+    }
+    .r-card-footer { border-top-color: rgba(255, 255, 255, 0.08); }
+  }
+}
+
+// Layout
 .monitor-layout {
   display: grid;
-  grid-template-columns: 260px 1fr;
-  gap: v.$space-md;
-  padding: v.$space-md;
+  grid-template-columns: 240px 1fr;
+  gap: v.$space-lg;
+  padding: v.$space-lg;
   max-width: 1600px;
   margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+  flex: 1;
 
-  @media (max-width: 860px) {
+  @media (max-width: 900px) {
     grid-template-columns: 1fr;
   }
 }
@@ -26,37 +154,40 @@
   gap: v.$space-md;
 }
 
-.desktop-history {
-  @media (max-width: 860px) {
-    display: none;
-  }
-}
-
 .layout-content {
   display: flex;
   flex-direction: column;
   gap: v.$space-md;
+  min-width: 0;
 }
 
 .content-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
   .section-title {
     display: flex;
     align-items: center;
     gap: v.$space-xs;
     margin: 0;
-    font-size: 18px;
+    font-size: 20px;
     font-weight: v.$font-weight-bold;
 
     .active-badge {
-      padding: 2px 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 22px;
+      height: 22px;
+      padding: 0 6px;
       border-radius: v.$radius-full;
-      background: v.$color-primary;
+      background: #2563eb;
+      color: white;
       font-size: 12px;
+      font-weight: bold;
     }
+  }
+
+  .section-sub {
+    margin: 2px 0 0 0;
+    font-size: 13px;
   }
 }
 
@@ -68,17 +199,251 @@
 
 .empty-monitor {
   grid-column: 1 / -1;
+  text-align: center;
+  padding: 32px v.$space-md;
+  border-radius: v.$radius-xl;
+
+  .empty-icon { font-size: 48px; margin-bottom: v.$space-sm; }
+  h3 { margin: 0; font-size: 18px; font-weight: bold; }
+  p { margin: 4px 0 0 0; font-size: 13px; }
+}
+
+// Teacher Roster View
+.groups-roster-layout {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: v.$space-lg;
   display: flex;
   flex-direction: column;
+  gap: v.$space-lg;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.roster-header-box {
+  padding: v.$space-md v.$space-lg;
+  border-radius: v.$radius-lg;
+
+  h2 { margin: 0; font-size: 20px; font-weight: bold; }
+  p { margin: 2px 0 0 0; font-size: 13px; color: #64748b; }
+}
+
+.group-selector-pills {
+  display: flex;
+  gap: v.$space-sm;
+  overflow-x: auto;
+  padding-bottom: 4px;
+
+  .group-tab-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: v.$radius-full;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: all 0.2s;
+
+    .g-level { font-size: 11px; opacity: 0.8; }
+    .g-count { font-size: 11px; opacity: 0.7; }
+  }
+}
+
+.roster-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: v.$space-md;
+}
+
+.roster-student-card {
+  border-radius: v.$radius-lg;
+  padding: v.$space-md;
+  display: flex;
+  flex-direction: column;
+  gap: v.$space-sm;
+  transition: all 0.2s ease;
+
+  .r-card-header {
+    display: flex;
+    align-items: center;
+    gap: v.$space-sm;
+
+    .r-avatar-wrap {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      overflow: hidden;
+      flex-shrink: 0;
+
+      .r-avatar-img { width: 100%; height: 100%; object-fit: cover; }
+      .r-avatar-initial {
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 18px;
+      }
+    }
+
+    .r-student-main {
+      .r-name { margin: 0; font-size: 15px; font-weight: bold; }
+      .r-meta { margin: 2px 0 0 0; font-size: 12px; }
+    }
+  }
+
+  .r-tutors-box {
+    border-radius: v.$radius-md;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    .tutors-title { font-size: 11px; font-weight: bold; }
+    .tutors-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+    .tutor-chip {
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+    .text-muted-xs { font-size: 11px; color: #94a3b8; font-style: italic; }
+  }
+
+  .r-card-footer {
+    padding-top: 6px;
+    border-top: 1px solid transparent;
+    display: flex;
+    justify-content: flex-end;
+
+    .btn-edit-student {
+      padding: 5px 12px;
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      color: #2563eb;
+      border-radius: v.$radius-md;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+
+      &:hover {
+        background: #2563eb;
+        color: white;
+      }
+    }
+  }
+}
+
+// Modal Styles
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
   align-items: center;
   justify-content: center;
-  padding: v.$space-xl;
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: v.$radius-xl;
-  border: 1px dashed rgba(255, 255, 255, 0.1);
-  text-align: center;
+  z-index: 1000;
+  padding: v.$space-md;
+}
 
-  .empty-icon { font-size: 48px; margin-bottom: v.$space-xs; }
-  h3 { margin: 0; font-size: 18px; font-weight: bold; }
-  p { margin: 4px 0 0; font-size: 13px; color: rgba(255, 255, 255, 0.4); }
+.modal-card {
+  background: white;
+  color: #0f172a;
+  width: 100%;
+  max-width: 480px;
+  border-radius: v.$radius-lg;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  animation: modalIn 0.2s ease-out;
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: v.$space-md v.$space-lg;
+    border-bottom: 1px solid #e2e8f0;
+    h3 { margin: 0; font-size: 17px; font-weight: bold; }
+    .btn-close { background: none; border: none; font-size: 24px; cursor: pointer; color: #64748b; }
+  }
+
+  .modal-body {
+    padding: v.$space-lg;
+    display: flex;
+    flex-direction: column;
+    gap: v.$space-md;
+  }
+
+  .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: v.$space-sm;
+    padding: v.$space-md v.$space-lg;
+    border-top: 1px solid #e2e8f0;
+    background: #f8fafc;
+  }
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+
+  label { font-size: 12px; font-weight: 600; color: #334155; }
+  .form-control {
+    padding: 8px 12px;
+    border-radius: v.$radius-md;
+    border: 1px solid #cbd5e1;
+    font-size: 13px;
+    outline: none;
+
+    &:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+  }
+}
+
+.alert-error {
+  padding: 8px 12px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #b91c1c;
+  border-radius: v.$radius-md;
+  font-size: 13px;
+}
+
+.btn-secondary {
+  padding: 7px 14px;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: v.$radius-md;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-primary {
+  padding: 7px 16px;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: v.$radius-md;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover:not(:disabled) { background: #1d4ed8; }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
 }

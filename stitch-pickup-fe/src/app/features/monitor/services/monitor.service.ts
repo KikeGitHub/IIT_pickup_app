@@ -4,6 +4,7 @@ import { tap, catchError, of } from 'rxjs';
 import { WebSocketService } from '../../../core/services/websocket.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { NotificationSoundService } from '../../../core/services/notification-sound.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { AlertResponse } from '../../../core/models/alert.model';
 import { environment } from '../../../../environments/environment';
 
@@ -19,7 +20,6 @@ export interface MonitorAlert {
   pickupMethod: 'CAR' | 'WALK';
   sentAt: string;
   isDispatched: boolean;
-  /** Flag to trigger highlight animation when a card is updated in real-time */
   isUpdated: boolean;
 }
 
@@ -33,6 +33,7 @@ export interface DeliveryRecord {
   pickupMethod: string;
   status: 'ENTREGADO_ESCUELA' | 'RECIBIDO_PADRE';
   teacherConfirmedAt: string;
+  parentConfirmedAt?: string;
   logDate: string;
 }
 
@@ -46,6 +47,7 @@ export class MonitorService {
   private readonly ws = inject(WebSocketService);
   private readonly notification = inject(NotificationService);
   private readonly sound = inject(NotificationSoundService);
+  private readonly auth = inject(AuthService);
 
   private readonly apiUrl = environment.apiUrl;
 
@@ -100,9 +102,9 @@ export class MonitorService {
         this.alerts.update(alerts =>
           alerts.map(a => a.id === alertId ? { ...a, isDispatched: true } : a)
         );
-        // Add to deliveries
-        this.deliveries.update(d => [delivery, ...d]);
-        this.notification.success(`✅ ${delivery.studentName} entregado a ${delivery.teacherName ?? 'maestro'}`);
+        // Add or update in deliveries
+        this.deliveries.update(d => [delivery, ...d.filter(item => item.studentId !== delivery.studentId)]);
+        this.notification.success(`✅ ${delivery.studentName} entregado en puerta`);
       }),
       catchError((err) => {
         this.dispatchingAlertId.set(null);
@@ -148,8 +150,24 @@ export class MonitorService {
 
   // ─── Private: WebSocket ──────────────────────────────────────────────────
   private subscribeToWebSocket(): void {
-    // Listen for new parent proximity alerts
+    // 1. Listen for new parent proximity alerts
     this.ws.onParentAlert().subscribe(event => {
+      const currentUser = this.auth.currentUser();
+
+      // STRICT TEACHER GROUP FILTERING:
+      // If user is a TEACHER, verify if student belongs to one of their assigned groups
+      if (currentUser && currentUser.role === 'TEACHER') {
+        const teacherGroups: string[] = currentUser.groups || [];
+        const matchesGroup = teacherGroups.some(g =>
+          g.trim().toLowerCase() === (event.groupName || '').trim().toLowerCase()
+        );
+
+        if (!matchesGroup) {
+          // Ignore alert from another teacher's group completely
+          return;
+        }
+      }
+
       // Dedup by studentId: if a card for this student already exists, UPDATE it
       const existingIndex = this.alerts().findIndex(a => a.studentId === event.studentId && !a.isDispatched);
 
@@ -174,7 +192,6 @@ export class MonitorService {
           })
         );
 
-        // Clear the isUpdated flag after 2s so animation can replay
         setTimeout(() => {
           this.alerts.update(alerts =>
             alerts.map(a => a.studentId === event.studentId ? { ...a, isUpdated: false } : a)
@@ -184,11 +201,11 @@ export class MonitorService {
         // Sound + notification for update
         if (event.status === 'URGENTE') {
           this.sound.playUrgentSound();
-          this.notification.warning(`🚨 ${event.studentName} — URGENTE (actualizado)`);
+          this.notification.warning(`🚨 ${event.studentName} — URGENTE`);
         } else {
           this.sound.playAlertSound();
           const statusLabel: Record<string, string> = { TEN_MIN: '10 MIN', FIVE_MIN: '5 MIN', EN_FILA: 'EN FILA' };
-          this.notification.info(`📍 ${event.studentName} — ${statusLabel[event.status] || event.status} (actualizado)`);
+          this.notification.info(`📍 ${event.studentName} — ${statusLabel[event.status] || event.status}`);
         }
       } else {
         // NEW card for a new student
@@ -208,7 +225,6 @@ export class MonitorService {
         };
         this.alerts.update(alerts => [newAlert, ...alerts]);
 
-        // Clear isUpdated flag after animation
         setTimeout(() => {
           this.alerts.update(alerts =>
             alerts.map(a => a.studentId === event.studentId ? { ...a, isUpdated: false } : a)
@@ -221,10 +237,34 @@ export class MonitorService {
           this.notification.warning(`🚨 NUEVA: ${event.studentName} — URGENTE`);
         } else {
           this.sound.playAlertSound();
-          const statusLabel: Record<string, string> = { TEN_MIN: '10 MIN', FIVE_MIN: '5 MIN', EN_FILA: 'EN FILA', URGENTE: '🚨 URGENTE' };
+          const statusLabel: Record<string, string> = { TEN_MIN: '10 MIN', FIVE_MIN: '5 MIN', EN_FILA: 'EN FILA' };
           this.notification.info(`📍 NUEVA: ${event.studentName} — ${statusLabel[event.status] || event.status}`);
         }
       }
+    });
+
+    // 2. Listen for delivery status updates (e.g. parent confirmed receipt)
+    this.ws.onDeliveryEvent().subscribe(delivery => {
+      this.deliveries.update(list => {
+        const idx = list.findIndex(d => d.studentId === delivery.studentId || d.id === delivery.id);
+        if (idx !== -1) {
+          return list.map((item, i) => i === idx ? { ...item, ...delivery } : item);
+        } else {
+          return [{
+            id: delivery.id,
+            studentId: delivery.studentId,
+            studentName: delivery.studentName,
+            level: delivery.level,
+            groupName: delivery.groupName,
+            teacherName: delivery.teacherName,
+            pickupMethod: delivery.pickupMethod || 'CAR',
+            status: delivery.status,
+            teacherConfirmedAt: delivery.teacherConfirmedAt || new Date().toISOString(),
+            parentConfirmedAt: delivery.parentConfirmedAt,
+            logDate: delivery.logDate
+          }, ...list];
+        }
+      });
     });
   }
 }

@@ -1,10 +1,11 @@
 @use 'styles/variables' as v;
 
 .dispatches-card {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: white;
+  border: 1px solid #e2e8f0;
   border-radius: v.$radius-lg;
   padding: v.$space-md;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
 }
 
 .card-header {
@@ -17,9 +18,9 @@
     margin: 0;
     font-size: 14px;
     font-weight: v.$font-weight-bold;
-    color: white;
+    color: #0f172a;
 
-    .header-icon { width: 18px; height: 18px; color: #4ade80; }
+    .header-icon { width: 18px; height: 18px; color: #16a34a; }
   }
 }
 
@@ -36,16 +37,17 @@
   align-items: center;
   gap: v.$space-sm;
   padding: 8px 12px;
-  background: rgba(255, 255, 255, 0.03);
+  background: #f8fafc;
   border-radius: v.$radius-md;
-  border-left: 3px solid #4ade80;
+  border: 1px solid #f1f5f9;
+  border-left: 3px solid #16a34a;
 
   .check-icon {
     width: 20px;
     height: 20px;
     border-radius: 50%;
-    background: rgba(74, 222, 128, 0.15);
-    color: #4ade80;
+    background: rgba(22, 163, 74, 0.15);
+    color: #16a34a;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -57,14 +59,14 @@
   .dispatch-info {
     flex: 1;
 
-    .student-name { margin: 0; font-size: 13px; font-weight: v.$font-weight-semibold; color: white; }
-    .dispatch-meta { margin: 0; font-size: 11px; color: rgba(255, 255, 255, 0.45); .sep { margin: 0 2px; } }
+    .student-name { margin: 0; font-size: 13px; font-weight: v.$font-weight-semibold; color: #0f172a; }
+    .dispatch-meta { margin: 0; font-size: 11px; color: #64748b; .sep { margin: 0 2px; } }
   }
 
   .dispatch-time {
     font-size: 11px;
     font-weight: bold;
-    color: rgba(255, 255, 255, 0.5);
+    color: #64748b;
   }
 }
 
@@ -72,5 +74,22 @@
   padding: v.$space-md;
   text-align: center;
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.4);
+  color: #94a3b8;
+}
+
+:host-context(.theme-dark) {
+  .dispatches-card {
+    background: #131c2e;
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: none;
+  }
+  .card-header .card-title { color: #f8fafc; }
+  .dispatch-item {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: transparent;
+    .dispatch-info .student-name { color: #f8fafc; }
+    .dispatch-info .dispatch-meta { color: rgba(255, 255, 255, 0.45); }
+    .dispatch-time { color: rgba(255, 255, 255, 0.5); }
+  }
+  .empty-state { color: rgba(255, 255, 255, 0.4); }
 }

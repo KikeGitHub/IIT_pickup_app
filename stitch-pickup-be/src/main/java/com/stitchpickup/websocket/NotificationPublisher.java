@@ -11,9 +11,10 @@ import org.springframework.stereotype.Component;
  * NotificationPublisher — Centraliza toda la emisión de eventos WebSocket.
  *
  * Tópicos:
- *   /topic/alerts       → Broadcast de nueva alerta a todos los monitores
- *   /topic/deliveries   → Broadcast de entrega confirmada a todos los monitores
- *   /user/{parentId}/queue/delivery → Confirmación privada al padre
+ *   /topic/school/alerts            → Broadcast de nueva alerta a monitores
+ *   /topic/deliveries               → Broadcast de entregas a monitores y padres
+ *   /topic/delivery/parent/{id}     → Notificación directa al padre
+ *   /user/{parentId}/queue/delivery → Cola privada del padre
  *
  * SOLID — S: Solo emite mensajes. No contiene lógica de negocio.
  */
@@ -34,7 +35,7 @@ public class NotificationPublisher {
         }
     }
 
-    /** Broadcast de entrega despachada a todos los monitores */
+    /** Broadcast de entrega despachada o confirmada a todos los monitores */
     public void publishDelivery(DeliveryLogResponse delivery) {
         try {
             messagingTemplate.convertAndSend("/topic/deliveries", delivery);
@@ -44,11 +45,14 @@ public class NotificationPublisher {
         }
     }
 
-    /** Mensaje privado al padre notificando que su hijo ya está en puerta */
+    /** Mensaje directo al padre notificando que su hijo ya está en puerta */
     public void notifyParentDeliveryReady(String parentId, DeliveryLogResponse delivery) {
         try {
+            // Enviar por topic directo del padre
+            messagingTemplate.convertAndSend("/topic/delivery/parent/" + parentId, delivery);
+            // Enviar también por cola de usuario
             messagingTemplate.convertAndSendToUser(parentId, "/queue/delivery", delivery);
-            log.debug("Delivery notification → /user/{}/queue/delivery", parentId);
+            log.debug("Delivery notification sent to parent: {}", parentId);
         } catch (Exception e) {
             log.warn("Failed to notify parent {}: {}", parentId, e.getMessage());
         }

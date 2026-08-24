@@ -14,6 +14,7 @@ export class StudentCardComponent {
   @Input({ required: true }) students: Student[] = [];
   @Input({ required: true }) selectedStudentId: string | null = null;
   @Output() selectStudent = new EventEmitter<string>();
+  @Output() editStudent = new EventEmitter<Student>();
 
   readonly showMembersModal = signal(false);
 
@@ -23,6 +24,12 @@ export class StudentCardComponent {
 
   onSelect(studentId: string): void {
     this.selectStudent.emit(studentId);
+  }
+
+  onEdit(): void {
+    if (this.selectedStudent) {
+      this.editStudent.emit(this.selectedStudent);
+    }
   }
 
   toggleMembersModal(): void {

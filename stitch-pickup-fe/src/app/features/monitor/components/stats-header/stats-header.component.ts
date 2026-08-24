@@ -13,17 +13,35 @@ import { AuthService } from '../../../../core/services/auth.service';
 })
 export class StatsHeaderComponent {
   readonly authService = inject(AuthService);
+
   @Input() totalActive: number = 0;
   @Input() urgentCount: number = 0;
   @Input() enFilaCount: number = 0;
   @Input() dispatchedCount: number = 0;
   @Input() isConnected: boolean = false;
   @Input() teacherName: string = '';
+  @Input() currentTheme: 'light' | 'dark' = 'light';
+  @Input() activeTab: 'MONITOR' | 'GROUPS' = 'MONITOR';
+
   @Output() logout = new EventEmitter<void>();
+  @Output() toggleTheme = new EventEmitter<void>();
+  @Output() tabChange = new EventEmitter<'MONITOR' | 'GROUPS'>();
 
   onLogout(): void { this.logout.emit(); }
+  onToggleTheme(): void { this.toggleTheme.emit(); }
+  setTab(tab: 'MONITOR' | 'GROUPS'): void { this.tabChange.emit(tab); }
 
   now(): string {
     return new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  get teacherGroupsLabel(): string {
+    const user = this.authService.currentUser();
+    if (!user) return '';
+    if (user.role === 'ADMIN') return 'Super Admin (Todos los Niveles)';
+    if (user.groups && user.groups.length > 0) {
+      return 'Grupos: ' + user.groups.join(', ');
+    }
+    return user.level || 'Personal Escolar';
   }
 }
