@@ -118,6 +118,26 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
     this.editingStudent.set(null);
   }
 
+  onPhotoFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      if (file.size > 2 * 1024 * 1024) {
+        this.editError = 'La fotografía no debe superar 2MB.';
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.editAvatarUrl = reader.result as string;
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  clearPhoto(): void {
+    this.editAvatarUrl = '';
+  }
+
   saveStudent(): void {
     const s = this.editingStudent();
     if (!s) return;

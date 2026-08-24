@@ -165,6 +165,26 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
     this.showEditModal.set(true);
   }
 
+  onPhotoFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      if (file.size > 2 * 1024 * 1024) {
+        this.editError = 'La fotografía no debe superar 2MB.';
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.editAvatarUrl = reader.result as string;
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  clearPhoto(): void {
+    this.editAvatarUrl = '';
+  }
+
   closeEditModal(): void {
     this.showEditModal.set(false);
     this.editingStudent.set(null);

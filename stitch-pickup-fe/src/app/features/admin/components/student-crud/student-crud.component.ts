@@ -126,6 +126,26 @@ export class StudentCrudComponent implements OnInit {
     this.showModal.set(false);
   }
 
+  onPhotoFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      if (file.size > 2 * 1024 * 1024) {
+        this.formError = 'La fotografía no debe superar 2MB.';
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.studentAvatarUrl = reader.result as string;
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  clearPhoto(): void {
+    this.studentAvatarUrl = '';
+  }
+
   saveStudent(): void {
     if (!this.studentName.trim()) {
       this.formError = 'El nombre del alumno es obligatorio.';
