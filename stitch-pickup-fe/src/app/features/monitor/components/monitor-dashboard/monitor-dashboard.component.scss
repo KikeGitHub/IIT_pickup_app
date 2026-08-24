@@ -145,6 +145,8 @@
 
   @media (max-width: 900px) {
     grid-template-columns: 1fr;
+    gap: v.$space-md;
+    padding: 12px;
   }
 }
 
@@ -193,8 +195,13 @@
 
 .alerts-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: v.$space-md;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
 }
 
 .empty-monitor {
@@ -218,14 +225,19 @@
   gap: v.$space-lg;
   width: 100%;
   box-sizing: border-box;
+
+  @media (max-width: 768px) {
+    padding: 12px;
+    gap: 12px;
+  }
 }
 
 .roster-header-box {
   padding: v.$space-md v.$space-lg;
   border-radius: v.$radius-lg;
 
-  h2 { margin: 0; font-size: 20px; font-weight: bold; }
-  p { margin: 2px 0 0 0; font-size: 13px; color: #64748b; }
+  h2 { margin: 0; font-size: 18px; font-weight: bold; }
+  p { margin: 2px 0 0 0; font-size: 12px; color: #64748b; }
 }
 
 .group-selector-pills {
@@ -238,23 +250,28 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 8px 16px;
+    padding: 7px 14px;
     border-radius: v.$radius-full;
     cursor: pointer;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
     white-space: nowrap;
     transition: all 0.2s;
 
-    .g-level { font-size: 11px; opacity: 0.8; }
-    .g-count { font-size: 11px; opacity: 0.7; }
+    .g-level { font-size: 10px; opacity: 0.8; }
+    .g-count { font-size: 10px; opacity: 0.7; }
   }
 }
 
 .roster-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: v.$space-md;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
 }
 
 .roster-student-card {

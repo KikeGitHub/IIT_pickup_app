@@ -9,6 +9,14 @@
   border-radius: v.$radius-lg;
   border: 1px solid #e2e8f0;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+
+  @media (max-width: 900px) {
+    flex-direction: row;
+    align-items: center;
+    overflow-x: auto;
+    padding: 6px 10px;
+    gap: 6px;
+  }
 }
 
 .sidebar-label {
@@ -19,6 +27,14 @@
   letter-spacing: 0.08em;
   color: #64748b;
   padding: 4px v.$space-xs 0;
+  white-space: nowrap;
+
+  @media (max-width: 900px) {
+    margin: 0;
+    padding: 0 4px 0 0;
+    border-right: 1px solid #e2e8f0;
+    margin-right: 4px;
+  }
 }
 
 .filter-btn {
@@ -34,6 +50,14 @@
   transition: all 0.18s ease;
   width: 100%;
   text-align: left;
+  white-space: nowrap;
+
+  @media (max-width: 900px) {
+    width: auto;
+    padding: 6px 10px;
+    border-radius: v.$radius-full;
+    background: #f1f5f9;
+  }
 
   .filter-emoji { font-size: 16px; flex-shrink: 0; }
 
@@ -90,14 +114,25 @@
     background: #131c2e;
     border-color: rgba(255, 255, 255, 0.08);
     box-shadow: none;
+
+    @media (max-width: 900px) {
+      border-color: rgba(255, 255, 255, 0.08);
+    }
   }
 
   .sidebar-label {
     color: rgba(255, 255, 255, 0.5);
+    @media (max-width: 900px) {
+      border-right-color: rgba(255, 255, 255, 0.1);
+    }
   }
 
   .filter-btn {
     color: rgba(255, 255, 255, 0.75);
+
+    @media (max-width: 900px) {
+      background: rgba(255, 255, 255, 0.05);
+    }
 
     .filter-count {
       background: rgba(255, 255, 255, 0.12);
