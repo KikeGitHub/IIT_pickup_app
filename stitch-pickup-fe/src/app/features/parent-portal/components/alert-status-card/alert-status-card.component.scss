@@ -1,0 +1,92 @@
+@use 'styles/variables' as v;
+
+.status-card {
+  padding: v.$space-md;
+  border-radius: v.$radius-lg;
+  background: white;
+  box-shadow: v.$shadow-md;
+  transition: all 0.3s ease;
+
+  &--idle {
+    border-left: 4px solid v.$color-outline;
+  }
+
+  &--sending {
+    border-left: 4px solid v.$color-primary;
+    background: rgba(v.$color-primary, 0.02);
+  }
+
+  &--queued {
+    border-left: 4px solid #d97706;
+    background: #fffbeb;
+  }
+
+  &--confirmed {
+    border-left: 4px solid #16a34a;
+    background: #f0fdf4;
+  }
+}
+
+.status-content {
+  display: flex;
+  align-items: center;
+  gap: v.$space-md;
+}
+
+.status-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  svg { width: 22px; height: 22px; }
+
+  &--idle {
+    background: v.$color-surface-container;
+    color: v.$color-outline;
+  }
+
+  &--queued {
+    background: #fef3c7;
+    color: #d97706;
+  }
+
+  &--confirmed {
+    background: #dcfce7;
+    color: #16a34a;
+  }
+}
+
+.status-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(v.$color-primary, 0.2);
+  border-top-color: v.$color-primary;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+.status-text {
+  flex: 1;
+
+  .status-title {
+    margin: 0;
+    font-size: v.$font-size-label-md;
+    font-weight: v.$font-weight-bold;
+    color: v.$color-on-surface;
+  }
+
+  .status-sub {
+    margin: 2px 0 0;
+    font-size: v.$font-size-body-md;
+    color: v.$color-on-surface-variant;
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

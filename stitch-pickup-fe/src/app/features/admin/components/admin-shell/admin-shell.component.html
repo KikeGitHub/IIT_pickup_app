@@ -1,0 +1,74 @@
+<div class="admin-root">
+
+  <!-- Navy Admin Header -->
+  <header class="admin-header">
+    <div class="header-brand">
+      <img src="/logo_IIT.jpg" alt="IIT" class="brand-logo" />
+      <div>
+        <h1 class="portal-title">Stitch Pickup Admin</h1>
+        <p class="portal-sub">Panel de Control & Reportería — IIT</p>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <div class="user-info">
+        <span class="user-name">{{ authService.currentUser()?.nombre || 'Super Admin' }}</span>
+        <span class="user-role">SUPER ADMIN</span>
+      </div>
+      <button type="button" class="btn-logout" (click)="logout()" title="Cerrar Sesión">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke="currentColor" stroke-width="2"/><polyline points="16 17 21 12 16 7" stroke="currentColor" stroke-width="2"/><line x1="21" y1="12" x2="9" y2="12" stroke="currentColor" stroke-width="2"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Subnav Tabs -->
+  <nav class="admin-nav" role="tablist">
+    <div class="nav-container">
+      <button
+        type="button"
+        role="tab"
+        class="nav-tab"
+        [class.nav-tab--active]="activeTab() === 'KPIS'"
+        (click)="setTab('KPIS')"
+      >
+        <span>📊 Panel KPIs & Métricas</span>
+      </button>
+
+      <button
+        type="button"
+        role="tab"
+        class="nav-tab"
+        [class.nav-tab--active]="activeTab() === 'USERS'"
+        (click)="setTab('USERS')"
+      >
+        <span>👥 Usuarios & Accesos</span>
+      </button>
+
+      <button
+        type="button"
+        role="tab"
+        class="nav-tab"
+        [class.nav-tab--active]="activeTab() === 'CSV'"
+        (click)="setTab('CSV')"
+      >
+        <span>📂 Importación Masiva CSV</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Active Tab Content -->
+  <main class="admin-main">
+    @if (activeTab() === 'KPIS') {
+      <app-kpi-dashboard></app-kpi-dashboard>
+    }
+
+    @if (activeTab() === 'USERS') {
+      <app-user-management></app-user-management>
+    }
+
+    @if (activeTab() === 'CSV') {
+      <app-csv-import></app-csv-import>
+    }
+  </main>
+
+</div>

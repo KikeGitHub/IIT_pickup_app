@@ -1,0 +1,61 @@
+<div class="monitor-root">
+
+  <!-- Header with Live Stats & WebSocket status -->
+  <app-stats-header
+    [totalActive]="monitorService.totalActive()"
+    [urgentCount]="monitorService.urgentCount()"
+    [enFilaCount]="monitorService.enFilaCount()"
+    [dispatchedCount]="monitorService.dispatchedCount()"
+    [isConnected]="true"
+    [teacherName]="teacherName"
+    (logout)="logout()"
+  ></app-stats-header>
+
+  <!-- Main Grid Layout -->
+  <main class="monitor-layout">
+
+    <!-- Left Sidebar: Level Filters -->
+    <aside class="layout-sidebar">
+      <app-level-filter-sidebar
+        [selectedLevel]="monitorService.selectedLevel()"
+        [totalCount]="monitorService.totalActive()"
+        (filterChange)="onFilterChange($event)"
+      ></app-level-filter-sidebar>
+
+      <!-- History Section on Sidebar for desktop -->
+      <div class="desktop-history">
+        <app-dispatch-confirmation
+          [deliveries]="monitorService.deliveries()"
+        ></app-dispatch-confirmation>
+      </div>
+    </aside>
+
+    <!-- Center/Right: Live Alerts Grid -->
+    <section class="layout-content" aria-label="Alertas activas">
+      <header class="content-header">
+        <h2 class="section-title">
+          <span>Alertas Activas</span>
+          <span class="active-badge">{{ monitorService.filteredAlerts().length }}</span>
+        </h2>
+      </header>
+
+      <div class="alerts-grid">
+        @for (alert of monitorService.filteredAlerts(); track alert.id) {
+          <app-student-monitor-card
+            [alert]="alert"
+            [isDispatching]="monitorService.dispatchingAlertId() === alert.id"
+            (dispatch)="onDispatch($event)"
+          ></app-student-monitor-card>
+        } @empty {
+          <div class="empty-monitor">
+            <div class="empty-icon">🎉</div>
+            <h3>Sin alumnos en espera</h3>
+            <p>No hay alertas activas en este momento para el filtro seleccionado.</p>
+          </div>
+        }
+      </div>
+    </section>
+
+  </main>
+
+</div>

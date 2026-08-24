@@ -1,0 +1,90 @@
+<div class="portal-root">
+
+  <!-- Header bar -->
+  <header class="portal-header">
+    <div class="header-brand">
+      <img src="/logo_IIT.jpg" alt="IIT" class="brand-logo" />
+      <div>
+        <h1 class="portal-title">Stitch Pickup</h1>
+        <p class="portal-subtitle">Portal del Padre de Familia</p>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <!-- Connectivity Indicator -->
+      <div
+        class="online-badge"
+        [class.online-badge--offline]="!connectivity.isOnline()"
+        [title]="connectivity.isOnline() ? 'Conectado a Internet' : 'Sin conexión — Modo Offline activo'"
+      >
+        <span class="dot"></span>
+        <span class="label">{{ connectivity.isOnline() ? 'En Línea' : 'Offline' }}</span>
+      </div>
+
+      <!-- Logout -->
+      <button type="button" class="btn-logout" (click)="logout()" title="Cerrar Sesión">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke="currentColor" stroke-width="2"/>
+          <polyline points="16 17 21 12 16 7" stroke="currentColor" stroke-width="2"/>
+          <line x1="21" y1="12" x2="9" y2="12" stroke="currentColor" stroke-width="2"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="portal-main">
+
+    @if (studentService.isLoading()) {
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Cargando información del alumno...</p>
+      </div>
+    } @else {
+      <div class="dashboard-grid">
+
+        <!-- Student Info Card -->
+        <section aria-label="Información del alumno">
+          <app-student-card
+            [students]="studentService.students()"
+            [selectedStudentId]="currentStudentId"
+            (selectStudent)="onSelectStudent($event)"
+          ></app-student-card>
+        </section>
+
+        <!-- Current Status Banner -->
+        <section aria-label="Estado actual de la alerta">
+          <app-alert-status-card
+            [alertStatus]="currentAlertStatus"
+          ></app-alert-status-card>
+        </section>
+
+        <!-- Pickup Mode Selector (Car vs Walk) -->
+        <section aria-label="Modalidad de entrega">
+          <app-pickup-mode-selector
+            [selectedMethod]="currentAlertStatus.pickupMethod"
+            (methodChange)="onPickupMethodChange($event)"
+          ></app-pickup-mode-selector>
+        </section>
+
+        <!-- Proximity Alert Buttons -->
+        <section aria-label="Botones de alerta de proximidad">
+          <h3 class="section-heading">Emitir Alerta de Proximidad</h3>
+          <app-alert-buttons
+            [activeStatus]="currentAlertStatus.lastStatus"
+            [disabled]="currentAlertStatus.state === 'SENDING'"
+            (sendAlert)="onSendAlert($event)"
+          ></app-alert-buttons>
+        </section>
+
+        <!-- Day History Timeline -->
+        <section aria-label="Historial del día">
+          <app-day-history></app-day-history>
+        </section>
+
+      </div>
+    }
+
+  </main>
+
+</div>

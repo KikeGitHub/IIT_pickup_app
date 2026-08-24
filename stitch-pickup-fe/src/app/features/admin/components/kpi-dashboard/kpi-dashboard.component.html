@@ -1,0 +1,73 @@
+@if (adminService.kpis(); as kpis) {
+  <div class="kpi-grid">
+
+    <!-- KPI Metric Cards -->
+    <div class="metric-card">
+      <div class="metric-icon metric-icon--blue">📍</div>
+      <div class="metric-data">
+        <span class="metric-val">{{ kpis.totalAlertsToday }}</span>
+        <span class="metric-lbl">Alertas Recibidas Hoy</span>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon metric-icon--green">✅</div>
+      <div class="metric-data">
+        <span class="metric-val">{{ kpis.totalDeliveredToday }}</span>
+        <span class="metric-lbl">Alumnos Entregados</span>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon metric-icon--amber">⏱</div>
+      <div class="metric-data">
+        <span class="metric-val">{{ kpis.avgPickupTimeMinutes }} min</span>
+        <span class="metric-lbl">Tiempo Promedio de Entrega</span>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon metric-icon--purple">🔥</div>
+      <div class="metric-data">
+        <span class="metric-val">{{ kpis.peakHour }}</span>
+        <span class="metric-lbl">Hora Pico de Salida</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Level & Method Distribution Charts/Bars -->
+  <div class="charts-row">
+    <div class="chart-card">
+      <h3 class="chart-title">Distribución por Nivel Escolar</h3>
+      <div class="bar-list">
+        <div class="bar-item">
+          <span class="bar-lbl">🎒 Kinder ({{ kpis.alertsByLevel['KINDER'] || 0 }})</span>
+          <div class="bar-track"><div class="bar-fill bar-fill--kinder" [style.width.%]="30"></div></div>
+        </div>
+        <div class="bar-item">
+          <span class="bar-lbl">📚 Primaria ({{ kpis.alertsByLevel['PRIMARIA'] || 0 }})</span>
+          <div class="bar-track"><div class="bar-fill bar-fill--primaria" [style.width.%]="60"></div></div>
+        </div>
+        <div class="bar-item">
+          <span class="bar-lbl">🎓 Secundaria ({{ kpis.alertsByLevel['SECUNDARIA'] || 0 }})</span>
+          <div class="bar-track"><div class="bar-fill bar-fill--secundaria" [style.width.%]="20"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <h3 class="chart-title">Modalidad de Recogida</h3>
+      <div class="bar-list">
+        <div class="bar-item">
+          <span class="bar-lbl">🚗 Circuito en Auto ({{ kpis.alertsByMethod['CAR'] || 0 }})</span>
+          <div class="bar-track"><div class="bar-fill bar-fill--car" [style.width.%]="80"></div></div>
+        </div>
+        <div class="bar-item">
+          <span class="bar-lbl">🚶 Puerta Peatonal ({{ kpis.alertsByMethod['WALK'] || 0 }})</span>
+          <div class="bar-track"><div class="bar-fill bar-fill--walk" [style.width.%]="20"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+}

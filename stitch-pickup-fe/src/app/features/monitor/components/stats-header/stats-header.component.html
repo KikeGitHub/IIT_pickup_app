@@ -1,0 +1,42 @@
+<header class="monitor-header">
+  <div class="header-left">
+    <div class="brand">
+      <div class="brand-dot"></div>
+      <div>
+        <h1 class="brand-title">Monitor de Entregas</h1>
+        <p class="brand-sub">{{ teacherName || 'IIT' }} · {{ now() }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPI stats -->
+  <div class="kpi-row" role="list" aria-label="Estadísticas del día">
+    <div class="kpi-card" role="listitem">
+      <span class="kpi-num">{{ totalActive }}</span>
+      <span class="kpi-lbl">En espera</span>
+    </div>
+    <div class="kpi-card kpi-card--enfila" role="listitem">
+      <span class="kpi-num">{{ enFilaCount }}</span>
+      <span class="kpi-lbl">En fila</span>
+    </div>
+    <div class="kpi-card kpi-card--urgent" role="listitem" [class.kpi-card--pulse]="urgentCount > 0">
+      <span class="kpi-num">{{ urgentCount }}</span>
+      <span class="kpi-lbl">Urgente</span>
+    </div>
+    <div class="kpi-card kpi-card--done" role="listitem">
+      <span class="kpi-num">{{ dispatchedCount }}</span>
+      <span class="kpi-lbl">Entregados</span>
+    </div>
+  </div>
+
+  <!-- Connection status + logout -->
+  <div class="header-right">
+    <div class="ws-badge" [class.ws-badge--connected]="isConnected" [attr.title]="isConnected ? 'WebSocket conectado' : 'Desconectado'">
+      <span class="ws-dot"></span>
+      <span>{{ isConnected ? 'En Vivo' : 'Offline' }}</span>
+    </div>
+    <button type="button" class="logout-btn" (click)="onLogout()" title="Cerrar Sesión">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke="currentColor" stroke-width="2"/><polyline points="16 17 21 12 16 7" stroke="currentColor" stroke-width="2"/><line x1="21" y1="12" x2="9" y2="12" stroke="currentColor" stroke-width="2"/></svg>
+    </button>
+  </div>
+</header>

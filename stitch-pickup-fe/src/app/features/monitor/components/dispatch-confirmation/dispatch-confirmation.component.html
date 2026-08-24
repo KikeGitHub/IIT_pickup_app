@@ -1,0 +1,32 @@
+<div class="dispatches-card">
+  <div class="card-header">
+    <h3 class="card-title">
+      <svg viewBox="0 0 24 24" fill="none" class="header-icon">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" stroke="currentColor" stroke-width="2"/>
+        <polyline points="22 4 12 14.01 9 11.01" stroke="currentColor" stroke-width="2"/>
+      </svg>
+      <span>Entregados Hoy ({{ deliveries.length }})</span>
+    </h3>
+  </div>
+
+  <div class="dispatches-list">
+    @for (d of deliveries; track d.id) {
+      <div class="dispatch-item">
+        <div class="check-icon">✓</div>
+        <div class="dispatch-info">
+          <p class="student-name">{{ d.studentName }}</p>
+          <p class="dispatch-meta">
+            <span>{{ d.level }} · Grupo {{ d.groupName }}</span>
+            <span class="sep">·</span>
+            <span>Por: {{ d.teacherName || 'Maestro' }}</span>
+          </p>
+        </div>
+        <span class="dispatch-time">{{ formatTime(d.teacherConfirmedAt) }}</span>
+      </div>
+    } @empty {
+      <div class="empty-state">
+        <p>Aún no se han despachado alumnos hoy.</p>
+      </div>
+    }
+  </div>
+</div>

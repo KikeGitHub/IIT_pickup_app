@@ -1,0 +1,73 @@
+@use 'styles/variables' as v;
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: v.$space-xs;
+  padding: v.$space-sm;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: v.$radius-lg;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sidebar-label {
+  margin: 0 0 v.$space-xs;
+  font-size: 10px;
+  font-weight: v.$font-weight-bold;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.4);
+  padding: 0 v.$space-xs;
+}
+
+.filter-btn {
+  display: flex;
+  align-items: center;
+  gap: v.$space-xs;
+  padding: v.$space-xs v.$space-sm;
+  border-radius: v.$radius-md;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.65);
+  cursor: pointer;
+  transition: all 0.18s ease;
+  width: 100%;
+  text-align: left;
+
+  .filter-emoji { font-size: 16px; flex-shrink: 0; }
+
+  .filter-name {
+    flex: 1;
+    font-size: 13px;
+    font-weight: v.$font-weight-semibold;
+    font-family: v.$font-family-base;
+  }
+
+  .filter-count {
+    min-width: 20px;
+    height: 20px;
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: v.$radius-full;
+    font-size: 11px;
+    font-weight: v.$font-weight-bold;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 6px;
+  }
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: white;
+  }
+
+  &--active {
+    background: v.$color-primary;
+    color: white;
+
+    .filter-count {
+      background: rgba(255, 255, 255, 0.25);
+    }
+  }
+}

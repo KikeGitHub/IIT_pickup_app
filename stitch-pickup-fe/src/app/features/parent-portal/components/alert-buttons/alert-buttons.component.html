@@ -1,0 +1,65 @@
+<div class="alert-grid">
+  <!-- 10 MIN -->
+  <button
+    type="button"
+    class="alert-btn alert-btn--10min"
+    [class.alert-btn--active]="activeStatus === 'TEN_MIN'"
+    [disabled]="disabled"
+    (click)="onAlertClick('TEN_MIN')"
+  >
+    <div class="btn-glow"></div>
+    <span class="btn-time">10</span>
+    <span class="btn-unit">MIN</span>
+    <span class="btn-label">Aproximándome</span>
+  </button>
+
+  <!-- 5 MIN -->
+  <button
+    type="button"
+    class="alert-btn alert-btn--5min"
+    [class.alert-btn--active]="activeStatus === 'FIVE_MIN'"
+    [disabled]="disabled"
+    (click)="onAlertClick('FIVE_MIN')"
+  >
+    <div class="btn-glow"></div>
+    <span class="btn-time">5</span>
+    <span class="btn-unit">MIN</span>
+    <span class="btn-label">Cerca del plantel</span>
+  </button>
+
+  <!-- EN FILA -->
+  <button
+    type="button"
+    class="alert-btn alert-btn--enfila"
+    [class.alert-btn--active]="activeStatus === 'EN_FILA'"
+    [disabled]="disabled"
+    (click)="onAlertClick('EN_FILA')"
+  >
+    <div class="btn-glow"></div>
+    <svg viewBox="0 0 24 24" fill="none" class="btn-icon">
+      <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9C2.1 11.1 2 11.5 2 12v4c0 .6.4 1 1 1h2" stroke="currentColor" stroke-width="2"/>
+      <circle cx="7" cy="17" r="2" stroke="currentColor" stroke-width="2"/>
+      <circle cx="17" cy="17" r="2" stroke="currentColor" stroke-width="2"/>
+    </svg>
+    <span class="btn-title">EN FILA</span>
+    <span class="btn-label">En carril de entrega</span>
+  </button>
+
+  <!-- URGENTE -->
+  <button
+    type="button"
+    class="alert-btn alert-btn--urgente"
+    [class.alert-btn--active]="activeStatus === 'URGENTE'"
+    [disabled]="disabled"
+    (click)="onAlertClick('URGENTE')"
+  >
+    <div class="btn-glow"></div>
+    <svg viewBox="0 0 24 24" fill="none" class="btn-icon">
+      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" stroke="currentColor" stroke-width="2"/>
+      <line x1="12" y1="9" x2="12" y2="13" stroke="currentColor" stroke-width="2"/>
+      <line x1="12" y1="17" x2="12.01" y2="17" stroke="currentColor" stroke-width="2"/>
+    </svg>
+    <span class="btn-title">URGENTE</span>
+    <span class="btn-label">Requiere atención</span>
+  </button>
+</div>

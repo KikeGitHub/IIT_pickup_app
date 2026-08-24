@@ -1,0 +1,61 @@
+<div class="status-card" [class]="'status-card--' + alertStatus.state.toLowerCase()">
+
+  @if (alertStatus.state === 'IDLE') {
+    <div class="status-content">
+      <div class="status-icon status-icon--idle">
+        <svg viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+          <path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2"/>
+        </svg>
+      </div>
+      <div class="status-text">
+        <p class="status-title">Sin alerta activa</p>
+        <p class="status-sub">Selecciona una opción abajo cuando inicies tu traslado.</p>
+      </div>
+    </div>
+  }
+
+  @if (alertStatus.state === 'SENDING') {
+    <div class="status-content">
+      <div class="status-spinner"></div>
+      <div class="status-text">
+        <p class="status-title">Enviando alerta...</p>
+        <p class="status-sub">Comunicando con los servidores del colegio.</p>
+      </div>
+    </div>
+  }
+
+  @if (alertStatus.state === 'QUEUED') {
+    <div class="status-content">
+      <div class="status-icon status-icon--queued">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M1 9l2 2 4-4" stroke="currentColor" stroke-width="2"/>
+          <path d="M12 19H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4" stroke="currentColor" stroke-width="2"/>
+        </svg>
+      </div>
+      <div class="status-text">
+        <p class="status-title">En cola Offline</p>
+        <p class="status-sub">Alerta: {{ getStatusLabel(alertStatus.lastStatus) }} • Se enviará al detectar señal.</p>
+      </div>
+    </div>
+  }
+
+  @if (alertStatus.state === 'CONFIRMED') {
+    <div class="status-content">
+      <div class="status-icon status-icon--confirmed">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" stroke="currentColor" stroke-width="2"/>
+          <polyline points="22 4 12 14.01 9 11.01" stroke="currentColor" stroke-width="2"/>
+        </svg>
+      </div>
+      <div class="status-text">
+        <p class="status-title">¡Alerta Confirmada!</p>
+        <p class="status-sub">
+          Estatus: <strong>{{ getStatusLabel(alertStatus.lastStatus) }}</strong>
+          ({{ alertStatus.pickupMethod === 'CAR' ? 'En Auto' : 'A Pie' }})
+        </p>
+      </div>
+    </div>
+  }
+
+</div>

@@ -1,0 +1,28 @@
+# ==============================================================================
+# Git Ignore - Stitch Pickup App (Monorepo Root)
+# ==============================================================================
+
+# Backend build artifacts & logs
+**/target/
+**/.mvn/wrapper/maven-wrapper.jar
+*.log
+
+# Frontend build artifacts & dependencies
+**/node_modules/
+**/dist/
+**/.angular/
+**/coverage/
+
+# Environment Variables & Secrets
+**/.env
+**/.env.local
+**/.env.*.local
+
+# IDEs and OS files
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+.DS_Store
+Thumbs.db

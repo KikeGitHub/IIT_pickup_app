@@ -1,0 +1,90 @@
+@if (selectedStudent; as student) {
+  <div class="student-card">
+
+    <!-- Selector tabs if parent has multiple students -->
+    @if (students.length > 1) {
+      <div class="student-selector" role="tablist" aria-label="Selección de alumno">
+        @for (s of students; track s.id) {
+          <button
+            type="button"
+            role="tab"
+            class="tab-btn"
+            [class.tab-btn--active]="s.id === selectedStudentId"
+            [attr.aria-selected]="s.id === selectedStudentId"
+            (click)="onSelect(s.id)"
+          >
+            <span class="tab-avatar">{{ s.name.charAt(0) }}</span>
+            <span class="tab-name">{{ s.name.split(' ')[0] }}</span>
+          </button>
+        }
+      </div>
+    }
+
+    <!-- Student Detail Header -->
+    <div class="student-info">
+      <div class="avatar-wrapper">
+        @if (student.avatarUrl) {
+          <img [src]="student.avatarUrl" [alt]="student.name" class="avatar-img" />
+        } @else {
+          <div class="avatar-placeholder">
+            {{ student.name.charAt(0) }}
+          </div>
+        }
+        <span class="level-badge" [class]="'level-badge--' + student.level.toLowerCase()">
+          {{ student.level }}
+        </span>
+      </div>
+
+      <div class="details">
+        <h2 class="student-name">{{ student.name }}</h2>
+        <p class="student-meta">
+          <span class="meta-grade">{{ student.grade }}</span>
+          <span class="meta-separator">•</span>
+          <span class="meta-group">Grupo {{ student.groupName }}</span>
+        </p>
+
+        <button
+          type="button"
+          class="btn-authorized"
+          (click)="toggleMembersModal()"
+        >
+          <svg viewBox="0 0 24 24" fill="none" class="btn-icon">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2"/>
+            <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke="currentColor" stroke-width="2"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="2"/>
+          </svg>
+          <span>{{ student.familyMembers.length || 1 }} Familiares Autorizados</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Modal Familiares Autorizados -->
+    @if (showMembersModal()) {
+      <div class="modal-backdrop" (click)="toggleMembersModal()">
+        <div class="modal-card" (click)="$event.stopPropagation()">
+          <header class="modal-header">
+            <h3>Familiares Autorizados</h3>
+            <button type="button" class="close-btn" (click)="toggleMembersModal()">&times;</button>
+          </header>
+
+          <div class="modal-body">
+            @for (m of student.familyMembers; track m.id) {
+              <div class="member-row">
+                <div class="member-avatar">{{ m.name.charAt(0) }}</div>
+                <div class="member-info">
+                  <p class="member-name">{{ m.name }}</p>
+                  <p class="member-rel">{{ m.relationship }} • {{ m.phone }}</p>
+                </div>
+                <span class="badge-authorized">Autorizado</span>
+              </div>
+            } @empty {
+              <p class="empty-msg">No hay otros familiares registrados.</p>
+            }
+          </div>
+        </div>
+      </div>
+    }
+
+  </div>
+}

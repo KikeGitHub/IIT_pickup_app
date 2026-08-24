@@ -1,0 +1,112 @@
+@use 'styles/variables' as v;
+
+.admin-root {
+  min-height: 100dvh;
+  background: v.$color-surface-container-low;
+  color: v.$color-on-surface;
+  font-family: v.$font-family-base;
+}
+
+.admin-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: v.$space-md v.$space-lg;
+  background: linear-gradient(135deg, v.$color-admin-header-from 0%, v.$color-admin-header-via 100%);
+  color: white;
+  box-shadow: v.$shadow-md;
+
+  .header-brand {
+    display: flex;
+    align-items: center;
+    gap: v.$space-sm;
+
+    .brand-logo {
+      width: 42px;
+      height: 42px;
+      border-radius: v.$radius-md;
+      object-fit: cover;
+    }
+
+    .portal-title {
+      margin: 0;
+      font-size: 20px;
+      font-weight: v.$font-weight-bold;
+      line-height: 1.1;
+    }
+
+    .portal-sub {
+      margin: 0;
+      font-size: 11px;
+      opacity: 0.6;
+    }
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: v.$space-md;
+
+    .user-info {
+      display: flex;
+      flex-direction: column;
+      text-align: right;
+
+      .user-name { font-size: 14px; font-weight: v.$font-weight-bold; }
+      .user-role { font-size: 10px; color: #a7f3d0; font-weight: bold; }
+    }
+
+    .btn-logout {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      svg { width: 18px; height: 18px; }
+      &:hover { background: rgba(255, 255, 255, 0.2); }
+    }
+  }
+}
+
+.admin-nav {
+  background: white;
+  border-bottom: 1px solid v.$color-outline-variant;
+
+  .nav-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    gap: v.$space-xs;
+    padding: 0 v.$space-md;
+  }
+
+  .nav-tab {
+    padding: v.$space-sm v.$space-md;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    font-size: 14px;
+    font-weight: v.$font-weight-semibold;
+    color: v.$color-on-surface-variant;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover { color: v.$color-primary; }
+
+    &--active {
+      color: v.$color-primary;
+      border-bottom-color: v.$color-primary;
+    }
+  }
+}
+
+.admin-main {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: v.$space-md;
+}

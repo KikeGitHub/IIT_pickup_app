@@ -1,0 +1,80 @@
+// _animations.scss — Uses @use for Sass variables
+
+// Slide Up animation for logins, cards, and modals
+.slide-up {
+  animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+// Shake animation for invalid passwords / error states
+.shake {
+  animation: shake 0.4s cubic-bezier(.36, .07, .19, .97) both;
+}
+
+@keyframes shake {
+  10%, 90% { transform: translateX(-2px); }
+  20%, 80% { transform: translateX(4px); }
+  30%, 50%, 70% { transform: translateX(-6px); }
+  40%, 60% { transform: translateX(6px); }
+}
+
+// Pulse warning for temporary password banner / modal
+.temp-warn {
+  animation: warnPulse 2s infinite;
+}
+
+@keyframes warnPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(251, 191, 36, 0); }
+}
+
+// Pulse red shadow for urgent alerts
+.pulse-red {
+  animation: pulseRedShadow 2s infinite;
+}
+
+@keyframes pulseRedShadow {
+  0% { box-shadow: 0 0 0 0 rgba(186, 26, 26, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(186, 26, 26, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(186, 26, 26, 0); }
+}
+
+// Pulse green shadow for active teacher states
+.pulse-green {
+  animation: pulseGreen 2s infinite;
+}
+
+@keyframes pulseGreen {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(22, 101, 52, 0.3); }
+  50% { box-shadow: 0 0 0 8px rgba(22, 101, 52, 0); }
+}
+
+// Active press effect for mobile touch targets
+.active-press {
+  transition: transform 0.1s ease, filter 0.1s ease;
+  &:active {
+    transform: scale(0.96);
+    filter: brightness(0.9);
+  }
+}
+
+// Spin
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+// Fade in
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}

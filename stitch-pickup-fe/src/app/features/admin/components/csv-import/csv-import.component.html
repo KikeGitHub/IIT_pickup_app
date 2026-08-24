@@ -1,0 +1,39 @@
+<div class="csv-card">
+  <h3 class="card-title">Carga Masiva de Alumnos vía CSV</h3>
+  <p class="card-desc">Selecciona un archivo <code>.csv</code> con el formato: <strong>Nombre, Nivel, Grado, Grupo</strong>.</p>
+
+  <div class="file-dropzone">
+    <input type="file" accept=".csv" (change)="onFileSelected($event)" id="csv-file-input" class="file-input" />
+    <label for="csv-file-input" class="dropzone-label">
+      <span class="file-icon">📄</span>
+      <span class="file-text">{{ selectedFile()?.name || 'Arrastra tu archivo CSV aquí o haz clic para seleccionar' }}</span>
+    </label>
+  </div>
+
+  @if (selectedFile()) {
+    <div class="action-bar">
+      <button type="button" class="btn-upload" [disabled]="isUploading()" (click)="upload()">
+        {{ isUploading() ? 'Procesando...' : 'Iniciar Carga Masiva' }}
+      </button>
+    </div>
+  }
+
+  @if (result(); as res) {
+    <div class="result-box" [class.result-box--success]="res.totalErrors === 0">
+      <h4>Resultado del Procesamiento:</h4>
+      <ul>
+        <li>Procesados: {{ res.totalProcessed }}</li>
+        <li>Éxito: {{ res.totalSuccess }}</li>
+        <li>Errores: {{ res.totalErrors }}</li>
+      </ul>
+      @if (res.errorMessages.length) {
+        <div class="error-log">
+          <p>Errores detectados:</p>
+          @for (e of res.errorMessages; track e) {
+            <code>{{ e }}</code>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>

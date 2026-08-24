@@ -1,0 +1,50 @@
+<div class="user-mgr-card">
+
+  <header class="table-header">
+    <div class="filter-pills">
+      <button type="button" class="pill-btn" [class.pill-btn--active]="selectedRoleFilter() === 'ALL'" (click)="setRoleFilter('ALL')">Todos</button>
+      <button type="button" class="pill-btn" [class.pill-btn--active]="selectedRoleFilter() === 'PARENT'" (click)="setRoleFilter('PARENT')">Padres</button>
+      <button type="button" class="pill-btn" [class.pill-btn--active]="selectedRoleFilter() === 'TEACHER'" (click)="setRoleFilter('TEACHER')">Maestros</button>
+      <button type="button" class="pill-btn" [class.pill-btn--active]="selectedRoleFilter() === 'ADMIN'" (click)="setRoleFilter('ADMIN')">Admin</button>
+    </div>
+  </header>
+
+  <div class="table-wrapper">
+    <table class="user-table">
+      <thead>
+        <tr>
+          <th>Usuario</th>
+          <th>Rol</th>
+          <th>Estado</th>
+          <th>Último Acceso</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (u of filteredUsers; track u.id) {
+          <tr>
+            <td>
+              <div class="user-cell">
+                <span class="user-avatar">{{ u.nombre.charAt(0) }}</span>
+                <div>
+                  <p class="u-name">{{ u.nombre }}</p>
+                  <p class="u-email">{{ u.email }}</p>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="role-badge" [class]="'role-badge--' + u.role.toLowerCase()">{{ u.role }}</span>
+            </td>
+            <td>
+              <span class="status-dot" [class.status-dot--active]="u.active"></span>
+              <span class="status-txt">{{ u.active ? 'Activo' : 'Inactivo' }}</span>
+            </td>
+            <td class="time-cell">{{ u.lastLogin || 'Nunca' }}</td>
+          </tr>
+        } @empty {
+          <tr><td colspan="4" class="empty-row">No hay usuarios para el filtro seleccionado.</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+</div>

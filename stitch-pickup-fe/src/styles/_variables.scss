@@ -1,0 +1,178 @@
+// ═══════════════════════════════════════════════════════════
+//  STITCH PICKUP — DESIGN TOKENS
+//  Fuente: DESIGN.md (Instituto Inglés de Toluca)
+//  Principio: Single Source of Truth para todos los estilos
+// ═══════════════════════════════════════════════════════════
+
+// ─── PALETA PRIMARIA (Navy Académico) ───────────────────────
+$color-primary:               #000e27;
+$color-on-primary:            #ffffff;
+$color-primary-container:     #00234e;
+$color-on-primary-container:  #728bbc;
+$color-inverse-primary:       #adc7fb;
+
+// ─── PALETA SECUNDARIA (Rojo Académico) ─────────────────────
+$color-secondary:             #b6171e;
+$color-on-secondary:          #ffffff;
+$color-secondary-container:   #da3433;
+$color-on-secondary-container:#fffbff;
+
+// ─── TERCIARIA (Slate oscuro) ───────────────────────────────
+$color-tertiary:              #0c0f10;
+$color-on-tertiary:           #ffffff;
+$color-tertiary-container:    #212425;
+$color-on-tertiary-container: #898b8c;
+
+// ─── SURFACES ───────────────────────────────────────────────
+$color-surface:                    #ffffff;
+$color-surface-dim:                #dcd9d9;
+$color-surface-bright:             #fcf9f8;
+$color-surface-container-lowest:   #ffffff;
+$color-surface-container-low:      #f6f3f2;
+$color-surface-container:          #f0eded;
+$color-surface-container-high:     #eae7e7;
+$color-surface-container-highest:  #e5e2e1;
+$color-surface-variant:            #e5e2e1;
+$color-background:                 #fcf9f8;
+
+// ─── ON SURFACES ────────────────────────────────────────────
+$color-on-surface:           #1b1b1c;
+$color-on-surface-variant:   #44474f;
+$color-on-background:        #1b1b1c;
+$color-inverse-surface:      #303030;
+$color-inverse-on-surface:   #f3f0ef;
+
+// ─── OUTLINE ────────────────────────────────────────────────
+$color-outline:              #747780;
+$color-outline-variant:      #c4c6d0;
+
+// ─── ERROR ──────────────────────────────────────────────────
+$color-error:                #ba1a1a;
+$color-on-error:             #ffffff;
+$color-error-container:      #ffdad6;
+$color-on-error-container:   #93000a;
+
+// ─── SURFACE TINT ───────────────────────────────────────────
+$color-surface-tint:         #445f8c;
+
+// ─── ESTADOS DE ALERTA (custom Stitch Pickup) ───────────────
+$color-alert-10min:          #ca8a04;   // yellow-600 — 10 minutos
+$color-alert-10min-bg:       #fefce8;   // yellow-50
+$color-alert-10min-border:   #fbbf24;   // yellow-400
+
+$color-alert-5min:           #ea580c;   // orange-600 — 5 minutos
+$color-alert-5min-bg:        #fff7ed;   // orange-50
+$color-alert-5min-border:    #f97316;   // orange-400
+
+$color-alert-en-fila:        #1d4ed8;   // blue-700 — En fila
+$color-alert-en-fila-bg:     #eff6ff;   // blue-50
+$color-alert-en-fila-border: #3b82f6;   // blue-500
+
+$color-alert-urgente:        #dc2626;   // red-600 — Urgente
+$color-alert-urgente-bg:     #fef2f2;   // red-50
+$color-alert-urgente-border: #ef4444;   // red-400
+
+$color-alert-confirmado:     #16a34a;   // green-600 — Confirmado
+$color-alert-confirmado-bg:  #f0fdf4;   // green-50
+$color-alert-confirmado-border: #22c55e; // green-400
+
+// ─── OFFLINE STATE ──────────────────────────────────────────
+$color-offline:              #d97706;   // amber-600
+$color-offline-bg:           #fffbeb;   // amber-50
+$color-offline-border:       #f59e0b;   // amber-400
+
+// ─── TEMA MAESTROS (green variant del portal maestros) ──────
+$color-teacher-primary:      #166534;
+$color-teacher-on-primary:   #ffffff;
+$color-teacher-surface:      #f0fdf4;
+$color-teacher-surface-dim:  #d1fae5;
+
+// ─── TEMA ADMIN (navy gradient del header admin) ─────────────
+$color-admin-header-from:    #0a122c;
+$color-admin-header-via:     #122252;
+
+// ─── TIPOGRAFÍA ─────────────────────────────────────────────
+$font-family-base:           'Hanken Grotesk', sans-serif;
+$font-google-url:            'https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700;800&display=swap';
+
+$font-size-headline-lg:      40px;
+$line-height-headline-lg:    48px;
+$letter-spacing-headline-lg: -0.02em;
+
+$font-size-headline-lg-mobile: 32px;
+$line-height-headline-lg-mobile: 38px;
+$letter-spacing-headline-lg-mobile: -0.01em;
+
+$font-size-headline-md:      28px;
+$line-height-headline-md:    34px;
+
+$font-size-headline-sm:      22px;
+$line-height-headline-sm:    28px;
+
+$font-size-body-lg:          18px;
+$line-height-body-lg:        28px;
+
+$font-size-body-md:          16px;
+$line-height-body-md:        24px;
+
+$font-size-label-md:         14px;
+$line-height-label-md:       20px;
+$letter-spacing-label-md:    0.02em;
+
+$font-size-button:           16px;
+$line-height-button:         24px;
+$letter-spacing-button:      0.01em;
+
+$font-weight-regular:        400;
+$font-weight-semibold:       600;
+$font-weight-bold:           700;
+$font-weight-extrabold:      800;
+
+// ─── BORDER RADIUS ──────────────────────────────────────────
+$radius-xs:   2px;
+$radius-sm:   0.25rem;   // 4px
+$radius-md:   0.5rem;    // 8px  — botones, inputs, cards
+$radius-lg:   1rem;      // 16px — modales, hero sections
+$radius-xl:   1.5rem;    // 24px — tarjetas premium
+$radius-2xl:  2rem;      // 32px — tarjetas del portal padre
+$radius-full: 9999px;    // pills, chips, avatares
+
+// ─── ESPACIADO (8px grid) ───────────────────────────────────
+$space-0:     0;
+$space-xs:    4px;    // 0.5 base
+$space-sm:    8px;    // 1 base — stack-sm
+$space-md:    16px;   // 2 base — stack-md, gutter
+$space-lg:    32px;   // 4 base — stack-lg
+$space-xl:    64px;   // 8 base — container-margin-desktop
+
+$space-container-mobile:  16px;
+$space-container-desktop: 64px;
+$space-gutter:            16px;
+
+// ─── ELEVACIÓN / SOMBRAS ────────────────────────────────────
+$shadow-xs:     0 1px 2px rgba(0, 0, 0, 0.04);
+$shadow-sm:     0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
+$shadow-md:     0 4px 12px rgba(0, 0, 0, 0.08);
+$shadow-lg:     0 10px 30px rgba(0, 0, 0, 0.10);
+$shadow-xl:     0 20px 60px rgba(0, 0, 0, 0.15);
+$shadow-button: 0 4px 12px rgba(0, 14, 39, 0.30);
+$shadow-modal:  0 25px 80px rgba(0, 0, 0, 0.20);
+
+// ─── TOQUE MÍNIMO (WCAG AA) ─────────────────────────────────
+$touch-target-min: 48px;
+
+// ─── BREAKPOINTS ────────────────────────────────────────────
+$bp-sm:  640px;
+$bp-md:  768px;
+$bp-lg:  1024px;
+$bp-xl:  1280px;
+$bp-2xl: 1536px;
+
+// ─── Z-INDEX ────────────────────────────────────────────────
+$z-base:    0;
+$z-raised:  10;
+$z-sticky:  50;
+$z-fixed:   100;
+$z-modal:   200;
+$z-overlay: 300;
+$z-toast:   400;

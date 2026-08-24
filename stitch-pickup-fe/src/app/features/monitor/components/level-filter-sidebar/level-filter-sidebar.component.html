@@ -1,0 +1,19 @@
+<nav class="sidebar" role="navigation" aria-label="Filtro por nivel escolar">
+  <p class="sidebar-label">Nivel</p>
+
+  @for (f of filters; track f.value) {
+    <button
+      type="button"
+      class="filter-btn"
+      [class.filter-btn--active]="selectedLevel === f.value"
+      (click)="onFilter(f.value)"
+      [attr.aria-pressed]="selectedLevel === f.value"
+    >
+      <span class="filter-emoji">{{ f.emoji }}</span>
+      <span class="filter-name">{{ f.label }}</span>
+      @if (getCount(f.value) > 0) {
+        <span class="filter-count">{{ getCount(f.value) }}</span>
+      }
+    </button>
+  }
+</nav>

@@ -1,0 +1,108 @@
+@use 'styles/variables' as v;
+
+.alert-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: v.$space-md;
+
+  @media (max-width: 360px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.alert-btn {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 110px;
+  padding: v.$space-md;
+  border-radius: v.$radius-xl;
+  border: none;
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+  color: white;
+
+  .btn-glow {
+    position: absolute;
+    inset: 0;
+    opacity: 0.15;
+    background: radial-gradient(circle at 50% 0%, white 0%, transparent 70%);
+  }
+
+  .btn-time {
+    font-size: 32px;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .btn-unit {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    margin-bottom: 4px;
+    opacity: 0.9;
+  }
+
+  .btn-title {
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    margin-top: 4px;
+  }
+
+  .btn-icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  .btn-label {
+    font-size: 11px;
+    opacity: 0.85;
+    margin-top: 2px;
+  }
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    filter: brightness(1.08);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+    filter: brightness(0.95);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  // Color Variants
+  &--10min {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.35);
+  }
+
+  &--5min {
+    background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+    box-shadow: 0 8px 20px rgba(217, 119, 6, 0.35);
+  }
+
+  &--enfila {
+    background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+    box-shadow: 0 8px 20px rgba(22, 163, 74, 0.35);
+  }
+
+  &--urgente {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    box-shadow: 0 8px 20px rgba(220, 38, 38, 0.35);
+  }
+
+  &--active {
+    outline: 3px solid white;
+    outline-offset: -3px;
+    box-shadow: v.$shadow-modal;
+  }
+}

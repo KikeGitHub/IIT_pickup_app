@@ -1,0 +1,32 @@
+@use 'variables' as v;
+
+// Global Input Fields Styling
+.iit-input {
+  width: 100%;
+  border: 1px solid v.$color-outline-variant;
+  border-radius: v.$radius-md;
+  padding: 0.75rem 1rem;
+  font-size: v.$font-size-label-md;
+  color: v.$color-primary;
+  background-color: v.$color-surface-container-low;
+  transition: all 0.2s ease-in-out;
+
+  &:focus {
+    outline: none;
+    border-color: v.$color-primary;
+    box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.15);
+  }
+
+  &::placeholder {
+    color: v.$color-outline;
+  }
+}
+
+// Active press effect
+.active-press {
+  transition: transform 0.1s ease, filter 0.1s ease;
+  &:active {
+    transform: scale(0.96);
+    filter: brightness(0.9);
+  }
+}

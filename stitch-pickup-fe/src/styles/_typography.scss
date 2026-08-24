@@ -1,0 +1,65 @@
+@use 'variables' as v;
+
+body, button, input, select, textarea {
+  font-family: v.$font-family-base;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.headline-lg {
+  font-family: v.$font-family-base;
+  font-size: v.$font-size-headline-lg;
+  line-height: v.$line-height-headline-lg;
+  letter-spacing: v.$letter-spacing-headline-lg;
+  font-weight: v.$font-weight-bold;
+
+  @media (max-width: v.$bp-sm) {
+    font-size: v.$font-size-headline-lg-mobile;
+    line-height: v.$line-height-headline-lg-mobile;
+    letter-spacing: v.$letter-spacing-headline-lg-mobile;
+  }
+}
+
+.headline-md {
+  font-family: v.$font-family-base;
+  font-size: v.$font-size-headline-md;
+  line-height: v.$line-height-headline-md;
+  font-weight: v.$font-weight-semibold;
+}
+
+.headline-sm {
+  font-family: v.$font-family-base;
+  font-size: v.$font-size-headline-sm;
+  line-height: v.$line-height-headline-sm;
+  font-weight: v.$font-weight-semibold;
+}
+
+.body-lg {
+  font-family: v.$font-family-base;
+  font-size: v.$font-size-body-lg;
+  line-height: v.$line-height-body-lg;
+  font-weight: v.$font-weight-regular;
+}
+
+.body-md {
+  font-family: v.$font-family-base;
+  font-size: v.$font-size-body-md;
+  line-height: v.$line-height-body-md;
+  font-weight: v.$font-weight-regular;
+}
+
+.label-md {
+  font-family: v.$font-family-base;
+  font-size: v.$font-size-label-md;
+  line-height: v.$line-height-label-md;
+  letter-spacing: v.$letter-spacing-label-md;
+  font-weight: v.$font-weight-semibold;
+}
+
+.button-text {
+  font-family: v.$font-family-base;
+  font-size: v.$font-size-button;
+  line-height: v.$line-height-button;
+  letter-spacing: v.$letter-spacing-button;
+  font-weight: v.$font-weight-bold;
+}

@@ -1,0 +1,400 @@
+@use 'styles/variables' as v;
+
+// ─── Root Layout ─────────────────────────────────────────────────────────────
+
+.login-root {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  position: relative;
+  overflow: hidden;
+  background: v.$color-primary;
+}
+
+// ─── Hero Background ─────────────────────────────────────────────────────────
+
+.login-hero {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.hero-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    v.$color-primary 0%,
+    v.$color-primary-container 50%,
+    v.$color-secondary 100%
+  );
+  opacity: 0.95;
+}
+
+.hero-pattern {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 20% 50%, rgba(v.$color-secondary, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(v.$color-on-primary-container, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 60% 80%, rgba(v.$color-secondary, 0.10) 0%, transparent 40%);
+}
+
+// ─── Container ────────────────────────────────────────────────────────────────
+
+.login-container {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 440px;
+  padding: v.$space-md;
+}
+
+// ─── Card ─────────────────────────────────────────────────────────────────────
+
+.login-card {
+  background: rgba(255, 255, 255, 0.97);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: v.$radius-2xl;
+  padding: v.$space-lg;
+  box-shadow: v.$shadow-modal;
+  animation: slideUp 0.4s ease-out;
+
+  @media (max-width: v.$bp-sm) {
+    border-radius: v.$radius-xl;
+    padding: v.$space-md;
+  }
+}
+
+// ─── Brand ────────────────────────────────────────────────────────────────────
+
+.login-brand {
+  display: flex;
+  align-items: center;
+  gap: v.$space-md;
+  margin-bottom: v.$space-lg;
+  padding-bottom: v.$space-md;
+  border-bottom: 1px solid v.$color-outline-variant;
+}
+
+.brand-logo {
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  border-radius: v.$radius-md;
+  overflow: hidden;
+  box-shadow: v.$shadow-sm;
+}
+
+.brand-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.brand-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.brand-name {
+  font-family: v.$font-family-base;
+  font-size: v.$font-size-headline-sm;
+  font-weight: v.$font-weight-bold;
+  color: v.$color-primary;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.brand-subtitle {
+  font-family: v.$font-family-base;
+  font-size: v.$font-size-label-md;
+  color: v.$color-on-surface-variant;
+  margin: 0;
+  margin-top: 2px;
+}
+
+// ─── Login Header ─────────────────────────────────────────────────────────────
+
+.login-header {
+  margin-bottom: v.$space-md;
+}
+
+.login-title {
+  font-family: v.$font-family-base;
+  font-size: v.$font-size-headline-md;
+  font-weight: v.$font-weight-bold;
+  color: v.$color-on-surface;
+  margin: 0 0 v.$space-xs;
+  line-height: 1.2;
+
+  @media (max-width: v.$bp-sm) {
+    font-size: v.$font-size-headline-sm;
+  }
+}
+
+.login-description {
+  font-family: v.$font-family-base;
+  font-size: v.$font-size-body-md;
+  color: v.$color-on-surface-variant;
+  margin: 0;
+}
+
+// ─── Alert ────────────────────────────────────────────────────────────────────
+
+.login-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: v.$space-sm;
+  padding: v.$space-sm v.$space-md;
+  border-radius: v.$radius-md;
+  margin-bottom: v.$space-md;
+  font-family: v.$font-family-base;
+  font-size: v.$font-size-label-md;
+  animation: slideUp 0.25s ease-out;
+
+  &--error {
+    background: v.$color-error-container;
+    color: v.$color-on-error-container;
+    border: 1px solid rgba(v.$color-error, 0.3);
+  }
+}
+
+.alert-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+// ─── Form ─────────────────────────────────────────────────────────────────────
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: v.$space-md;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: v.$space-xs;
+}
+
+.form-label {
+  font-family: v.$font-family-base;
+  font-size: v.$font-size-label-md;
+  font-weight: v.$font-weight-semibold;
+  color: v.$color-on-surface;
+  letter-spacing: v.$letter-spacing-label-md;
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 14px;
+  width: 18px;
+  height: 18px;
+  color: v.$color-on-surface-variant;
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+.form-input {
+  width: 100%;
+  height: v.$touch-target-min;
+  padding: 0 v.$space-md 0 44px;
+  font-family: v.$font-family-base;
+  font-size: v.$font-size-body-md;
+  color: v.$color-on-surface;
+  background: v.$color-surface-container;
+  border: 1.5px solid v.$color-outline-variant;
+  border-radius: v.$radius-md;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+  box-sizing: border-box;
+
+  &::placeholder {
+    color: v.$color-outline;
+  }
+
+  &:focus {
+    border-color: v.$color-primary;
+    background: v.$color-surface;
+    box-shadow: 0 0 0 3px rgba(v.$color-primary, 0.12);
+  }
+
+  .form-group--error & {
+    border-color: v.$color-error;
+    background: v.$color-error-container;
+
+    &:focus {
+      box-shadow: 0 0 0 3px rgba(v.$color-error, 0.15);
+    }
+  }
+}
+
+.input-toggle-btn {
+  position: absolute;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: v.$color-on-surface-variant;
+  border-radius: v.$radius-sm;
+  padding: 0;
+  transition: color 0.15s;
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  &:hover {
+    color: v.$color-primary;
+  }
+
+  &:focus-visible {
+    outline: 2px solid v.$color-primary;
+    outline-offset: 2px;
+  }
+}
+
+.form-error {
+  font-family: v.$font-family-base;
+  font-size: 12px;
+  color: v.$color-error;
+  margin: 0;
+  padding-left: 2px;
+}
+
+// ─── Submit Button ────────────────────────────────────────────────────────────
+
+.btn-login {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: v.$space-sm;
+  width: 100%;
+  height: v.$touch-target-min;
+  margin-top: v.$space-xs;
+  padding: 0 v.$space-md;
+  font-family: v.$font-family-base;
+  font-size: v.$font-size-button;
+  font-weight: v.$font-weight-semibold;
+  color: v.$color-on-primary;
+  background: v.$color-primary;
+  border: none;
+  border-radius: v.$radius-md;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+  box-shadow: v.$shadow-button;
+  letter-spacing: v.$letter-spacing-button;
+  outline: none;
+
+  .btn-icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+
+  &:hover:not(:disabled) {
+    background: v.$color-primary-container;
+    box-shadow: 0 6px 20px rgba(v.$color-primary, 0.4);
+    transform: translateY(-1px);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: v.$shadow-sm;
+  }
+
+  &:focus-visible {
+    outline: 2px solid v.$color-primary;
+    outline-offset: 3px;
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+
+  &--loading {
+    pointer-events: none;
+  }
+}
+
+.btn-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  flex-shrink: 0;
+}
+
+// ─── Footer ───────────────────────────────────────────────────────────────────
+
+.login-footer {
+  margin-top: v.$space-md;
+  padding-top: v.$space-md;
+  border-top: 1px solid v.$color-outline-variant;
+  text-align: center;
+}
+
+.footer-text {
+  font-family: v.$font-family-base;
+  font-size: v.$font-size-label-md;
+  color: v.$color-on-surface-variant;
+  margin: 0 0 v.$space-xs;
+
+  &--small {
+    font-size: 12px;
+    margin: 0;
+  }
+}
+
+.footer-link {
+  color: v.$color-primary;
+  font-weight: v.$font-weight-semibold;
+  text-decoration: none;
+  transition: color 0.15s;
+
+  &:hover {
+    color: v.$color-secondary;
+    text-decoration: underline;
+  }
+}
+
+// ─── Animations ───────────────────────────────────────────────────────────────
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

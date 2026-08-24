@@ -1,0 +1,84 @@
+@use 'styles/variables' as v;
+
+.monitor-root {
+  min-height: 100dvh;
+  background: #0c0f10;
+  color: white;
+  font-family: v.$font-family-base;
+}
+
+.monitor-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: v.$space-md;
+  padding: v.$space-md;
+  max-width: 1600px;
+  margin: 0 auto;
+
+  @media (max-width: 860px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.layout-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: v.$space-md;
+}
+
+.desktop-history {
+  @media (max-width: 860px) {
+    display: none;
+  }
+}
+
+.layout-content {
+  display: flex;
+  flex-direction: column;
+  gap: v.$space-md;
+}
+
+.content-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: v.$space-xs;
+    margin: 0;
+    font-size: 18px;
+    font-weight: v.$font-weight-bold;
+
+    .active-badge {
+      padding: 2px 8px;
+      border-radius: v.$radius-full;
+      background: v.$color-primary;
+      font-size: 12px;
+    }
+  }
+}
+
+.alerts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: v.$space-md;
+}
+
+.empty-monitor {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: v.$space-xl;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: v.$radius-xl;
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  text-align: center;
+
+  .empty-icon { font-size: 48px; margin-bottom: v.$space-xs; }
+  h3 { margin: 0; font-size: 18px; font-weight: bold; }
+  p { margin: 4px 0 0; font-size: 13px; color: rgba(255, 255, 255, 0.4); }
+}

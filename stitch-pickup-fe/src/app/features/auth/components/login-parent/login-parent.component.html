@@ -1,0 +1,160 @@
+<section class="login-root" id="login-parent-page">
+
+  <!-- ── Background Hero ──────────────────────────────────────────────────── -->
+  <div class="login-hero" aria-hidden="true">
+    <div class="hero-gradient"></div>
+    <div class="hero-pattern"></div>
+  </div>
+
+  <!-- ── Login Card ────────────────────────────────────────────────────────── -->
+  <main class="login-container">
+    <div class="login-card" role="main">
+
+      <!-- Brand Header -->
+      <header class="login-brand">
+        <div class="brand-logo">
+          <img src="/logo_IIT.jpg" alt="Instituto Inglés de Toluca" class="brand-img" />
+        </div>
+        <div class="brand-text">
+          <h1 class="brand-name">Stitch Pickup</h1>
+          <p class="brand-subtitle">Instituto Inglés de Toluca</p>
+        </div>
+      </header>
+
+      <!-- Title -->
+      <div class="login-header">
+        <h2 class="login-title">Bienvenido, Padre de Familia</h2>
+        <p class="login-description">
+          Ingresa tus datos para avisar cuando vas en camino.
+        </p>
+      </div>
+
+      <!-- Error Alert -->
+      @if (errorMessage()) {
+        <div class="login-alert login-alert--error" role="alert" aria-live="assertive">
+          <svg class="alert-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+            <line x1="12" y1="8" x2="12" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="12" cy="16" r="1" fill="currentColor"/>
+          </svg>
+          <span>{{ errorMessage() }}</span>
+        </div>
+      }
+
+      <!-- Form -->
+      <form
+        [formGroup]="loginForm"
+        (ngSubmit)="onSubmit()"
+        class="login-form"
+        novalidate
+        aria-label="Formulario de acceso para padres"
+      >
+        <!-- Email Field -->
+        <div class="form-group" [class.form-group--error]="isFieldInvalid('email')">
+          <label for="parent-email" class="form-label">Correo electrónico</label>
+          <div class="input-wrapper">
+            <svg class="input-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <rect x="2" y="4" width="20" height="16" rx="2" stroke="currentColor" stroke-width="2"/>
+              <path d="m2 7 10 7 10-7" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            <input
+              id="parent-email"
+              type="email"
+              formControlName="email"
+              class="form-input"
+              placeholder="ejemplo@gmail.com"
+              autocomplete="email"
+              [attr.aria-describedby]="isFieldInvalid('email') ? 'email-error' : null"
+              [attr.aria-invalid]="isFieldInvalid('email')"
+            />
+          </div>
+          @if (isFieldInvalid('email')) {
+            <p id="email-error" class="form-error" role="alert">{{ getFieldError('email') }}</p>
+          }
+        </div>
+
+        <!-- Password Field -->
+        <div class="form-group" [class.form-group--error]="isFieldInvalid('password')">
+          <label for="parent-password" class="form-label">Contraseña</label>
+          <div class="input-wrapper">
+            <svg class="input-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" stroke-width="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            <input
+              id="parent-password"
+              [type]="showPassword() ? 'text' : 'password'"
+              formControlName="password"
+              class="form-input"
+              placeholder="••••••••"
+              autocomplete="current-password"
+              [attr.aria-describedby]="isFieldInvalid('password') ? 'password-error' : null"
+              [attr.aria-invalid]="isFieldInvalid('password')"
+            />
+            <button
+              type="button"
+              class="input-toggle-btn"
+              (click)="togglePassword()"
+              [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+            >
+              @if (showPassword()) {
+                <!-- Eye Off -->
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  <line x1="1" y1="1" x2="23" y2="23" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              } @else {
+                <!-- Eye -->
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="2"/>
+                  <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+                </svg>
+              }
+            </button>
+          </div>
+          @if (isFieldInvalid('password')) {
+            <p id="password-error" class="form-error" role="alert">{{ getFieldError('password') }}</p>
+          }
+        </div>
+
+        <!-- Submit Button -->
+        <button
+          type="submit"
+          id="btn-login-parent"
+          class="btn-login"
+          [class.btn-login--loading]="isLoading()"
+          [disabled]="isLoading()"
+          aria-label="Iniciar sesión"
+        >
+          @if (isLoading()) {
+            <span class="btn-spinner" aria-hidden="true"></span>
+            <span>Verificando...</span>
+          } @else {
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <polyline points="10 17 15 12 10 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <line x1="15" y1="12" x2="3" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <span>Iniciar sesión</span>
+          }
+        </button>
+      </form>
+
+      <!-- Footer Links -->
+      <footer class="login-footer">
+        <p class="footer-text">
+          ¿Eres maestro o guardia?
+          <a routerLink="/auth/maestros" class="footer-link" id="link-teacher-login">
+            Acceso del personal
+          </a>
+        </p>
+        <p class="footer-text footer-text--small">
+          ¿Problemas para acceder? Contacta a la dirección escolar.
+        </p>
+      </footer>
+
+    </div>
+  </main>
+
+</section>
