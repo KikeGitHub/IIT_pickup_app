@@ -249,11 +249,11 @@ Se usa `@stomp/stompjs` v7 (moderno, tree-shakeable) con SockJS como fallback pa
 
 | Usuario | Email | Contraseña | Rol |
 |---|---|---|---|
-| Carlos Ramírez Soto | padre1@iit.edu.mx | IIT2024! | PARENT |
-| Roberto González Vidal | padre2@iit.edu.mx | IIT2024! | PARENT |
-| María Fernanda Solis | maestro1@iit.edu.mx | Maestro2024! | TEACHER |
-| Prof. Luis Hernández | maestro2@iit.edu.mx | Maestro2024! | TEACHER |
-| Director General | admin@iit.edu.mx | Admin2024! | ADMIN |
+| Carlos Ramírez Soto | padre1@iit.edu.mx | demo1234 | PARENT |
+| Roberto González Vidal | padre2@iit.edu.mx | demo1234 | PARENT |
+| María Fernanda Solis | maestro1@iit.edu.mx | demo1234 | TEACHER |
+| Prof. Luis Hernández | maestro2@iit.edu.mx | demo1234 | TEACHER |
+| Director General | admin@iit.edu.mx | admin2026 | ADMIN |
 
 ---
 

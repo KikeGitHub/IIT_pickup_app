@@ -21,30 +21,35 @@ import java.util.List;
 @Configuration
 public class CorsConfig {
 
-    @Value("${spring.websocket.allowed-origins:http://localhost:3000,http://localhost:4200}")
+    @Value("${spring.websocket.allowed-origins:http://localhost:3000,http://localhost:4200,http://127.0.0.1:3000,http://127.0.0.1:4200}")
     private String allowedOriginsRaw;
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        // Orígenes permitidos
-        List<String> origins = Arrays.asList(allowedOriginsRaw.split(","));
+        // Orígenes permitidos (soporta lista explícita y patrones)
+        List<String> origins = Arrays.stream(allowedOriginsRaw.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .toList();
+
         config.setAllowedOrigins(origins);
+        config.setAllowedOriginPatterns(List.of("http://localhost:*", "http://127.0.0.1:*"));
 
         // Métodos HTTP permitidos
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"));
 
-        // Headers permitidos
-        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept", "X-Requested-With"));
+        // Headers permitidos (todos)
+        config.setAllowedHeaders(List.of("*"));
 
         // Headers expuestos al cliente
-        config.setExposedHeaders(List.of("Authorization"));
+        config.setExposedHeaders(List.of("Authorization", "Content-Disposition"));
 
-        // Credenciales (necesario para WebSocket con Authorization header)
+        // Credenciales habilitadas
         config.setAllowCredentials(true);
 
-        // Tiempo de caché del preflight (segundos)
+        // Tiempo de caché del preflight (1 hora)
         config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

@@ -76,17 +76,24 @@
 
 .brand-logo {
   flex-shrink: 0;
-  width: 56px;
-  height: 56px;
-  border-radius: v.$radius-md;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
   overflow: hidden;
-  box-shadow: v.$shadow-sm;
+  box-shadow: 0 4px 12px rgba(22, 101, 52, 0.15);
+  background: #ffffff;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(22, 101, 52, 0.12);
 }
 
 .brand-img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  border-radius: 50%;
+  object-fit: contain;
 }
 
 .brand-text {

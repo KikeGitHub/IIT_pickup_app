@@ -3,6 +3,7 @@ package com.stitchpickup.config;
 import com.stitchpickup.security.JwtAuthenticationFilter;
 import com.stitchpickup.security.UserDetailsServiceImpl;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -25,6 +26,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  *
  * Principios (ADR-002-jwt-stateless):
  * - STATELESS: sin sesiones HTTP ni CSRF (JWT es el mecanismo de estado)
+ * - CORS habilitado con CorsConfigurationSource
  * - Rutas públicas: /api/v1/auth/**, /swagger-ui/**, /api-docs/**
  * - Rutas protegidas: según el rol requerido
  *
@@ -38,6 +40,7 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtFilter;
     private final UserDetailsServiceImpl userDetailsService;
+    private final CorsConfigurationSource corsConfigurationSource;
 
     // ─── Endpoints públicos ───────────────────────────────────────────────────
     private static final String[] PUBLIC_ENDPOINTS = {
@@ -53,6 +56,9 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+            // Habilitar CORS explícitamente en el pipeline de Spring Security
+            .cors(cors -> cors.configurationSource(corsConfigurationSource))
+
             // Deshabilitar CSRF (JWT es stateless — no usamos cookies de sesión)
             .csrf(AbstractHttpConfigurer::disable)
 
@@ -62,6 +68,8 @@ public class SecurityConfig {
 
             // Reglas de autorización
             .authorizeHttpRequests(auth -> auth
+                // Permitir solicitudes preflight OPTIONS en todas las rutas
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 // Públicos
                 .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
                 // Solo ADMIN

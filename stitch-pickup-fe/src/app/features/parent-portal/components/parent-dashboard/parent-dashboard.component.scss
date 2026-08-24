@@ -25,10 +25,15 @@
     gap: v.$space-sm;
 
     .brand-logo {
-      width: 40px;
-      height: 40px;
-      border-radius: v.$radius-md;
-      object-fit: cover;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      object-fit: contain;
+      background: #ffffff;
+      padding: 2px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      flex-shrink: 0;
     }
 
     .portal-title {

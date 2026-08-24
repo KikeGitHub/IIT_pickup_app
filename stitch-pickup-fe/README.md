@@ -8,9 +8,18 @@ To start a local development server, run:
 
 ```bash
 ng serve
+# o npm run start
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+Once the server is running, open your browser:
+
+### 🌐 Rutas de Acceso (URLs)
+
+* **Padres:** 👉 [http://localhost:4200/auth/login](http://localhost:4200/auth/login) (o [http://localhost:4200/](http://localhost:4200/))
+  * *Credenciales Demo:* `padre1@iit.edu.mx` / `demo1234`
+* **Maestros / Admin:** 👉 [http://localhost:4200/auth/maestros](http://localhost:4200/auth/maestros)
+  * *Admin Demo:* `admin@iit.edu.mx` / `admin2026`
+  * *Maestro Demo:* `maestro1@iit.edu.mx` / `demo1234`
 
 ## Code scaffolding
 
