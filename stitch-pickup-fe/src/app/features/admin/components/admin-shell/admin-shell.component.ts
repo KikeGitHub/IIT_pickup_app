@@ -1,15 +1,15 @@
 import { Component, inject, ChangeDetectionStrategy, signal } from '@angular/core';
-// Admin Shell Component for Sprint 5
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
 import { KpiDashboardComponent } from '../kpi-dashboard/kpi-dashboard.component';
-import { UserManagementComponent } from '../user-management/user-management.component';
+import { GroupConfigComponent } from '../group-config/group-config.component';
+import { StudentCrudComponent } from '../student-crud/student-crud.component';
+import { TeacherUserCrudComponent } from '../teacher-user-crud/teacher-user-crud.component';
+import { ParentUserCrudComponent } from '../parent-user-crud/parent-user-crud.component';
 import { CsvImportComponent } from '../csv-import/csv-import.component';
 
-import { RouterLink } from '@angular/router';
-
-export type AdminTab = 'KPIS' | 'USERS' | 'CSV';
+export type AdminTab = 'KPIS' | 'GROUPS' | 'STUDENTS' | 'TEACHERS' | 'PARENTS' | 'CSV';
 
 @Component({
   selector: 'app-admin-shell',
@@ -18,7 +18,10 @@ export type AdminTab = 'KPIS' | 'USERS' | 'CSV';
     CommonModule,
     RouterLink,
     KpiDashboardComponent,
-    UserManagementComponent,
+    GroupConfigComponent,
+    StudentCrudComponent,
+    TeacherUserCrudComponent,
+    ParentUserCrudComponent,
     CsvImportComponent
   ],
   templateUrl: './admin-shell.component.html',
@@ -33,10 +36,11 @@ export class AdminShellComponent {
 
   setTab(tab: AdminTab): void {
     this.activeTab.set(tab);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   logout(): void {
     this.authService.logout();
-    this.router.navigate(['/auth/teacher']);
+    this.router.navigate(['/auth/maestros']);
   }
 }

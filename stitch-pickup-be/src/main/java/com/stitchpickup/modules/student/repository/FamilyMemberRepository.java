@@ -9,5 +9,7 @@ import java.util.UUID;
 
 @Repository
 public interface FamilyMemberRepository extends JpaRepository<FamilyMember, UUID> {
+    List<FamilyMember> findByStudentId(UUID studentId);
     List<FamilyMember> findByStudentIdAndAuthorizedTrue(UUID studentId);
+    void deleteByStudentId(UUID studentId);
 }

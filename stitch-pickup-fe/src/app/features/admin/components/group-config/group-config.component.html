@@ -1,0 +1,160 @@
+<div class="groups-root">
+
+  <!-- Header Section -->
+  <header class="page-header">
+    <div>
+      <h2 class="page-title">🏫 Configuración de Grados y Grupos</h2>
+      <p class="page-sub">Organiza y administra las secciones escolares por nivel educativo del IIT</p>
+    </div>
+    <button type="button" class="btn-primary" (click)="openCreateModal()">
+      <svg viewBox="0 0 24 24" fill="none" class="btn-icon"><line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="2"/><line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2"/></svg>
+      <span>Nuevo Grupo</span>
+    </button>
+  </header>
+
+  <!-- Level Columns Grid -->
+  <div class="levels-grid">
+
+    <!-- KINDER Column -->
+    <div class="level-column level-column--kinder">
+      <div class="column-header">
+        <div class="header-left">
+          <span class="level-emoji">🌱</span>
+          <div>
+            <h3>Kinder / Preescolar</h3>
+            <span class="count-badge">{{ kinderGroups.length }} grupos</span>
+          </div>
+        </div>
+        <button type="button" class="btn-add-mini" (click)="openCreateModal('KINDER')" title="Agregar grupo a Kinder">+</button>
+      </div>
+
+      <div class="groups-list">
+        @for (g of kinderGroups; track g.id) {
+          <div class="group-card">
+            <div class="card-info">
+              <span class="group-name">{{ g.name }}</span>
+              <span class="student-count">👥 {{ g.studentCount }} alumnos</span>
+            </div>
+            <div class="card-actions">
+              <button type="button" class="btn-icon-action" (click)="openEditModal(g)" title="Editar">✏️</button>
+              <button type="button" class="btn-icon-action btn-icon-action--del" (click)="deleteGroup(g)" title="Eliminar">🗑️</button>
+            </div>
+          </div>
+        } @empty {
+          <div class="empty-column">Sin grupos en Kinder</div>
+        }
+      </div>
+    </div>
+
+    <!-- PRIMARIA Column -->
+    <div class="level-column level-column--primaria">
+      <div class="column-header">
+        <div class="header-left">
+          <span class="level-emoji">📚</span>
+          <div>
+            <h3>Primaria</h3>
+            <span class="count-badge">{{ primariaGroups.length }} grupos</span>
+          </div>
+        </div>
+        <button type="button" class="btn-add-mini" (click)="openCreateModal('PRIMARIA')" title="Agregar grupo a Primaria">+</button>
+      </div>
+
+      <div class="groups-list">
+        @for (g of primariaGroups; track g.id) {
+          <div class="group-card">
+            <div class="card-info">
+              <span class="group-name">{{ g.name }}</span>
+              <span class="student-count">👥 {{ g.studentCount }} alumnos</span>
+            </div>
+            <div class="card-actions">
+              <button type="button" class="btn-icon-action" (click)="openEditModal(g)" title="Editar">✏️</button>
+              <button type="button" class="btn-icon-action btn-icon-action--del" (click)="deleteGroup(g)" title="Eliminar">🗑️</button>
+            </div>
+          </div>
+        } @empty {
+          <div class="empty-column">Sin grupos en Primaria</div>
+        }
+      </div>
+    </div>
+
+    <!-- SECUNDARIA Column -->
+    <div class="level-column level-column--secundaria">
+      <div class="column-header">
+        <div class="header-left">
+          <span class="level-emoji">🎓</span>
+          <div>
+            <h3>Secundaria</h3>
+            <span class="count-badge">{{ secundariaGroups.length }} grupos</span>
+          </div>
+        </div>
+        <button type="button" class="btn-add-mini" (click)="openCreateModal('SECUNDARIA')" title="Agregar grupo a Secundaria">+</button>
+      </div>
+
+      <div class="groups-list">
+        @for (g of secundariaGroups; track g.id) {
+          <div class="group-card">
+            <div class="card-info">
+              <span class="group-name">{{ g.name }}</span>
+              <span class="student-count">👥 {{ g.studentCount }} alumnos</span>
+            </div>
+            <div class="card-actions">
+              <button type="button" class="btn-icon-action" (click)="openEditModal(g)" title="Editar">✏️</button>
+              <button type="button" class="btn-icon-action btn-icon-action--del" (click)="deleteGroup(g)" title="Eliminar">🗑️</button>
+            </div>
+          </div>
+        } @empty {
+          <div class="empty-column">Sin grupos en Secundaria</div>
+        }
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Modal Create / Edit Group -->
+  @if (showModal()) {
+    <div class="modal-backdrop" (click)="closeModal()">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <header class="modal-header">
+          <h3>{{ isEditing() ? 'Editar Grupo' : 'Nuevo Grupo Escolar' }}</h3>
+          <button type="button" class="btn-close" (click)="closeModal()">&times;</button>
+        </header>
+
+        <div class="modal-body">
+          @if (formError) {
+            <div class="alert-error">{{ formError }}</div>
+          }
+
+          <div class="form-group">
+            <label for="groupLevel">Nivel Educativo</label>
+            <select id="groupLevel" [(ngModel)]="groupLevel" class="form-control">
+              <option value="KINDER">🌱 Kinder / Preescolar</option>
+              <option value="PRIMARIA">📚 Primaria</option>
+              <option value="SECUNDARIA">🎓 Secundaria</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="groupName">Nombre o Sección del Grupo (ej: 1A, 3B, KA)</label>
+            <input
+              id="groupName"
+              type="text"
+              [(ngModel)]="groupName"
+              placeholder="Ej: 3A"
+              class="form-control"
+              (keyup.enter)="saveGroup()"
+              autofocus
+            />
+          </div>
+        </div>
+
+        <footer class="modal-footer">
+          <button type="button" class="btn-secondary" (click)="closeModal()">Cancelar</button>
+          <button type="button" class="btn-primary" (click)="saveGroup()">
+            {{ isEditing() ? 'Guardar Cambios' : 'Crear Grupo' }}
+          </button>
+        </footer>
+      </div>
+    </div>
+  }
+
+</div>

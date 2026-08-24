@@ -29,4 +29,13 @@ public interface StudentRepository extends JpaRepository<Student, UUID> {
 
     @Query("SELECT s FROM Student s LEFT JOIN FETCH s.group WHERE s.active = true ORDER BY s.name")
     List<Student> findAllActiveWithGroup();
+
+    @Query("SELECT s FROM Student s LEFT JOIN FETCH s.group ORDER BY s.name")
+    List<Student> findAllWithGroup();
+
+    long countByGroupId(UUID groupId);
+
+    List<Student> findByGroupId(UUID groupId);
+
+    List<Student> findByNameContainingIgnoreCase(String name);
 }

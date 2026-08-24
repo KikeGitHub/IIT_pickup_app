@@ -3,10 +3,10 @@
   <!-- Navy Admin Header -->
   <header class="admin-header">
     <div class="header-brand">
-      <img src="/logo_IIT.jpg" alt="IIT" class="brand-logo" />
+      <img src="/logo_IIT.png" alt="IIT" class="brand-logo" />
       <div>
         <h1 class="portal-title">Stitch Pickup Admin</h1>
-        <p class="portal-sub">Panel de Control & Reportería — IIT</p>
+        <p class="portal-sub">Panel de Control & Gestión Escolar — IIT</p>
       </div>
     </div>
 
@@ -15,17 +15,19 @@
         <svg viewBox="0 0 24 24" fill="none" class="nav-icon"><path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" stroke="currentColor" stroke-width="2"/><line x1="6" y1="1" x2="6" y2="4" stroke="currentColor" stroke-width="2"/><line x1="10" y1="1" x2="10" y2="4" stroke="currentColor" stroke-width="2"/><line x1="14" y1="1" x2="14" y2="4" stroke="currentColor" stroke-width="2"/></svg>
         <span>🚗 Monitor de Entregas</span>
       </a>
+
       <div class="user-info">
         <span class="user-name">{{ authService.currentUser()?.nombre || 'Super Admin' }}</span>
         <span class="user-role">SUPER ADMIN</span>
       </div>
+
       <button type="button" class="btn-logout" (click)="logout()" title="Cerrar Sesión">
         <svg viewBox="0 0 24 24" fill="none"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke="currentColor" stroke-width="2"/><polyline points="16 17 21 12 16 7" stroke="currentColor" stroke-width="2"/><line x1="21" y1="12" x2="9" y2="12" stroke="currentColor" stroke-width="2"/></svg>
       </button>
     </div>
   </header>
 
-  <!-- Subnav Tabs -->
+  <!-- Subnav Tabs (Desktop & Tablet) -->
   <nav class="admin-nav" role="tablist">
     <div class="nav-container">
       <button
@@ -42,10 +44,40 @@
         type="button"
         role="tab"
         class="nav-tab"
-        [class.nav-tab--active]="activeTab() === 'USERS'"
-        (click)="setTab('USERS')"
+        [class.nav-tab--active]="activeTab() === 'GROUPS'"
+        (click)="setTab('GROUPS')"
       >
-        <span>👥 Usuarios & Accesos</span>
+        <span>🏫 Grados & Grupos</span>
+      </button>
+
+      <button
+        type="button"
+        role="tab"
+        class="nav-tab"
+        [class.nav-tab--active]="activeTab() === 'STUDENTS'"
+        (click)="setTab('STUDENTS')"
+      >
+        <span>🎓 Alumnos & Tutores</span>
+      </button>
+
+      <button
+        type="button"
+        role="tab"
+        class="nav-tab"
+        [class.nav-tab--active]="activeTab() === 'TEACHERS'"
+        (click)="setTab('TEACHERS')"
+      >
+        <span>👨‍🏫 Maestros & Personal</span>
+      </button>
+
+      <button
+        type="button"
+        role="tab"
+        class="nav-tab"
+        [class.nav-tab--active]="activeTab() === 'PARENTS'"
+        (click)="setTab('PARENTS')"
+      >
+        <span>👨‍👩‍👧 Padres de Familia</span>
       </button>
 
       <button
@@ -55,24 +87,69 @@
         [class.nav-tab--active]="activeTab() === 'CSV'"
         (click)="setTab('CSV')"
       >
-        <span>📂 Importación Masiva CSV</span>
+        <span>📂 Carga Masiva Excel/CSV</span>
       </button>
     </div>
   </nav>
 
-  <!-- Active Tab Content -->
+  <!-- Active Tab Content Container -->
   <main class="admin-main">
     @if (activeTab() === 'KPIS') {
       <app-kpi-dashboard></app-kpi-dashboard>
     }
 
-    @if (activeTab() === 'USERS') {
-      <app-user-management></app-user-management>
+    @if (activeTab() === 'GROUPS') {
+      <app-group-config></app-group-config>
+    }
+
+    @if (activeTab() === 'STUDENTS') {
+      <app-student-crud></app-student-crud>
+    }
+
+    @if (activeTab() === 'TEACHERS') {
+      <app-teacher-user-crud></app-teacher-user-crud>
+    }
+
+    @if (activeTab() === 'PARENTS') {
+      <app-parent-user-crud></app-parent-user-crud>
     }
 
     @if (activeTab() === 'CSV') {
       <app-csv-import></app-csv-import>
     }
   </main>
+
+  <!-- Mobile Bottom Navigation Bar (< 768px) -->
+  <nav class="mobile-bottom-nav">
+    <button type="button" class="mobile-nav-btn" [class.mobile-nav-btn--active]="activeTab() === 'KPIS'" (click)="setTab('KPIS')">
+      <span class="m-icon">📊</span>
+      <span class="m-lbl">KPIs</span>
+    </button>
+
+    <button type="button" class="mobile-nav-btn" [class.mobile-nav-btn--active]="activeTab() === 'GROUPS'" (click)="setTab('GROUPS')">
+      <span class="m-icon">🏫</span>
+      <span class="m-lbl">Grupos</span>
+    </button>
+
+    <button type="button" class="mobile-nav-btn" [class.mobile-nav-btn--active]="activeTab() === 'STUDENTS'" (click)="setTab('STUDENTS')">
+      <span class="m-icon">🎓</span>
+      <span class="m-lbl">Alumnos</span>
+    </button>
+
+    <button type="button" class="mobile-nav-btn" [class.mobile-nav-btn--active]="activeTab() === 'TEACHERS'" (click)="setTab('TEACHERS')">
+      <span class="m-icon">👨‍🏫</span>
+      <span class="m-lbl">Maestros</span>
+    </button>
+
+    <button type="button" class="mobile-nav-btn" [class.mobile-nav-btn--active]="activeTab() === 'PARENTS'" (click)="setTab('PARENTS')">
+      <span class="m-icon">👨‍👩‍👧</span>
+      <span class="m-lbl">Padres</span>
+    </button>
+
+    <button type="button" class="mobile-nav-btn" [class.mobile-nav-btn--active]="activeTab() === 'CSV'" (click)="setTab('CSV')">
+      <span class="m-icon">📂</span>
+      <span class="m-lbl">Excel</span>
+    </button>
+  </nav>
 
 </div>

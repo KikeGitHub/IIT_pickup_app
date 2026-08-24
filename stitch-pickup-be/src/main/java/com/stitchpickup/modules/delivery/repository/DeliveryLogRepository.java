@@ -18,4 +18,7 @@ public interface DeliveryLogRepository extends JpaRepository<DeliveryLog, UUID> 
 
     @Query("SELECT d FROM DeliveryLog d JOIN FETCH d.student WHERE d.logDate = :logDate")
     List<DeliveryLog> findByLogDateWithStudent(@Param("logDate") LocalDate logDate);
+
+    @Query("SELECT d FROM DeliveryLog d JOIN FETCH d.student WHERE d.logDate >= :from AND d.logDate <= :to")
+    List<DeliveryLog> findByLogDateBetweenWithStudent(@Param("from") LocalDate from, @Param("to") LocalDate to);
 }

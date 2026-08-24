@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -28,4 +29,12 @@ public interface TeacherUserRepository extends JpaRepository<TeacherUser, UUID> 
     /** Carga maestro por ID con sus grupos asignados */
     @Query("SELECT t FROM TeacherUser t LEFT JOIN FETCH t.groups WHERE t.id = :id")
     Optional<TeacherUser> findByIdWithGroups(@Param("id") UUID id);
+
+    /** Carga todos los maestros con sus grupos asignados */
+    @Query("SELECT DISTINCT t FROM TeacherUser t LEFT JOIN FETCH t.groups ORDER BY t.nombre")
+    List<TeacherUser> findAllWithGroups();
+
+    /** Maestros asignados a un grupo específico */
+    @Query("SELECT t FROM TeacherUser t JOIN t.groups g WHERE g.id = :groupId")
+    List<TeacherUser> findByGroupId(@Param("groupId") UUID groupId);
 }

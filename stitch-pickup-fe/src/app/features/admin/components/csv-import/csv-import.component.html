@@ -1,39 +1,135 @@
-<div class="csv-card">
-  <h3 class="card-title">Carga Masiva de Alumnos vía CSV</h3>
-  <p class="card-desc">Selecciona un archivo <code>.csv</code> con el formato: <strong>Nombre, Nivel, Grado, Grupo</strong>.</p>
+<div class="import-root">
 
-  <div class="file-dropzone">
-    <input type="file" accept=".csv" (change)="onFileSelected($event)" id="csv-file-input" class="file-input" />
-    <label for="csv-file-input" class="dropzone-label">
-      <span class="file-icon">📄</span>
-      <span class="file-text">{{ selectedFile()?.name || 'Arrastra tu archivo CSV aquí o haz clic para seleccionar' }}</span>
-    </label>
-  </div>
+  <!-- Header -->
+  <header class="page-header">
+    <div>
+      <h2 class="page-title">📂 Carga Masiva Excel / CSV</h2>
+      <p class="page-sub">Importa lotes completos de alumnos, maestros con grupos o padres de familia con plantillas oficiales</p>
+    </div>
+  </header>
 
-  @if (selectedFile()) {
-    <div class="action-bar">
-      <button type="button" class="btn-upload" [disabled]="isUploading()" (click)="upload()">
-        {{ isUploading() ? 'Procesando...' : 'Iniciar Carga Masiva' }}
+  <!-- Import Type Selector Tabs -->
+  <div class="type-selector-card">
+    <div class="selector-pills">
+      <button
+        type="button"
+        class="type-pill"
+        [class.type-pill--active]="selectedType() === 'STUDENTS'"
+        (click)="setType('STUDENTS')"
+      >
+        <span>🎓 Alumnos & Tutores</span>
+      </button>
+
+      <button
+        type="button"
+        class="type-pill"
+        [class.type-pill--active]="selectedType() === 'TEACHERS'"
+        (click)="setType('TEACHERS')"
+      >
+        <span>👨‍🏫 Maestros & Grupos</span>
+      </button>
+
+      <button
+        type="button"
+        class="type-pill"
+        [class.type-pill--active]="selectedType() === 'PARENTS'"
+        (click)="setType('PARENTS')"
+      >
+        <span>👨‍👩‍👧 Padres de Familia</span>
       </button>
     </div>
-  }
 
+    <!-- Template download action -->
+    <button type="button" class="btn-template" (click)="downloadTemplate()">
+      <svg viewBox="0 0 24 24" fill="none" class="t-icon"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="2"/><polyline points="7 10 12 15 17 10" stroke="currentColor" stroke-width="2"/><line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" stroke-width="2"/></svg>
+      <span>Descargar Plantilla Oficial ({{ selectedType() === 'STUDENTS' ? 'Alumnos' : selectedType() === 'TEACHERS' ? 'Maestros' : 'Padres' }})</span>
+    </button>
+  </div>
+
+  <!-- Drag and drop upload zone -->
+  <div class="upload-container">
+    <div
+      class="dropzone"
+      [class.dropzone--has-file]="selectedFile() !== null"
+      (dragover)="onDragOver($event)"
+      (drop)="onDrop($event)"
+    >
+      <div class="dropzone-content">
+        <div class="upload-icon">📄</div>
+        @if (selectedFile(); as file) {
+          <div class="file-selected-box">
+            <span class="file-name">✅ {{ file.name }}</span>
+            <span class="file-size">({{ (file.size / 1024).toFixed(1) }} KB)</span>
+          </div>
+          <p class="dropzone-hint">Archivo listo para procesar. Haz clic en "Iniciar Importación" abajo.</p>
+        } @else {
+          <h4>Arrastra y suelta tu archivo CSV aquí</h4>
+          <p class="dropzone-sub">o haz clic en el botón para explorar tus documentos</p>
+          <label class="btn-file-select">
+            <span>Examinar archivo CSV</span>
+            <input type="file" accept=".csv" (change)="onFileSelected($event)" hidden />
+          </label>
+        }
+      </div>
+    </div>
+
+    @if (errorMessage()) {
+      <div class="alert-error">
+        ⚠️ {{ errorMessage() }}
+      </div>
+    }
+
+    <!-- Process button -->
+    <div class="action-row" *ngIf="selectedFile()">
+      <button
+        type="button"
+        class="btn-process"
+        [disabled]="isUploading()"
+        (click)="processUpload()"
+      >
+        @if (isUploading()) {
+          <span class="spinner"></span>
+          <span>Procesando registros...</span>
+        } @else {
+          <span>🚀 Iniciar Importación Masiva</span>
+        }
+      </button>
+    </div>
+  </div>
+
+  <!-- Results Summary Card -->
   @if (result(); as res) {
-    <div class="result-box" [class.result-box--success]="res.totalErrors === 0">
-      <h4>Resultado del Procesamiento:</h4>
-      <ul>
-        <li>Procesados: {{ res.totalProcessed }}</li>
-        <li>Éxito: {{ res.totalSuccess }}</li>
-        <li>Errores: {{ res.totalErrors }}</li>
-      </ul>
-      @if (res.errorMessages.length) {
-        <div class="error-log">
-          <p>Errores detectados:</p>
-          @for (e of res.errorMessages; track e) {
-            <code>{{ e }}</code>
-          }
+    <div class="result-card">
+      <div class="result-header">
+        <h3>Resultado de la Importación Masiva</h3>
+      </div>
+
+      <div class="stats-grid">
+        <div class="res-stat-box">
+          <span class="res-stat-num">{{ res.totalProcessed }}</span>
+          <span class="res-stat-lbl">Filas Procesadas</span>
+        </div>
+        <div class="res-stat-box res-stat-box--success">
+          <span class="res-stat-num">{{ res.totalSuccess }}</span>
+          <span class="res-stat-lbl">Importadas con Éxito</span>
+        </div>
+        <div class="res-stat-box res-stat-box--error" *ngIf="res.totalErrors > 0">
+          <span class="res-stat-num">{{ res.totalErrors }}</span>
+          <span class="res-stat-lbl">Errores Detectados</span>
+        </div>
+      </div>
+
+      @if (res.errorMessages && res.errorMessages.length > 0) {
+        <div class="error-log-box">
+          <h4>Detalle de observaciones:</h4>
+          <ul>
+            @for (msg of res.errorMessages; track msg) {
+              <li>{{ msg }}</li>
+            }
+          </ul>
         </div>
       }
     </div>
   }
+
 </div>

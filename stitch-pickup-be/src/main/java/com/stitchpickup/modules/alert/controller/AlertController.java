@@ -56,26 +56,28 @@ public class AlertController {
 
     /**
      * Endpoint agrupado: devuelve UN solo registro por alumno (la alerta más reciente).
-     * - ADMIN: ve todos los alumnos.
+     * - Público o ADMIN: ve todos los alumnos (pantalla general de plantel).
      * - TEACHER: ve solo los alumnos de sus grupos asignados.
      */
     @GetMapping("/today/grouped")
-    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
-    @SecurityRequirement(name = "bearerAuth")
     @Operation(
         summary = "Obtener alertas del día agrupadas por alumno",
-        description = "Devuelve la alerta más reciente por cada alumno. ADMIN ve todos; TEACHER ve solo sus grupos asignados."
+        description = "Devuelve la alerta más reciente por cada alumno. Público/ADMIN ve todos; TEACHER ve solo sus grupos asignados."
     )
     public ResponseEntity<List<AlertResponse>> getTodayAlertsGrouped(HttpServletRequest request) {
-        String token = request.getHeader("Authorization").substring(7);
-        String role = tokenProvider.getRoleFromToken(token);
-        UUID userId = UUID.fromString(tokenProvider.getUserIdFromToken(token));
-
-        if ("ADMIN".equals(role)) {
-            return ResponseEntity.ok(alertService.getTodayAlertsGrouped());
-        } else {
-            // TEACHER → filtrar por sus grupos asignados
-            return ResponseEntity.ok(alertService.getTodayAlertsGroupedForTeacher(userId));
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            try {
+                String token = authHeader.substring(7);
+                String role = tokenProvider.getRoleFromToken(token);
+                if ("TEACHER".equals(role)) {
+                    UUID userId = UUID.fromString(tokenProvider.getUserIdFromToken(token));
+                    return ResponseEntity.ok(alertService.getTodayAlertsGroupedForTeacher(userId));
+                }
+            } catch (Exception ignored) {}
         }
+
+        // Si es ADMIN o acceso público de monitor general
+        return ResponseEntity.ok(alertService.getTodayAlertsGrouped());
     }
 }

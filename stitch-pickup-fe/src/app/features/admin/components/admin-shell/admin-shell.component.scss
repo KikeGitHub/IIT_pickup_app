@@ -5,6 +5,7 @@
   background: v.$color-surface-container-low;
   color: v.$color-on-surface;
   font-family: v.$font-family-base;
+  padding-bottom: 70px; // Padding for mobile bottom nav
 }
 
 .admin-header {
@@ -108,6 +109,9 @@
 .admin-nav {
   background: white;
   border-bottom: 1px solid v.$color-outline-variant;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 
   .nav-container {
     max-width: 1400px;
@@ -115,17 +119,21 @@
     display: flex;
     gap: v.$space-xs;
     padding: 0 v.$space-md;
+    overflow-x: auto;
+    scrollbar-width: none;
+    &::-webkit-scrollbar { display: none; }
   }
 
   .nav-tab {
-    padding: v.$space-sm v.$space-md;
+    padding: 12px 16px;
     background: none;
     border: none;
     border-bottom: 3px solid transparent;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: v.$font-weight-semibold;
     color: v.$color-on-surface-variant;
     cursor: pointer;
+    white-space: nowrap;
     transition: all 0.2s;
 
     &:hover { color: v.$color-primary; }
@@ -133,6 +141,7 @@
     &--active {
       color: v.$color-primary;
       border-bottom-color: v.$color-primary;
+      font-weight: v.$font-weight-bold;
     }
   }
 }
@@ -141,4 +150,61 @@
   max-width: 1400px;
   margin: 0 auto;
   padding: v.$space-md;
+}
+
+/* Mobile Bottom Navigation Bar (< 768px) */
+.mobile-bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  border-top: 1px solid v.$color-outline-variant;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
+  z-index: 1000;
+  justify-content: space-around;
+  padding: 6px 0;
+
+  .mobile-nav-btn {
+    background: none;
+    border: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    color: v.$color-on-surface-variant;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: v.$radius-sm;
+
+    .m-icon { font-size: 18px; }
+    .m-lbl { font-size: 10px; font-weight: v.$font-weight-semibold; }
+
+    &--active {
+      color: v.$color-primary;
+      .m-lbl { font-weight: v.$font-weight-bold; }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: v.$space-sm;
+
+    .header-right {
+      width: 100%;
+      justify-content: space-between;
+    }
+  }
+
+  .admin-nav {
+    display: none; // Hidden on mobile, replaced by bottom nav
+  }
+
+  .mobile-bottom-nav {
+    display: flex;
+  }
 }

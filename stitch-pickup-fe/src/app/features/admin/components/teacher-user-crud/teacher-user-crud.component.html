@@ -1,0 +1,193 @@
+<div class="teacher-mgr-root">
+
+  <!-- Header -->
+  <header class="page-header">
+    <div>
+      <h2 class="page-title">👨‍🏫 Gestión de Maestros & Personal Escolar</h2>
+      <p class="page-sub">Registra docentes y asigna uno o varios grupos escolares para la entrega de alumnos</p>
+    </div>
+    <button type="button" class="btn-primary" (click)="openCreateModal()">
+      <svg viewBox="0 0 24 24" fill="none" class="btn-icon"><line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="2"/><line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2"/></svg>
+      <span>Nuevo Maestro</span>
+    </button>
+  </header>
+
+  <!-- Filter & Search Toolbar -->
+  <div class="toolbar-card">
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input
+        type="text"
+        [(ngModel)]="searchQuery"
+        placeholder="Buscar por nombre o correo..."
+        class="search-input"
+      />
+    </div>
+
+    <div class="filter-pills">
+      <button type="button" class="pill-btn" [class.pill-btn--active]="levelFilter === 'ALL'" (click)="levelFilter = 'ALL'">Todos</button>
+      <button type="button" class="pill-btn" [class.pill-btn--active]="levelFilter === 'KINDER'" (click)="levelFilter = 'KINDER'">Kinder</button>
+      <button type="button" class="pill-btn" [class.pill-btn--active]="levelFilter === 'PRIMARIA'" (click)="levelFilter = 'PRIMARIA'">Primaria</button>
+      <button type="button" class="pill-btn" [class.pill-btn--active]="levelFilter === 'SECUNDARIA'" (click)="levelFilter = 'SECUNDARIA'">Secundaria</button>
+    </div>
+  </div>
+
+  <!-- Teachers Table -->
+  <div class="table-card">
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Maestro</th>
+            <th>Nivel</th>
+            <th>Grupos Asignados</th>
+            <th>Rol</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (t of filteredTeachers; track t.id) {
+            <tr>
+              <td>
+                <div class="user-cell">
+                  <span class="user-avatar">{{ t.nombre.charAt(0) }}</span>
+                  <div>
+                    <p class="u-name">{{ t.nombre }}</p>
+                    <p class="u-email">{{ t.email }}</p>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span class="level-tag">{{ t.level || 'General' }}</span>
+              </td>
+              <td>
+                <div class="group-badges">
+                  @for (g of t.groups || []; track g.id) {
+                    <span class="group-pill">{{ g.level }} - {{ g.name }}</span>
+                  } @empty {
+                    <span class="text-muted">Sin grupos asignados</span>
+                  }
+                </div>
+              </td>
+              <td>
+                <span class="role-badge" [class.role-badge--admin]="t.role === 'ADMIN'">{{ t.role }}</span>
+              </td>
+              <td>
+                <span class="status-indicator" [class.status-indicator--active]="t.active">
+                  {{ t.active ? 'Activo' : 'Inactivo' }}
+                </span>
+              </td>
+              <td>
+                <div class="action-btns">
+                  <button type="button" class="btn-action" (click)="openEditModal(t)" title="Editar">✏️</button>
+                  <button type="button" class="btn-action btn-action--del" (click)="deleteTeacher(t)" title="Eliminar">🗑️</button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6" class="empty-cell">No se encontraron maestros registrados.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modal Create / Edit Teacher -->
+  @if (showModal()) {
+    <div class="modal-backdrop" (click)="closeModal()">
+      <div class="modal-card modal-card--lg" (click)="$event.stopPropagation()">
+        <header class="modal-header">
+          <h3>{{ isEditing() ? 'Editar Maestro' : 'Nuevo Maestro' }}</h3>
+          <button type="button" class="btn-close" (click)="closeModal()">&times;</button>
+        </header>
+
+        <div class="modal-body">
+          @if (formError) {
+            <div class="alert-error">{{ formError }}</div>
+          }
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="teacherName">Nombre Completo *</label>
+              <input id="teacherName" type="text" [(ngModel)]="teacherName" placeholder="Ej: Prof. María Fernanda Solís" class="form-control" />
+            </div>
+
+            <div class="form-group">
+              <label for="teacherEmail">Correo Institucional *</label>
+              <input id="teacherEmail" type="email" [(ngModel)]="teacherEmail" placeholder="maestro@iit.edu.mx" class="form-control" />
+            </div>
+
+            <div class="form-group">
+              <label for="teacherPassword">{{ isEditing() ? 'Nueva Contraseña (dejar en blanco para mantener)' : 'Contraseña Temporal' }}</label>
+              <input id="teacherPassword" type="password" [(ngModel)]="teacherPassword" placeholder="demo1234" class="form-control" />
+            </div>
+
+            <div class="form-group">
+              <label for="teacherLevel">Nivel Principal</label>
+              <select id="teacherLevel" [(ngModel)]="teacherLevel" class="form-control">
+                <option value="KINDER">Kinder</option>
+                <option value="PRIMARIA">Primaria</option>
+                <option value="SECUNDARIA">Secundaria</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="teacherRole">Rol en Sistema</label>
+              <select id="teacherRole" [(ngModel)]="teacherRole" class="form-control">
+                <option value="TEACHER">Maestro / Monitor</option>
+                <option value="ADMIN">Administrador</option>
+              </select>
+            </div>
+
+            <div class="form-group form-group--checkbox">
+              <label>
+                <input type="checkbox" [(ngModel)]="teacherActive" />
+                <span>Cuenta Activa</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Multi-Group Selection with Checkboxes -->
+          <div class="group-selection-section">
+            <h4>Grupos Asignados (Selección Múltiple)</h4>
+            <p class="section-desc">Selecciona los grupos cuyos alumnos aparecerán en el monitor de este maestro</p>
+
+            <div class="levels-checkbox-grid">
+              @for (lvl of groupsByLevel; track lvl.level) {
+                <div class="level-box">
+                  <div class="level-box-title">{{ lvl.level }}</div>
+                  <div class="checkbox-list">
+                    @for (g of lvl.groups; track g.id) {
+                      <label class="group-checkbox-label">
+                        <input
+                          type="checkbox"
+                          [checked]="isGroupSelected(g.id)"
+                          (change)="toggleGroupSelection(g.id)"
+                        />
+                        <span>{{ g.name }}</span>
+                      </label>
+                    } @empty {
+                      <span class="no-groups-txt">Sin grupos</span>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+
+        </div>
+
+        <footer class="modal-footer">
+          <button type="button" class="btn-secondary" (click)="closeModal()">Cancelar</button>
+          <button type="button" class="btn-primary" (click)="saveTeacher()">
+            {{ isEditing() ? 'Guardar Cambios' : 'Registrar Maestro' }}
+          </button>
+        </footer>
+      </div>
+    </div>
+  }
+
+</div>

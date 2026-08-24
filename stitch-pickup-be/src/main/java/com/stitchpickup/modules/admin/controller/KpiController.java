@@ -8,9 +8,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/kpis")
@@ -20,13 +18,27 @@ public class KpiController {
 
     private final KpiService kpiService;
 
-    @GetMapping("/today")
+    @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(
-        summary = "Obtener KPIs del día",
-        description = "Devuelve estadísticas consolidadas del flujo de salida para el panel de administración."
+        summary = "Obtener KPIs por período",
+        description = "Devuelve estadísticas consolidadas. Período: day (hoy), week (7 días), month (30 días)."
     )
+    public ResponseEntity<KpisResponse> getKpis(
+            @RequestParam(defaultValue = "day") String period) {
+        KpiService.Period p = switch (period.toLowerCase()) {
+            case "week"  -> KpiService.Period.week;
+            case "month" -> KpiService.Period.month;
+            default      -> KpiService.Period.day;
+        };
+        return ResponseEntity.ok(kpiService.getKpis(p));
+    }
+
+    @GetMapping("/today")
+    @PreAuthorize("hasRole('ADMIN')")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "Obtener KPIs del día (alias de legacy)", description = "Alias para GET /kpis?period=day")
     public ResponseEntity<KpisResponse> getTodayKpis() {
         return ResponseEntity.ok(kpiService.getTodayKpis());
     }

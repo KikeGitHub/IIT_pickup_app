@@ -1,0 +1,242 @@
+<div class="student-mgr-root">
+
+  <!-- Header -->
+  <header class="page-header">
+    <div>
+      <h2 class="page-title">🎓 Gestión de Alumnos & Tutores de Pickup</h2>
+      <p class="page-sub">Alta de estudiantes, asignación de grupos, maestros responsables y hasta 3 personas autorizadas para recoger</p>
+    </div>
+    <button type="button" class="btn-primary" (click)="openCreateModal()">
+      <svg viewBox="0 0 24 24" fill="none" class="btn-icon"><line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="2"/><line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2"/></svg>
+      <span>Nuevo Alumno</span>
+    </button>
+  </header>
+
+  <!-- Filter & Search Toolbar -->
+  <div class="toolbar-card">
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input
+        type="text"
+        [(ngModel)]="searchQuery"
+        placeholder="Buscar por nombre de alumno o grupo..."
+        class="search-input"
+      />
+    </div>
+
+    <div class="filter-pills">
+      <button type="button" class="pill-btn" [class.pill-btn--active]="levelFilter === 'ALL'" (click)="levelFilter = 'ALL'">Todos</button>
+      <button type="button" class="pill-btn" [class.pill-btn--active]="levelFilter === 'KINDER'" (click)="levelFilter = 'KINDER'">Kinder</button>
+      <button type="button" class="pill-btn" [class.pill-btn--active]="levelFilter === 'PRIMARIA'" (click)="levelFilter = 'PRIMARIA'">Primaria</button>
+      <button type="button" class="pill-btn" [class.pill-btn--active]="levelFilter === 'SECUNDARIA'" (click)="levelFilter = 'SECUNDARIA'">Secundaria</button>
+    </div>
+  </div>
+
+  <!-- Students Table -->
+  <div class="table-card">
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Alumno</th>
+            <th>Nivel & Grado</th>
+            <th>Grupo</th>
+            <th>Maestro(s) Asignado(s)</th>
+            <th>Tutores Autorizados (Pickup)</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (s of filteredStudents; track s.id) {
+            <tr>
+              <td>
+                <div class="student-cell">
+                  <span class="student-avatar">{{ s.name.charAt(0) }}</span>
+                  <div>
+                    <p class="s-name">{{ s.name }}</p>
+                    <p class="s-bday" *ngIf="s.birthday">🎂 {{ s.birthday }}</p>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <div class="level-badge-wrap">
+                  <span class="level-tag" [class]="'level-tag--' + s.level.toLowerCase()">{{ s.level }}</span>
+                  <span class="grade-tag" *ngIf="s.grade">{{ s.grade }}</span>
+                </div>
+              </td>
+              <td>
+                <span class="group-pill" *ngIf="s.groupName; else noGroup">Grupo {{ s.groupName }}</span>
+                <ng-template #noGroup><span class="text-muted">Sin grupo</span></ng-template>
+              </td>
+              <td>
+                <div class="teachers-list">
+                  @for (tName of s.teacherNames; track tName) {
+                    <span class="teacher-tag">👨‍🏫 {{ tName }}</span>
+                  } @empty {
+                    <span class="text-muted">Sin maestro</span>
+                  }
+                </div>
+              </td>
+              <td>
+                <div class="tutors-list">
+                  @for (t of s.familyMembers; track t.name) {
+                    <span class="tutor-pill" [class.tutor-pill--disabled]="!t.authorized" [title]="t.phone ? 'Tel: ' + t.phone : ''">
+                      {{ t.name }} ({{ t.relationship }})
+                    </span>
+                  } @empty {
+                    <span class="text-muted">Sin tutores asignados</span>
+                  }
+                </div>
+              </td>
+              <td>
+                <span class="status-indicator" [class.status-indicator--active]="s.active">
+                  {{ s.active ? 'Activo' : 'Inactivo' }}
+                </span>
+              </td>
+              <td>
+                <div class="action-btns">
+                  <button type="button" class="btn-action" (click)="openEditModal(s)" title="Editar">✏️</button>
+                  <button type="button" class="btn-action btn-action--del" (click)="deleteStudent(s)" title="Eliminar">🗑️</button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="7" class="empty-cell">No se encontraron alumnos registrados.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modal Create / Edit Student -->
+  @if (showModal()) {
+    <div class="modal-backdrop" (click)="closeModal()">
+      <div class="modal-card modal-card--xl" (click)="$event.stopPropagation()">
+        <header class="modal-header">
+          <h3>{{ isEditing() ? 'Editar Alumno' : 'Alta de Nuevo Alumno' }}</h3>
+          <button type="button" class="btn-close" (click)="closeModal()">&times;</button>
+        </header>
+
+        <div class="modal-body">
+          @if (formError) {
+            <div class="alert-error">{{ formError }}</div>
+          }
+
+          <!-- General Student Info Section -->
+          <div class="form-section-title">Información del Estudiante</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="studentName">Nombre Completo del Alumno *</label>
+              <input id="studentName" type="text" [(ngModel)]="studentName" placeholder="Ej: Sofía Ramírez López" class="form-control" />
+            </div>
+
+            <div class="form-group">
+              <label for="studentLevel">Nivel Educativo *</label>
+              <select id="studentLevel" [(ngModel)]="studentLevel" (change)="onLevelChange()" class="form-control">
+                <option value="KINDER">🌱 Kinder / Preescolar</option>
+                <option value="PRIMARIA">📚 Primaria</option>
+                <option value="SECUNDARIA">🎓 Secundaria</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="studentGrade">Grado Escolar</label>
+              <input id="studentGrade" type="text" [(ngModel)]="studentGrade" placeholder="Ej: 3°, 1° Kinder, etc." class="form-control" />
+            </div>
+
+            <div class="form-group">
+              <label for="studentGroup">Grupo Escolar Asignado</label>
+              <select id="studentGroup" [(ngModel)]="studentGroupId" class="form-control">
+                <option value="">-- Sin Grupo --</option>
+                @for (g of availableGroups; track g.id) {
+                  <option [value]="g.id">Grupo {{ g.name }} ({{ g.level }})</option>
+                }
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="studentBirthday">Fecha de Nacimiento</label>
+              <input id="studentBirthday" type="date" [(ngModel)]="studentBirthday" class="form-control" />
+            </div>
+
+            <div class="form-group">
+              <label for="studentAvatarUrl">URL de Fotografía / Avatar</label>
+              <input id="studentAvatarUrl" type="url" [(ngModel)]="studentAvatarUrl" placeholder="https://..." class="form-control" />
+            </div>
+          </div>
+
+          <!-- Dynamic Assigned Teachers Info Banner -->
+          <div class="teacher-notice-box" *ngIf="studentGroupId">
+            <span class="notice-icon">👨‍🏫</span>
+            <div class="notice-text">
+              <strong>Maestro(s) del Grupo Seleccionado:</strong>
+              @if (selectedGroupTeachers.length > 0) {
+                <span>{{ selectedGroupTeachers.join(', ') }}</span>
+              } @else {
+                <span class="text-muted">Aún no hay maestros asignados a este grupo escolar.</span>
+              }
+            </div>
+          </div>
+
+          <!-- 3 Authorized Pickup Tutors Section -->
+          <div class="form-section-title mt-lg">
+            <span>🛡️ Familiares / Tutores Autorizados para Pickup (Hasta 3)</span>
+          </div>
+          <p class="section-desc">Registra a las personas autorizadas que pueden presentarse a recoger al alumno en puerta o circuito vehicular.</p>
+
+          <div class="tutors-grid">
+            @for (t of tutors; track $index) {
+              <div class="tutor-card-form">
+                <div class="tutor-form-header">
+                  <span class="tutor-num">Tutor #{{ $index + 1 }}</span>
+                  <label class="auth-switch">
+                    <input type="checkbox" [(ngModel)]="t.authorized" />
+                    <span>Autorizado</span>
+                  </label>
+                </div>
+
+                <div class="tutor-form-body">
+                  <div class="form-group">
+                    <label>Nombre Completo</label>
+                    <input type="text" [(ngModel)]="t.name" placeholder="Ej: Carlos Ramírez Soto" class="form-control" />
+                  </div>
+
+                  <div class="form-row-2">
+                    <div class="form-group">
+                      <label>Parentesco</label>
+                      <select [(ngModel)]="t.relationship" class="form-control">
+                        <option value="Mamá">Mamá</option>
+                        <option value="Papá">Papá</option>
+                        <option value="Abuelo/a">Abuelo/a</option>
+                        <option value="Tío/a">Tío/a</option>
+                        <option value="Chofer">Chofer</option>
+                        <option value="Tutor Legal">Tutor Legal</option>
+                      </select>
+                    </div>
+
+                    <div class="form-group">
+                      <label>Teléfono</label>
+                      <input type="tel" [(ngModel)]="t.phone" placeholder="722-123-4567" class="form-control" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+
+        </div>
+
+        <footer class="modal-footer">
+          <button type="button" class="btn-secondary" (click)="closeModal()">Cancelar</button>
+          <button type="button" class="btn-primary" (click)="saveStudent()">
+            {{ isEditing() ? 'Guardar Cambios' : 'Registrar Alumno' }}
+          </button>
+        </footer>
+      </div>
+    </div>
+  }
+
+</div>

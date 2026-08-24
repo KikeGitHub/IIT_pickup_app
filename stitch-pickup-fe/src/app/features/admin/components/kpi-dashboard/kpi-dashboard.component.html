@@ -1,73 +1,192 @@
-@if (adminService.kpis(); as kpis) {
-  <div class="kpi-grid">
+<div class="kpi-dashboard-root">
 
-    <!-- KPI Metric Cards -->
-    <div class="metric-card">
-      <div class="metric-icon metric-icon--blue">📍</div>
-      <div class="metric-data">
-        <span class="metric-val">{{ kpis.totalAlertsToday }}</span>
-        <span class="metric-lbl">Alertas Recibidas Hoy</span>
-      </div>
+  <!-- Period Filter Toolbar -->
+  <div class="period-toolbar">
+    <div class="toolbar-title">
+      <h3>Resumen Operativo & Flujo de Salida</h3>
+      <p class="text-muted">Métricas de tiempo, entregas por división y desempeño de maestros</p>
     </div>
-
-    <div class="metric-card">
-      <div class="metric-icon metric-icon--green">✅</div>
-      <div class="metric-data">
-        <span class="metric-val">{{ kpis.totalDeliveredToday }}</span>
-        <span class="metric-lbl">Alumnos Entregados</span>
-      </div>
-    </div>
-
-    <div class="metric-card">
-      <div class="metric-icon metric-icon--amber">⏱</div>
-      <div class="metric-data">
-        <span class="metric-val">{{ kpis.avgPickupTimeMinutes }} min</span>
-        <span class="metric-lbl">Tiempo Promedio de Entrega</span>
-      </div>
-    </div>
-
-    <div class="metric-card">
-      <div class="metric-icon metric-icon--purple">🔥</div>
-      <div class="metric-data">
-        <span class="metric-val">{{ kpis.peakHour }}</span>
-        <span class="metric-lbl">Hora Pico de Salida</span>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- Level & Method Distribution Charts/Bars -->
-  <div class="charts-row">
-    <div class="chart-card">
-      <h3 class="chart-title">Distribución por Nivel Escolar</h3>
-      <div class="bar-list">
-        <div class="bar-item">
-          <span class="bar-lbl">🎒 Kinder ({{ kpis.alertsByLevel['KINDER'] || 0 }})</span>
-          <div class="bar-track"><div class="bar-fill bar-fill--kinder" [style.width.%]="30"></div></div>
-        </div>
-        <div class="bar-item">
-          <span class="bar-lbl">📚 Primaria ({{ kpis.alertsByLevel['PRIMARIA'] || 0 }})</span>
-          <div class="bar-track"><div class="bar-fill bar-fill--primaria" [style.width.%]="60"></div></div>
-        </div>
-        <div class="bar-item">
-          <span class="bar-lbl">🎓 Secundaria ({{ kpis.alertsByLevel['SECUNDARIA'] || 0 }})</span>
-          <div class="bar-track"><div class="bar-fill bar-fill--secundaria" [style.width.%]="20"></div></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="chart-card">
-      <h3 class="chart-title">Modalidad de Recogida</h3>
-      <div class="bar-list">
-        <div class="bar-item">
-          <span class="bar-lbl">🚗 Circuito en Auto ({{ kpis.alertsByMethod['CAR'] || 0 }})</span>
-          <div class="bar-track"><div class="bar-fill bar-fill--car" [style.width.%]="80"></div></div>
-        </div>
-        <div class="bar-item">
-          <span class="bar-lbl">🚶 Puerta Peatonal ({{ kpis.alertsByMethod['WALK'] || 0 }})</span>
-          <div class="bar-track"><div class="bar-fill bar-fill--walk" [style.width.%]="20"></div></div>
-        </div>
-      </div>
+    <div class="period-pills">
+      <button
+        type="button"
+        class="period-btn"
+        [class.period-btn--active]="adminService.selectedPeriod() === 'day'"
+        (click)="setPeriod('day')"
+      >
+        📅 Hoy
+      </button>
+      <button
+        type="button"
+        class="period-btn"
+        [class.period-btn--active]="adminService.selectedPeriod() === 'week'"
+        (click)="setPeriod('week')"
+      >
+        📆 Esta Semana
+      </button>
+      <button
+        type="button"
+        class="period-btn"
+        [class.period-btn--active]="adminService.selectedPeriod() === 'month'"
+        (click)="setPeriod('month')"
+      >
+        🗓️ Este Mes
+      </button>
     </div>
   </div>
-}
+
+  @if (adminService.kpis(); as kpis) {
+    <!-- Metric Cards Grid -->
+    <div class="kpi-grid">
+      <div class="metric-card">
+        <div class="metric-icon metric-icon--blue">📍</div>
+        <div class="metric-data">
+          <span class="metric-val">{{ kpis.totalAlertsToday }}</span>
+          <span class="metric-lbl">Alertas Recibidas</span>
+        </div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-icon metric-icon--green">✅</div>
+        <div class="metric-data">
+          <span class="metric-val">{{ kpis.totalDeliveredToday }}</span>
+          <span class="metric-lbl">Alumnos Entregados</span>
+        </div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-icon metric-icon--amber">⏱</div>
+        <div class="metric-data">
+          <span class="metric-val">{{ kpis.avgPickupTimeMinutes }} min</span>
+          <span class="metric-lbl">Tiempo Promedio de Entrega</span>
+        </div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-icon metric-icon--purple">🔥</div>
+        <div class="metric-data">
+          <span class="metric-val">{{ kpis.peakHour }}</span>
+          <span class="metric-lbl">Franja / Hora Pico</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Row: Level & Method Breakdown -->
+    <div class="charts-row">
+      <div class="chart-card">
+        <h3 class="chart-title">Distribución por Nivel Escolar</h3>
+        <div class="bar-list">
+          <div class="bar-item">
+            <div class="bar-header">
+              <span class="bar-lbl">🎒 Kinder</span>
+              <span class="bar-qty">{{ kpis.alertsByLevel['KINDER'] || 0 }} alumnos ({{ getLevelPercent('KINDER') }}%)</span>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill bar-fill--kinder" [style.width.%]="getLevelPercent('KINDER')"></div>
+            </div>
+          </div>
+
+          <div class="bar-item">
+            <div class="bar-header">
+              <span class="bar-lbl">📚 Primaria</span>
+              <span class="bar-qty">{{ kpis.alertsByLevel['PRIMARIA'] || 0 }} alumnos ({{ getLevelPercent('PRIMARIA') }}%)</span>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill bar-fill--primaria" [style.width.%]="getLevelPercent('PRIMARIA')"></div>
+            </div>
+          </div>
+
+          <div class="bar-item">
+            <div class="bar-header">
+              <span class="bar-lbl">🎓 Secundaria</span>
+              <span class="bar-qty">{{ kpis.alertsByLevel['SECUNDARIA'] || 0 }} alumnos ({{ getLevelPercent('SECUNDARIA') }}%)</span>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill bar-fill--secundaria" [style.width.%]="getLevelPercent('SECUNDARIA')"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <h3 class="chart-title">Modalidad de Recogida</h3>
+        <div class="bar-list">
+          <div class="bar-item">
+            <div class="bar-header">
+              <span class="bar-lbl">🚗 Circuito en Auto</span>
+              <span class="bar-qty">{{ kpis.alertsByMethod['CAR'] || 0 }} entregas ({{ getMethodPercent('CAR') }}%)</span>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill bar-fill--car" [style.width.%]="getMethodPercent('CAR')"></div>
+            </div>
+          </div>
+
+          <div class="bar-item">
+            <div class="bar-header">
+              <span class="bar-lbl">🚶 Puerta Peatonal</span>
+              <span class="bar-qty">{{ kpis.alertsByMethod['WALK'] || 0 }} entregas ({{ getMethodPercent('WALK') }}%)</span>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill bar-fill--walk" [style.width.%]="getMethodPercent('WALK')"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Teacher Delivery Performance Table -->
+    <div class="teacher-performance-card">
+      <div class="table-header-box">
+        <div>
+          <h3 class="card-title">👨‍🏫 Rendimiento de Entregas por Maestro</h3>
+          <p class="card-sub">Velocidad de despacho y cantidad de alumnos entregados por el personal escolar</p>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="perf-table">
+          <thead>
+            <tr>
+              <th>Maestro / Personal</th>
+              <th>Alumnos Despachados</th>
+              <th>Tiempo Promedio</th>
+              <th>Efectividad</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (t of kpis.teacherMetrics || []; track t.teacherName) {
+              <tr>
+                <td>
+                  <div class="teacher-cell">
+                    <span class="t-avatar">{{ t.teacherName.charAt(0) }}</span>
+                    <span class="t-name">{{ t.teacherName }}</span>
+                  </div>
+                </td>
+                <td>
+                  <span class="badge-count">{{ t.totalDelivered }} alumnos</span>
+                </td>
+                <td>
+                  <span class="time-tag" [class.time-tag--fast]="t.avgTimeMinutes <= 5" [class.time-tag--slow]="t.avgTimeMinutes > 7">
+                    ⏱ {{ t.avgTimeMinutes }} min
+                  </span>
+                </td>
+                <td>
+                  <div class="eff-bar-wrap">
+                    <div class="eff-bar">
+                      <div class="eff-fill" [style.width.%]="t.avgTimeMinutes <= 5 ? 95 : t.avgTimeMinutes <= 7 ? 75 : 50"></div>
+                    </div>
+                    <span class="eff-txt">{{ t.avgTimeMinutes <= 5 ? 'Excelente' : t.avgTimeMinutes <= 7 ? 'Bueno' : 'Regular' }}</span>
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="4" class="empty-cell">No se registran despachos de maestros en el período seleccionado.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+</div>

@@ -76,11 +76,11 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/v1/users/**").hasRole("ADMIN")
                 .requestMatchers("/api/v1/kpis/**").hasRole("ADMIN")
-                // TEACHER y ADMIN — monitor de entregas
-                .requestMatchers("/api/v1/deliveries/*/dispatch").hasAnyRole("TEACHER", "ADMIN")
+                // Monitor público y autenticado
+                .requestMatchers(HttpMethod.GET, "/api/v1/alerts/today/grouped").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/alerts/today").hasAnyRole("TEACHER", "ADMIN")
-                .requestMatchers(HttpMethod.GET, "/api/v1/alerts/today/grouped").hasAnyRole("TEACHER", "ADMIN")
                 .requestMatchers(HttpMethod.GET, "/api/v1/deliveries/today").hasAnyRole("TEACHER", "ADMIN")
+                .requestMatchers("/api/v1/deliveries/*/dispatch").hasAnyRole("TEACHER", "ADMIN")
                 // Solo PARENT — envío de alertas
                 .requestMatchers(HttpMethod.POST, "/api/v1/alerts").hasRole("PARENT")
                 .requestMatchers(HttpMethod.GET, "/api/v1/students/my-students").hasRole("PARENT")
