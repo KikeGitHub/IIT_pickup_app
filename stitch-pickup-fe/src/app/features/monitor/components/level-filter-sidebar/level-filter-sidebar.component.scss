@@ -5,30 +5,31 @@
   flex-direction: column;
   gap: v.$space-xs;
   padding: v.$space-sm;
-  background: rgba(255, 255, 255, 0.04);
+  background: white;
   border-radius: v.$radius-lg;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .sidebar-label {
   margin: 0 0 v.$space-xs;
-  font-size: 10px;
-  font-weight: v.$font-weight-bold;
+  font-size: 11px;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: rgba(255, 255, 255, 0.4);
-  padding: 0 v.$space-xs;
+  letter-spacing: 0.08em;
+  color: #64748b;
+  padding: 4px v.$space-xs 0;
 }
 
 .filter-btn {
   display: flex;
   align-items: center;
-  gap: v.$space-xs;
-  padding: v.$space-xs v.$space-sm;
+  gap: 8px;
+  padding: 8px 12px;
   border-radius: v.$radius-md;
-  border: none;
+  border: 1px solid transparent;
   background: transparent;
-  color: rgba(255, 255, 255, 0.65);
+  color: #334155;
   cursor: pointer;
   transition: all 0.18s ease;
   width: 100%;
@@ -39,18 +40,18 @@
   .filter-name {
     flex: 1;
     font-size: 13px;
-    font-weight: v.$font-weight-semibold;
+    font-weight: 600;
     font-family: v.$font-family-base;
   }
 
   .filter-count {
     min-width: 20px;
     height: 20px;
-    background: rgba(255, 255, 255, 0.12);
+    background: #e2e8f0;
     border-radius: v.$radius-full;
     font-size: 11px;
-    font-weight: v.$font-weight-bold;
-    color: white;
+    font-weight: bold;
+    color: #1e293b;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -58,16 +59,63 @@
   }
 
   &:hover {
-    background: rgba(255, 255, 255, 0.08);
-    color: white;
+    background: #f1f5f9;
+    color: #0f172a;
   }
 
   &--active {
-    background: v.$color-primary;
+    background: #2563eb;
     color: white;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.35);
+
+    .filter-name {
+      color: white;
+    }
 
     .filter-count {
       background: rgba(255, 255, 255, 0.25);
+      color: white;
+    }
+
+    &:hover {
+      background: #1d4ed8;
+      color: white;
+    }
+  }
+}
+
+// Dark Mode Overrides
+:host-context(.theme-dark) {
+  .sidebar {
+    background: #131c2e;
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: none;
+  }
+
+  .sidebar-label {
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  .filter-btn {
+    color: rgba(255, 255, 255, 0.75);
+
+    .filter-count {
+      background: rgba(255, 255, 255, 0.12);
+      color: white;
+    }
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: white;
+    }
+
+    &--active {
+      background: #2563eb;
+      color: white;
+
+      .filter-count {
+        background: rgba(255, 255, 255, 0.25);
+      }
     }
   }
 }

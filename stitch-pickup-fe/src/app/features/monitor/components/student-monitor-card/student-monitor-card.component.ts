@@ -16,13 +16,48 @@ export class StudentMonitorCardComponent {
   @Input() isUpdated: boolean = false;
   @Output() dispatch = new EventEmitter<string>();
 
-  get statusConfig(): { label: string; color: string; bgColor: string; priority: number } {
+  get statusConfig(): { label: string; color: string; bgColor: string; borderColor: string; priority: number } {
     switch (this.alert.status) {
-      case 'URGENTE': return { label: '🚨 URGENTE', color: '#fca5a5', bgColor: 'rgba(239,68,68,0.15)', priority: 4 };
-      case 'EN_FILA': return { label: '🚗 EN FILA', color: '#93c5fd', bgColor: 'rgba(59,130,246,0.12)', priority: 3 };
-      case 'FIVE_MIN': return { label: '⏱ 5 MIN', color: '#fdba74', bgColor: 'rgba(249,115,22,0.12)', priority: 2 };
-      case 'TEN_MIN': return { label: '🕐 10 MIN', color: '#fde68a', bgColor: 'rgba(245,158,11,0.10)', priority: 1 };
-      default: return { label: this.alert.status, color: 'white', bgColor: 'rgba(255,255,255,0.05)', priority: 0 };
+      case 'URGENTE':
+        return {
+          label: '🚨 URGENTE',
+          color: '#b91c1c',
+          bgColor: '#fee2e2',
+          borderColor: '#ef4444',
+          priority: 4
+        };
+      case 'EN_FILA':
+        return {
+          label: '🚗 EN FILA',
+          color: '#1d4ed8',
+          bgColor: '#dbeafe',
+          borderColor: '#3b82f6',
+          priority: 3
+        };
+      case 'FIVE_MIN':
+        return {
+          label: '⏱ 5 MIN',
+          color: '#b45309',
+          bgColor: '#fef3c7',
+          borderColor: '#f59e0b',
+          priority: 2
+        };
+      case 'TEN_MIN':
+        return {
+          label: '🕐 10 MIN',
+          color: '#334155',
+          bgColor: '#f1f5f9',
+          borderColor: '#94a3b8',
+          priority: 1
+        };
+      default:
+        return {
+          label: this.alert.status,
+          color: '#1e293b',
+          bgColor: '#f8fafc',
+          borderColor: '#cbd5e1',
+          priority: 0
+        };
     }
   }
 

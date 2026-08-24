@@ -2,7 +2,7 @@
   class="monitor-card"
   [class.monitor-card--urgent]="alert.status === 'URGENTE'"
   [class.monitor-card--updated]="isUpdated"
-  [style.border-left-color]="statusConfig.color"
+  [style.border-left-color]="statusConfig.borderColor"
 >
   <!-- Status Badge -->
   <div class="card-status-badge" [style.background]="statusConfig.bgColor" [style.color]="statusConfig.color">
