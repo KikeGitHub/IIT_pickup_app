@@ -1,2 +1,61 @@
-// Entry point: loads from src/styles/styles.scss
-@use 'styles/styles';
+@use 'styles/variables' as v;
+@use 'styles/typography' as t;
+@use 'styles/animations' as a;
+@use 'styles/components' as c;
+
+// ─── CSS Reset & Base ─────────────────────────────────────────────────────────
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+  min-height: 100dvh;
+  background-color: v.$color-background;
+  color: v.$color-on-surface;
+  -webkit-tap-highlight-color: transparent;
+  font-family: v.$font-family-base;
+  line-height: v.$line-height-body-md;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// ─── Scrollbar Styling ────────────────────────────────────────────────────────
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: v.$color-surface-container;
+}
+
+::-webkit-scrollbar-thumb {
+  background: v.$color-outline-variant;
+  border-radius: v.$radius-full;
+
+  &:hover {
+    background: v.$color-outline;
+  }
+}
+
+// ─── Focus Visible ───────────────────────────────────────────────────────────
+
+:focus-visible {
+  outline: 2px solid v.$color-primary;
+  outline-offset: 2px;
+}
+
+// ─── Selection ────────────────────────────────────────────────────────────────
+
+::selection {
+  background: rgba(v.$color-primary, 0.15);
+  color: v.$color-on-surface;
+}
