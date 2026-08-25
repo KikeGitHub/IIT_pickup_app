@@ -112,6 +112,12 @@
                 <div class="r-student-main">
                   <h3 class="r-name">{{ s.name }}</h3>
                   <p class="r-meta">{{ s.level }} · {{ s.grade || grp.name }} <span *ngIf="s.birthday">· 🎂 {{ s.birthday }}</span></p>
+                  <p class="r-submeta" *ngIf="s.curp || s.gender">
+                    <span class="curp-badge" *ngIf="s.curp">🏷️ {{ s.curp }}</span>
+                    <span class="gender-pill" *ngIf="s.gender" [class.gender-pill--m]="s.gender === 'M'" [class.gender-pill--f]="s.gender === 'F'">
+                      {{ s.gender === 'M' ? '👦 Niño' : '👧 Niña' }}
+                    </span>
+                  </p>
                 </div>
               </div>
 
@@ -172,6 +178,26 @@
           <div class="form-group">
             <label for="editBirthday">Fecha de Nacimiento</label>
             <input id="editBirthday" type="date" [(ngModel)]="editBirthday" class="form-control" />
+          </div>
+
+          <div class="form-group">
+            <label for="editGender">Sexo *</label>
+            <select id="editGender" [(ngModel)]="editGender" class="form-control">
+              <option value="M">👦 M - Masculino</option>
+              <option value="F">👧 F - Femenino</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="editCurp">CURP (Opcional)</label>
+            <input
+              id="editCurp"
+              type="text"
+              maxlength="18"
+              [(ngModel)]="editCurp"
+              placeholder="Ej: LOJC240123HMCPMRA1"
+              class="form-control uppercase-input"
+            />
           </div>
 
           <div class="form-group">

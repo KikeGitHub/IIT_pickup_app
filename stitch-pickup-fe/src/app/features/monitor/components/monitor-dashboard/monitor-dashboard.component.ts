@@ -45,6 +45,8 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
   editName = '';
   editGrade = '';
   editBirthday = '';
+  editGender: 'M' | 'F' = 'M';
+  editCurp = '';
   editAvatarUrl = '';
   editError = '';
   isSavingStudent = signal<boolean>(false);
@@ -108,6 +110,8 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
     this.editName = student.name;
     this.editGrade = student.grade || '';
     this.editBirthday = student.birthday || '';
+    this.editGender = (student.gender as 'M' | 'F') || 'M';
+    this.editCurp = student.curp || '';
     this.editAvatarUrl = student.avatarUrl || '';
     this.editError = '';
     this.showEditModal.set(true);
@@ -154,6 +158,8 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
       name: this.editName.trim(),
       grade: this.editGrade.trim() || undefined,
       birthday: this.editBirthday || undefined,
+      gender: this.editGender,
+      curp: this.editCurp.trim().toUpperCase() || undefined,
       avatarUrl: this.editAvatarUrl.trim() || undefined
     };
 

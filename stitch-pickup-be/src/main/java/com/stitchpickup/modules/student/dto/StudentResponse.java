@@ -8,6 +8,9 @@ public record StudentResponse(
     String level,
     String grade,
     String groupName,
+    String birthday,
+    String gender,
+    String curp,
     String avatarUrl,
     List<FamilyMemberResponse> familyMembers
 ) {}

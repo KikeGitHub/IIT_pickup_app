@@ -20,6 +20,8 @@ export interface TeacherStudent {
   groupId?: string;
   groupName?: string;
   birthday?: string;
+  gender?: 'M' | 'F' | string;
+  curp?: string;
   avatarUrl?: string;
   active: boolean;
   familyMembers: FamilyMemberDto[];
@@ -36,6 +38,8 @@ export interface TeacherStudentUpdatePayload {
   name: string;
   grade?: string;
   birthday?: string;
+  gender?: string;
+  curp?: string;
   avatarUrl?: string;
 }
 

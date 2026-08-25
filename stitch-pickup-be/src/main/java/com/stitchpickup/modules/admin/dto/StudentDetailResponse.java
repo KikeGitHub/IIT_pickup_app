@@ -10,6 +10,8 @@ public record StudentDetailResponse(
     String groupId,
     String groupName,
     String birthday,
+    String gender,
+    String curp,
     String avatarUrl,
     boolean active,
     List<String> teacherNames,

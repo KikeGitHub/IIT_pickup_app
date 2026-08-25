@@ -149,7 +149,39 @@
   }
 
   .s-name { margin: 0; font-weight: v.$font-weight-bold; color: v.$color-on-surface; }
-  .s-bday { margin: 0; font-size: 11px; color: v.$color-on-surface-variant; }
+  .s-meta {
+    margin: 2px 0 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .curp-badge {
+    font-family: monospace;
+    font-size: 10px;
+    font-weight: 600;
+    background: #f1f5f9;
+    color: #475569;
+    padding: 1px 6px;
+    border-radius: 4px;
+    border: 1px solid #cbd5e1;
+    letter-spacing: 0.5px;
+  }
+  .gender-pill {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 4px;
+    &--m { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+    &--f { background: #fce7f3; color: #9d174d; border: 1px solid #fbcfe8; }
+  }
+  .s-bday { margin: 2px 0 0; font-size: 11px; color: v.$color-on-surface-variant; }
+}
+
+.uppercase-input {
+  text-transform: uppercase;
+  font-family: monospace;
+  letter-spacing: 1px;
 }
 
 .level-badge-wrap {

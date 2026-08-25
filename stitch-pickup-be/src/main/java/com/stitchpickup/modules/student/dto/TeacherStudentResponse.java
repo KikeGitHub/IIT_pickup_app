@@ -11,6 +11,8 @@ public record TeacherStudentResponse(
     String groupId,
     String groupName,
     String birthday,
+    String gender,
+    String curp,
     String avatarUrl,
     boolean active,
     List<FamilyMemberResponse> familyMembers

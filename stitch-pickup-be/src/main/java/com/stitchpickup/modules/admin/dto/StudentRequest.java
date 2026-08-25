@@ -9,6 +9,8 @@ public record StudentRequest(
     String grade,
     String groupId,
     String birthday,
+    String gender,
+    String curp,
     String avatarUrl,
     Boolean active,
     List<FamilyMemberRequest> familyMembers

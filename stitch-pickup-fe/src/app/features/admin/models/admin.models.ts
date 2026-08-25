@@ -23,6 +23,8 @@ export interface StudentDetail {
   groupId?: string;
   groupName?: string;
   birthday?: string;
+  gender?: 'M' | 'F' | string;
+  curp?: string;
   avatarUrl?: string;
   active: boolean;
   teacherNames: string[];

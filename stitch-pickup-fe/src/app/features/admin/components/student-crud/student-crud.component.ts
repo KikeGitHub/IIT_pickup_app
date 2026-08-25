@@ -27,6 +27,8 @@ export class StudentCrudComponent implements OnInit {
   studentGrade = '3°';
   studentGroupId = '';
   studentBirthday = '';
+  studentGender: 'M' | 'F' = 'M';
+  studentCurp = '';
   studentAvatarUrl = '';
   studentActive = true;
 
@@ -55,7 +57,8 @@ export class StudentCrudComponent implements OnInit {
       list = list.filter(
         (s) =>
           s.name.toLowerCase().includes(q) ||
-          (s.groupName && s.groupName.toLowerCase().includes(q))
+          (s.groupName && s.groupName.toLowerCase().includes(q)) ||
+          (s.curp && s.curp.toLowerCase().includes(q))
       );
     }
     return list;
@@ -74,9 +77,8 @@ export class StudentCrudComponent implements OnInit {
   }
 
   onLevelChange(): void {
-    // Reset group when level changes
-    const matchingGroups = this.availableGroups;
-    this.studentGroupId = matchingGroups.length > 0 ? matchingGroups[0].id : '';
+    const groups = this.availableGroups;
+    this.studentGroupId = groups.length > 0 ? groups[0].id : '';
   }
 
   openCreateModal(): void {
@@ -88,6 +90,8 @@ export class StudentCrudComponent implements OnInit {
     const groups = this.availableGroups;
     this.studentGroupId = groups.length > 0 ? groups[0].id : '';
     this.studentBirthday = '';
+    this.studentGender = 'M';
+    this.studentCurp = '';
     this.studentAvatarUrl = '';
     this.studentActive = true;
     this.tutors = [
@@ -107,6 +111,8 @@ export class StudentCrudComponent implements OnInit {
     this.studentGrade = student.grade || '';
     this.studentGroupId = student.groupId || '';
     this.studentBirthday = student.birthday || '';
+    this.studentGender = (student.gender as 'M' | 'F') || 'M';
+    this.studentCurp = student.curp || '';
     this.studentAvatarUrl = student.avatarUrl || '';
     this.studentActive = student.active;
 
@@ -161,6 +167,8 @@ export class StudentCrudComponent implements OnInit {
       grade: this.studentGrade,
       groupId: this.studentGroupId || undefined,
       birthday: this.studentBirthday || undefined,
+      gender: this.studentGender,
+      curp: this.studentCurp.trim().toUpperCase() || undefined,
       avatarUrl: this.studentAvatarUrl || undefined,
       active: this.studentActive,
       familyMembers: validTutors

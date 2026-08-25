@@ -13,6 +13,9 @@ export interface Student {
   level: 'KINDER' | 'PRIMARIA' | 'SECUNDARIA';
   grade: string;
   groupName: string;
+  birthday?: string;
+  gender?: 'M' | 'F' | string;
+  curp?: string;
   avatarUrl?: string;
   familyMembers: FamilyMember[];
 }

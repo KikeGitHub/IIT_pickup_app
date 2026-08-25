@@ -67,6 +67,8 @@ public class StudentAdminService {
                 .grade(request.grade())
                 .group(group)
                 .birthday(bday)
+                .gender(request.gender() != null && !request.gender().isBlank() ? request.gender().trim().toUpperCase() : null)
+                .curp(request.curp() != null && !request.curp().isBlank() ? request.curp().trim().toUpperCase() : null)
                 .avatarUrl(request.avatarUrl())
                 .active(request.active() != null ? request.active() : true)
                 .build();
@@ -117,6 +119,9 @@ public class StudentAdminService {
         } else {
             student.setBirthday(null);
         }
+
+        student.setGender(request.gender() != null && !request.gender().isBlank() ? request.gender().trim().toUpperCase() : null);
+        student.setCurp(request.curp() != null && !request.curp().isBlank() ? request.curp().trim().toUpperCase() : null);
 
         if (request.avatarUrl() != null) {
             student.setAvatarUrl(request.avatarUrl());
@@ -186,6 +191,8 @@ public class StudentAdminService {
                 groupId,
                 groupName,
                 student.getBirthday() != null ? student.getBirthday().toString() : null,
+                student.getGender(),
+                student.getCurp(),
                 student.getAvatarUrl(),
                 student.getActive() != null ? student.getActive() : true,
                 teacherNames,

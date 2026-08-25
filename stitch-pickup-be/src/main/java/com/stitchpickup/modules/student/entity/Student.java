@@ -45,6 +45,12 @@ public class Student {
 
     private LocalDate birthday;
 
+    @Column(length = 1)
+    private String gender;
+
+    @Column(length = 18)
+    private String curp;
+
     @Column(name = "avatar_url")
     private String avatarUrl;
 

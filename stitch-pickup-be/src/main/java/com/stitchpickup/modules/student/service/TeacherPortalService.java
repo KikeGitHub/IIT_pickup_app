@@ -78,7 +78,12 @@ public class TeacherPortalService {
             try {
                 student.setBirthday(LocalDate.parse(request.birthday()));
             } catch (Exception ignored) {}
+        } else {
+            student.setBirthday(null);
         }
+
+        student.setGender(request.gender() != null && !request.gender().isBlank() ? request.gender().trim().toUpperCase() : null);
+        student.setCurp(request.curp() != null && !request.curp().isBlank() ? request.curp().trim().toUpperCase() : null);
 
         if (request.avatarUrl() != null) {
             student.setAvatarUrl(request.avatarUrl().trim());
@@ -108,6 +113,8 @@ public class TeacherPortalService {
                 s.getGroup() != null ? s.getGroup().getId().toString() : null,
                 s.getGroup() != null ? s.getGroup().getName() : null,
                 s.getBirthday() != null ? s.getBirthday().toString() : null,
+                s.getGender(),
+                s.getCurp(),
                 s.getAvatarUrl(),
                 Boolean.TRUE.equals(s.getActive()),
                 tutors

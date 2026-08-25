@@ -311,6 +311,32 @@
     .r-student-main {
       .r-name { margin: 0; font-size: 15px; font-weight: bold; }
       .r-meta { margin: 2px 0 0 0; font-size: 12px; }
+      .r-submeta {
+        margin: 4px 0 0 0;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+      .curp-badge {
+        font-family: monospace;
+        font-size: 10px;
+        font-weight: 600;
+        background: rgba(100, 116, 139, 0.12);
+        color: #475569;
+        padding: 1px 5px;
+        border-radius: 4px;
+        border: 1px solid rgba(148, 163, 184, 0.4);
+        letter-spacing: 0.5px;
+      }
+      .gender-pill {
+        font-size: 10px;
+        font-weight: 700;
+        padding: 1px 5px;
+        border-radius: 4px;
+        &--m { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+        &--f { background: #fce7f3; color: #9d174d; border: 1px solid #fbcfe8; }
+      }
     }
   }
 

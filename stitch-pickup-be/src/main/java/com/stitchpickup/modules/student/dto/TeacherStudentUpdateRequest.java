@@ -6,5 +6,7 @@ public record TeacherStudentUpdateRequest(
     @NotBlank String name,
     String grade,
     String birthday,
+    String gender,
+    String curp,
     String avatarUrl
 ) {}

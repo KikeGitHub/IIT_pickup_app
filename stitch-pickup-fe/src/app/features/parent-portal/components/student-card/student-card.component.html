@@ -41,6 +41,11 @@
           <span class="meta-grade">{{ student.grade }}</span>
           <span class="meta-separator">•</span>
           <span class="meta-group">Grupo {{ student.groupName }}</span>
+          <span class="meta-separator" *ngIf="student.gender">•</span>
+          <span class="meta-gender" *ngIf="student.gender">{{ student.gender === 'M' ? '👦 Niño' : '👧 Niña' }}</span>
+        </p>
+        <p class="student-curp-meta" *ngIf="student.curp">
+          <span class="curp-badge">🏷️ CURP: {{ student.curp }}</span>
         </p>
 
         <div class="card-buttons-row">

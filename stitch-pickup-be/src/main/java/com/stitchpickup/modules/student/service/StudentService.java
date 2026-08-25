@@ -79,6 +79,9 @@ public class StudentService {
                 s.getLevel().name(),
                 s.getGrade(),
                 groupName,
+                s.getBirthday() != null ? s.getBirthday().toString() : null,
+                s.getGender(),
+                s.getCurp(),
                 s.getAvatarUrl(),
                 memberDtos
         );
