@@ -1,12 +1,15 @@
 import { Component, inject, OnInit, ChangeDetectionStrategy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { finalize } from 'rxjs';
 import { AdminService, TeacherUser, SchoolGroup } from '../../services/admin.service';
+import { PaginationComponent } from '../../../../shared/components/pagination/pagination.component';
+import { LoadingOverlayComponent } from '../../../../shared/components/loading-overlay/loading-overlay.component';
 
 @Component({
   selector: 'app-teacher-user-crud',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PaginationComponent, LoadingOverlayComponent],
   templateUrl: './teacher-user-crud.component.html',
   styleUrl: './teacher-user-crud.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -17,6 +20,11 @@ export class TeacherUserCrudComponent implements OnInit {
   readonly showModal = signal<boolean>(false);
   readonly isEditing = signal<boolean>(false);
   readonly editingTeacherId = signal<string | null>(null);
+
+  // Pagination State
+  readonly currentPage = signal<number>(1);
+  readonly pageSize = signal<number>(15);
+  readonly pageSizeOptions = [15, 30, 100];
 
   searchQuery = '';
   levelFilter: 'ALL' | 'KINDER' | 'PRIMARIA' | 'SECUNDARIA' = 'ALL';
@@ -50,6 +58,30 @@ export class TeacherUserCrudComponent implements OnInit {
       );
     }
     return list;
+  }
+
+  get pagedTeachers(): TeacherUser[] {
+    const start = (this.currentPage() - 1) * this.pageSize();
+    return this.filteredTeachers.slice(start, start + this.pageSize());
+  }
+
+  onSearchChange(): void {
+    this.currentPage.set(1);
+  }
+
+  setLevelFilter(level: 'ALL' | 'KINDER' | 'PRIMARIA' | 'SECUNDARIA'): void {
+    this.levelFilter = level;
+    this.currentPage.set(1);
+  }
+
+  onPageChange(page: number): void {
+    this.currentPage.set(page);
+    window.scrollTo({ top: 180, behavior: 'smooth' });
+  }
+
+  onPageSizeChange(size: number): void {
+    this.pageSize.set(size);
+    this.currentPage.set(1);
   }
 
   get groupsByLevel(): { level: string; groups: SchoolGroup[] }[] {
@@ -122,14 +154,20 @@ export class TeacherUserCrudComponent implements OnInit {
     };
 
     if (this.isEditing() && this.editingTeacherId()) {
-      this.adminService.updateTeacher(this.editingTeacherId()!, payload).subscribe({
+      this.adminService.startTransaction('Guardando Maestro...', 'Actualizando información en el servidor.');
+      this.adminService.updateTeacher(this.editingTeacherId()!, payload).pipe(
+        finalize(() => this.adminService.endTransaction())
+      ).subscribe({
         next: () => this.closeModal(),
         error: (err) => {
           this.formError = err.error?.message || 'Error al actualizar el maestro.';
         }
       });
     } else {
-      this.adminService.createTeacher(payload).subscribe({
+      this.adminService.startTransaction('Registrando Maestro...', 'Guardando cuenta docente en la base de datos.');
+      this.adminService.createTeacher(payload).pipe(
+        finalize(() => this.adminService.endTransaction())
+      ).subscribe({
         next: () => this.closeModal(),
         error: (err) => {
           this.formError = err.error?.message || 'Error al registrar el maestro.';
@@ -140,7 +178,10 @@ export class TeacherUserCrudComponent implements OnInit {
 
   deleteTeacher(teacher: TeacherUser): void {
     if (confirm(`¿Estás seguro de eliminar a ${teacher.nombre}?`)) {
-      this.adminService.deleteTeacher(teacher.id).subscribe({
+      this.adminService.startTransaction('Eliminando Maestro...', `Removiendo cuenta de ${teacher.nombre}.`);
+      this.adminService.deleteTeacher(teacher.id).pipe(
+        finalize(() => this.adminService.endTransaction())
+      ).subscribe({
         error: (err) => alert(err.error?.message || 'No se pudo eliminar el maestro.')
       });
     }

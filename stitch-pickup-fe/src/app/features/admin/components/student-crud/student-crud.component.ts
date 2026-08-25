@@ -1,12 +1,15 @@
 import { Component, inject, OnInit, ChangeDetectionStrategy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { finalize } from 'rxjs';
 import { AdminService, StudentDetail, SchoolGroup, FamilyMember } from '../../services/admin.service';
+import { PaginationComponent } from '../../../../shared/components/pagination/pagination.component';
+import { LoadingOverlayComponent } from '../../../../shared/components/loading-overlay/loading-overlay.component';
 
 @Component({
   selector: 'app-student-crud',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PaginationComponent, LoadingOverlayComponent],
   templateUrl: './student-crud.component.html',
   styleUrl: './student-crud.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -17,6 +20,11 @@ export class StudentCrudComponent implements OnInit {
   readonly showModal = signal<boolean>(false);
   readonly isEditing = signal<boolean>(false);
   readonly editingStudentId = signal<string | null>(null);
+
+  // Pagination State
+  readonly currentPage = signal<number>(1);
+  readonly pageSize = signal<number>(15);
+  readonly pageSizeOptions = [15, 30, 100];
 
   searchQuery = '';
   levelFilter: 'ALL' | 'KINDER' | 'PRIMARIA' | 'SECUNDARIA' = 'ALL';
@@ -62,6 +70,30 @@ export class StudentCrudComponent implements OnInit {
       );
     }
     return list;
+  }
+
+  get pagedStudents(): StudentDetail[] {
+    const start = (this.currentPage() - 1) * this.pageSize();
+    return this.filteredStudents.slice(start, start + this.pageSize());
+  }
+
+  onSearchChange(): void {
+    this.currentPage.set(1);
+  }
+
+  setLevelFilter(level: 'ALL' | 'KINDER' | 'PRIMARIA' | 'SECUNDARIA'): void {
+    this.levelFilter = level;
+    this.currentPage.set(1);
+  }
+
+  onPageChange(page: number): void {
+    this.currentPage.set(page);
+    window.scrollTo({ top: 180, behavior: 'smooth' });
+  }
+
+  onPageSizeChange(size: number): void {
+    this.pageSize.set(size);
+    this.currentPage.set(1);
   }
 
   get availableGroups(): SchoolGroup[] {
@@ -175,14 +207,20 @@ export class StudentCrudComponent implements OnInit {
     };
 
     if (this.isEditing() && this.editingStudentId()) {
-      this.adminService.updateStudent(this.editingStudentId()!, payload).subscribe({
+      this.adminService.startTransaction('Guardando Alumno...', 'Actualizando información en el servidor.');
+      this.adminService.updateStudent(this.editingStudentId()!, payload).pipe(
+        finalize(() => this.adminService.endTransaction())
+      ).subscribe({
         next: () => this.closeModal(),
         error: (err) => {
           this.formError = err.error?.message || 'Error al actualizar el alumno.';
         }
       });
     } else {
-      this.adminService.createStudent(payload).subscribe({
+      this.adminService.startTransaction('Registrando Alumno...', 'Guardando información en la base de datos.');
+      this.adminService.createStudent(payload).pipe(
+        finalize(() => this.adminService.endTransaction())
+      ).subscribe({
         next: () => this.closeModal(),
         error: (err) => {
           this.formError = err.error?.message || 'Error al registrar el alumno.';
@@ -193,7 +231,10 @@ export class StudentCrudComponent implements OnInit {
 
   deleteStudent(student: StudentDetail): void {
     if (confirm(`¿Estás seguro de eliminar al alumno "${student.name}"?`)) {
-      this.adminService.deleteStudent(student.id).subscribe({
+      this.adminService.startTransaction('Eliminando Alumno...', `Removiendo a ${student.name} del sistema.`);
+      this.adminService.deleteStudent(student.id).pipe(
+        finalize(() => this.adminService.endTransaction())
+      ).subscribe({
         error: (err) => alert(err.error?.message || 'No se pudo eliminar el alumno.')
       });
     }

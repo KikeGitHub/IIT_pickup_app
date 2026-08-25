@@ -1,20 +1,22 @@
 import { Component, inject, ChangeDetectionStrategy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { finalize } from 'rxjs';
 import { AdminService, CsvImportResult } from '../../services/admin.service';
+import { LoadingOverlayComponent } from '../../../../shared/components/loading-overlay/loading-overlay.component';
 
 export type ImportType = 'STUDENTS' | 'TEACHERS' | 'PARENTS';
 
 @Component({
   selector: 'app-csv-import',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, LoadingOverlayComponent],
   templateUrl: './csv-import.component.html',
   styleUrl: './csv-import.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CsvImportComponent {
-  private readonly adminService = inject(AdminService);
+  readonly adminService = inject(AdminService);
 
   readonly selectedType = signal<ImportType>('STUDENTS');
   readonly selectedFile = signal<File | null>(null);
@@ -94,6 +96,7 @@ export class CsvImportComponent {
 
     this.isUploading.set(true);
     this.errorMessage.set(null);
+    this.adminService.startTransaction('Importando Archivo CSV...', 'Validando y cargando registros en la base de datos.');
 
     const type = this.selectedType();
     let uploadObservable;
@@ -106,17 +109,20 @@ export class CsvImportComponent {
       uploadObservable = this.adminService.uploadParentsCsv(file);
     }
 
-    uploadObservable.subscribe({
+    uploadObservable.pipe(
+      finalize(() => {
+        this.isUploading.set(false);
+        this.adminService.endTransaction();
+      })
+    ).subscribe({
       next: (res) => {
         this.result.set(res);
-        this.isUploading.set(false);
         // Reload respective datasets
         this.adminService.loadStudents().subscribe();
         this.adminService.loadTeachers().subscribe();
         this.adminService.loadParents().subscribe();
       },
       error: (err) => {
-        this.isUploading.set(false);
         this.errorMessage.set(err.error?.message || 'Error al procesar el archivo. Verifica el formato e intenta nuevamente.');
       }
     });

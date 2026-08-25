@@ -1,12 +1,15 @@
 import { Component, inject, OnInit, ChangeDetectionStrategy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { finalize } from 'rxjs';
 import { AdminService, ParentUser, StudentDetail } from '../../services/admin.service';
+import { PaginationComponent } from '../../../../shared/components/pagination/pagination.component';
+import { LoadingOverlayComponent } from '../../../../shared/components/loading-overlay/loading-overlay.component';
 
 @Component({
   selector: 'app-parent-user-crud',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PaginationComponent, LoadingOverlayComponent],
   templateUrl: './parent-user-crud.component.html',
   styleUrl: './parent-user-crud.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -17,6 +20,11 @@ export class ParentUserCrudComponent implements OnInit {
   readonly showModal = signal<boolean>(false);
   readonly isEditing = signal<boolean>(false);
   readonly editingParentId = signal<string | null>(null);
+
+  // Pagination State
+  readonly currentPage = signal<number>(1);
+  readonly pageSize = signal<number>(15);
+  readonly pageSizeOptions = [15, 30, 100];
 
   searchQuery = '';
 
@@ -47,6 +55,25 @@ export class ParentUserCrudComponent implements OnInit {
       );
     }
     return list;
+  }
+
+  get pagedParents(): ParentUser[] {
+    const start = (this.currentPage() - 1) * this.pageSize();
+    return this.filteredParents.slice(start, start + this.pageSize());
+  }
+
+  onSearchChange(): void {
+    this.currentPage.set(1);
+  }
+
+  onPageChange(page: number): void {
+    this.currentPage.set(page);
+    window.scrollTo({ top: 180, behavior: 'smooth' });
+  }
+
+  onPageSizeChange(size: number): void {
+    this.pageSize.set(size);
+    this.currentPage.set(1);
   }
 
   get availableStudents(): StudentDetail[] {
@@ -116,14 +143,20 @@ export class ParentUserCrudComponent implements OnInit {
     };
 
     if (this.isEditing() && this.editingParentId()) {
-      this.adminService.updateParent(this.editingParentId()!, payload).subscribe({
+      this.adminService.startTransaction('Guardando Padre de Familia...', 'Actualizando información en el servidor.');
+      this.adminService.updateParent(this.editingParentId()!, payload).pipe(
+        finalize(() => this.adminService.endTransaction())
+      ).subscribe({
         next: () => this.closeModal(),
         error: (err) => {
           this.formError = err.error?.message || 'Error al actualizar el padre de familia.';
         }
       });
     } else {
-      this.adminService.createParent(payload).subscribe({
+      this.adminService.startTransaction('Registrando Padre de Familia...', 'Guardando cuenta en la base de datos.');
+      this.adminService.createParent(payload).pipe(
+        finalize(() => this.adminService.endTransaction())
+      ).subscribe({
         next: () => this.closeModal(),
         error: (err) => {
           this.formError = err.error?.message || 'Error al registrar el padre de familia.';
@@ -134,7 +167,10 @@ export class ParentUserCrudComponent implements OnInit {
 
   deleteParent(parent: ParentUser): void {
     if (confirm(`¿Estás seguro de eliminar a ${parent.nombre}?`)) {
-      this.adminService.deleteParent(parent.id).subscribe({
+      this.adminService.startTransaction('Eliminando Padre de Familia...', `Removiendo cuenta de ${parent.nombre}.`);
+      this.adminService.deleteParent(parent.id).pipe(
+        finalize(() => this.adminService.endTransaction())
+      ).subscribe({
         error: (err) => alert(err.error?.message || 'No se pudo eliminar el padre de familia.')
       });
     }

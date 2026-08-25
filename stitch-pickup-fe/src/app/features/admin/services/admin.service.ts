@@ -47,6 +47,19 @@ export class AdminService {
   readonly parents = signal<ParentUser[]>([]);
   readonly users = signal<AdminUser[]>([]);
   readonly isLoading = signal<boolean>(false);
+  readonly isTransacting = signal<boolean>(false);
+  readonly transactionTitle = signal<string>('Procesando...');
+  readonly transactionMessage = signal<string>('Por favor espera un momento.');
+
+  startTransaction(title: string = 'Procesando...', message: string = 'Por favor espera un momento.'): void {
+    this.transactionTitle.set(title);
+    this.transactionMessage.set(message);
+    this.isTransacting.set(true);
+  }
+
+  endTransaction(): void {
+    this.isTransacting.set(false);
+  }
 
   // ─── KPIs & Metrics ────────────────────────────────────────────────────────
   loadKpis(period: 'day' | 'week' | 'month' = 'day'): Observable<KpisData | null> {

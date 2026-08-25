@@ -1,26 +1,24 @@
 services:
-  # ─── 1. Base de Datos PostgreSQL 16 ───────────────────────────────────────
+  # ─── 1. Base de Datos PostgreSQL 16 (Interna, sin puerto público) ─────────
   postgres:
     image: postgres:16-alpine
     container_name: stitch-postgres
     restart: always
     environment:
-      POSTGRES_DB: stitch_pickup_db
-      POSTGRES_USER: stitch_user
-      POSTGRES_PASSWORD: stitch_secure_password_2026
+      POSTGRES_DB: ${POSTGRES_DB:-stitch_pickup_db}
+      POSTGRES_USER: ${POSTGRES_USER:-stitch_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-stitch_secure_password_2026}
     volumes:
       - pgdata:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U stitch_user -d stitch_pickup_db"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-stitch_user} -d ${POSTGRES_DB:-stitch_pickup_db}"]
       interval: 5s
       timeout: 5s
       retries: 5
     networks:
       - stitch-network
 
-  # ─── 2. Backend Spring Boot ───────────────────────────────────────────────
+  # ─── 2. Backend Spring Boot (Interno, accesible solo por Nginx) ───────────
   backend:
     build:
       context: ./stitch-pickup-be
@@ -32,18 +30,17 @@ services:
         condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: prod
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/stitch_pickup_db
-      SPRING_DATASOURCE_USERNAME: stitch_user
-      SPRING_DATASOURCE_PASSWORD: stitch_secure_password_2026
-      JWT_SECRET: c3RpdGNoLXBpY2t1cC1qd3Qtc2VjcmV0LWtleS0yMDI2LXNlY3VyZS1oYXNoLWZvci1wcm9kdWN0aW9uLXN5c3RlbQ==
-      JWT_EXPIRATION_HOURS: 24
-      SPRING_WEBSOCKET_ALLOWED_ORIGINS: "*"
-    ports:
-      - "8080:8080"
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-stitch_pickup_db}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-stitch_user}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-stitch_secure_password_2026}
+      JWT_SECRET: ${JWT_SECRET:-c3RpdGNoLXBpY2t1cC1qd3Qtc2VjcmV0LWtleS0yMDI2LXNlY3VyZS1oYXNoLWZvci1wcm9kdWN0aW9uLXN5c3RlbQ==}
+      JWT_EXPIRATION_HOURS: ${JWT_EXPIRATION_HOURS:-24}
+      SPRING_WEBSOCKET_ALLOWED_ORIGINS: ${WS_ALLOWED_ORIGINS:-*}
+      JAVA_TOOL_OPTIONS: ${JAVA_OPTS:--Xmx1024m -Xms256m -XX:+UseG1GC}
     networks:
       - stitch-network
 
-  # ─── 3. Frontend Angular + Nginx ─────────────────────────────────────────
+  # ─── 3. Frontend Angular + Nginx (Único punto de entrada público) ─────────
   frontend:
     build:
       context: ./stitch-pickup-fe

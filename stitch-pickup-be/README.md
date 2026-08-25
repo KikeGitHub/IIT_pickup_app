@@ -243,6 +243,13 @@ Las alertas se generan con un `clientId` UUID localmente antes de enviarse. Si e
 ### ADR-003: WebSocket STOMP sobre SockJS
 Se usa `@stomp/stompjs` v7 (moderno, tree-shakeable) con SockJS como fallback para entornos con proxies HTTP que bloquean WebSocket puro. El `WebSocketService` maneja auto-reconexión con delay de 5s, y el `NotificationPublisher` del backend centraliza toda la emisión.
 
+### ADR-004: Paginación de Grids Administrativos y Bloqueo de Pantalla en Transacciones (Loading Overlay)
+- **Contexto:** La base de datos contiene más de 1,304 alumnos, 1,160 padres de familia y 50 profesores. Renderizar miles de elementos directamente en el DOM causaría congelamiento de interfaz y consumo innecesario de memoria.
+- **Decisión:** 
+  1. Implementar paginación reactiva en el Frontend con selección de tamaño de página (15, 30 y 100 registros por página, predeterminado 15) con recálculo automático de página activa al filtrar o buscar.
+  2. Implementar un componente global de bloqueo de pantalla (`LoadingOverlayComponent` con backdrop blur y spinner dual-ring) que inhabilita la interacción durante transacciones de creación, modificación, eliminación o importación masiva CSV, garantizando la idempotencia y evitando dobles envíos concurrentes.
+  3. Barra de carga interactiva (`.table-loading-bar`) dentro de cada grid mientras se consultan los endpoints del servidor.
+
 ---
 
 ## 👥 Cuentas Demo

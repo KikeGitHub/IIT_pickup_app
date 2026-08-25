@@ -19,21 +19,28 @@
       <input
         type="text"
         [(ngModel)]="searchQuery"
-        placeholder="Buscar por nombre de alumno o grupo..."
+        (ngModelChange)="onSearchChange()"
+        placeholder="Buscar por nombre de alumno, CURP o grupo..."
         class="search-input"
       />
     </div>
 
     <div class="filter-pills">
-      <button type="button" class="pill-btn" [class.pill-btn--active]="levelFilter === 'ALL'" (click)="levelFilter = 'ALL'">Todos</button>
-      <button type="button" class="pill-btn" [class.pill-btn--active]="levelFilter === 'KINDER'" (click)="levelFilter = 'KINDER'">Kinder</button>
-      <button type="button" class="pill-btn" [class.pill-btn--active]="levelFilter === 'PRIMARIA'" (click)="levelFilter = 'PRIMARIA'">Primaria</button>
-      <button type="button" class="pill-btn" [class.pill-btn--active]="levelFilter === 'SECUNDARIA'" (click)="levelFilter = 'SECUNDARIA'">Secundaria</button>
+      <button type="button" class="pill-btn" [class.pill-btn--active]="levelFilter === 'ALL'" (click)="setLevelFilter('ALL')">Todos ({{ adminService.students().length }})</button>
+      <button type="button" class="pill-btn" [class.pill-btn--active]="levelFilter === 'KINDER'" (click)="setLevelFilter('KINDER')">Kinder</button>
+      <button type="button" class="pill-btn" [class.pill-btn--active]="levelFilter === 'PRIMARIA'" (click)="setLevelFilter('PRIMARIA')">Primaria</button>
+      <button type="button" class="pill-btn" [class.pill-btn--active]="levelFilter === 'SECUNDARIA'" (click)="setLevelFilter('SECUNDARIA')">Secundaria</button>
     </div>
   </div>
 
-  <!-- Students Table -->
+  <!-- Students Table Card -->
   <div class="table-card">
+    <!-- Table Loading Indicator -->
+    <div *ngIf="adminService.isLoading()" class="table-loading-bar">
+      <div class="loading-spinner-sm"></div>
+      <span>Cargando catálogo de alumnos...</span>
+    </div>
+
     <div class="table-responsive">
       <table class="data-table">
         <thead>
@@ -48,7 +55,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (s of filteredStudents; track s.id) {
+          @for (s of pagedStudents; track s.id) {
             <tr>
               <td>
                 <div class="student-cell">
@@ -109,13 +116,33 @@
             </tr>
           } @empty {
             <tr>
-              <td colspan="7" class="empty-cell">No se encontraron alumnos registrados.</td>
+              <td colspan="7" class="empty-cell">
+                <span *ngIf="!adminService.isLoading()">No se encontraron alumnos con los criterios seleccionados.</span>
+                <span *ngIf="adminService.isLoading()">Cargando información...</span>
+              </td>
             </tr>
           }
         </tbody>
       </table>
     </div>
+
+    <!-- Pagination Footer -->
+    <app-pagination
+      [totalItems]="filteredStudents.length"
+      [pageSize]="pageSize()"
+      [currentPage]="currentPage()"
+      [pageSizeOptions]="pageSizeOptions"
+      (pageChange)="onPageChange($event)"
+      (pageSizeChange)="onPageSizeChange($event)"
+    />
   </div>
+
+  <!-- Screen-Blocking Transaction Overlay -->
+  <app-loading-overlay
+    [active]="adminService.isTransacting()"
+    [title]="adminService.transactionTitle()"
+    [message]="adminService.transactionMessage()"
+  />
 
   <!-- Modal Create / Edit Student -->
   @if (showModal()) {

@@ -19,6 +19,7 @@
       <input
         type="text"
         [(ngModel)]="searchQuery"
+        (ngModelChange)="onSearchChange()"
         placeholder="Buscar por nombre, correo o alumno vinculado..."
         class="search-input"
       />
@@ -30,6 +31,12 @@
 
   <!-- Parents Table -->
   <div class="table-card">
+    <!-- Table Loading Indicator -->
+    <div *ngIf="adminService.isLoading()" class="table-loading-bar">
+      <div class="loading-spinner-sm"></div>
+      <span>Cargando catálogo de padres...</span>
+    </div>
+
     <div class="table-responsive">
       <table class="data-table">
         <thead>
@@ -43,7 +50,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (p of filteredParents; track p.id) {
+          @for (p of pagedParents; track p.id) {
             <tr>
               <td>
                 <div class="user-cell">
@@ -83,13 +90,33 @@
             </tr>
           } @empty {
             <tr>
-              <td colspan="6" class="empty-cell">No se encontraron padres de familia registrados.</td>
+              <td colspan="6" class="empty-cell">
+                <span *ngIf="!adminService.isLoading()">No se encontraron padres de familia registrados.</span>
+                <span *ngIf="adminService.isLoading()">Cargando información...</span>
+              </td>
             </tr>
           }
         </tbody>
       </table>
     </div>
+
+    <!-- Pagination Footer -->
+    <app-pagination
+      [totalItems]="filteredParents.length"
+      [pageSize]="pageSize()"
+      [currentPage]="currentPage()"
+      [pageSizeOptions]="pageSizeOptions"
+      (pageChange)="onPageChange($event)"
+      (pageSizeChange)="onPageSizeChange($event)"
+    />
   </div>
+
+  <!-- Screen-Blocking Transaction Overlay -->
+  <app-loading-overlay
+    [active]="adminService.isTransacting()"
+    [title]="adminService.transactionTitle()"
+    [message]="adminService.transactionMessage()"
+  />
 
   <!-- Modal Create / Edit Parent -->
   @if (showModal()) {

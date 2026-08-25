@@ -132,4 +132,11 @@
     </div>
   }
 
+  <!-- Screen-Blocking Transaction Overlay -->
+  <app-loading-overlay
+    [active]="adminService.isTransacting()"
+    [title]="adminService.transactionTitle()"
+    [message]="adminService.transactionMessage()"
+  />
+
 </div>

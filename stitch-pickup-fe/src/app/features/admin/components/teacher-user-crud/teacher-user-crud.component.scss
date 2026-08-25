@@ -101,6 +101,33 @@
   border: 1px solid v.$color-outline-variant;
   box-shadow: v.$shadow-sm;
   overflow: hidden;
+  position: relative;
+}
+
+.table-loading-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px;
+  background: #eff6ff;
+  border-bottom: 1px solid #bfdbfe;
+  color: #1d4ed8;
+  font-size: 12px;
+  font-weight: 600;
+  animation: fadeIn 0.2s ease-in;
+}
+
+.loading-spinner-sm {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #bfdbfe;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 .table-responsive {

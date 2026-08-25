@@ -1,12 +1,14 @@
 import { Component, inject, OnInit, ChangeDetectionStrategy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { finalize } from 'rxjs';
 import { AdminService, SchoolGroup } from '../../services/admin.service';
+import { LoadingOverlayComponent } from '../../../../shared/components/loading-overlay/loading-overlay.component';
 
 @Component({
   selector: 'app-group-config',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, LoadingOverlayComponent],
   templateUrl: './group-config.component.html',
   styleUrl: './group-config.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -73,14 +75,20 @@ export class GroupConfigComponent implements OnInit {
     };
 
     if (this.isEditing() && this.editingGroupId()) {
-      this.adminService.updateGroup(this.editingGroupId()!, payload).subscribe({
+      this.adminService.startTransaction('Guardando Grupo Escolar...', 'Actualizando configuración en el servidor.');
+      this.adminService.updateGroup(this.editingGroupId()!, payload).pipe(
+        finalize(() => this.adminService.endTransaction())
+      ).subscribe({
         next: () => this.closeModal(),
         error: (err) => {
           this.formError = err.error?.message || 'Error al actualizar el grupo.';
         }
       });
     } else {
-      this.adminService.createGroup(payload).subscribe({
+      this.adminService.startTransaction('Creando Grupo Escolar...', 'Registrando nuevo salón en la base de datos.');
+      this.adminService.createGroup(payload).pipe(
+        finalize(() => this.adminService.endTransaction())
+      ).subscribe({
         next: () => this.closeModal(),
         error: (err) => {
           this.formError = err.error?.message || 'Error al crear el grupo.';
@@ -91,7 +99,10 @@ export class GroupConfigComponent implements OnInit {
 
   deleteGroup(group: SchoolGroup): void {
     if (confirm(`¿Estás seguro de eliminar el grupo "${group.level} - ${group.name}"?`)) {
-      this.adminService.deleteGroup(group.id).subscribe({
+      this.adminService.startTransaction('Eliminando Grupo Escolar...', `Removiendo grupo ${group.name}.`);
+      this.adminService.deleteGroup(group.id).pipe(
+        finalize(() => this.adminService.endTransaction())
+      ).subscribe({
         error: (err) => {
           alert(err.error?.message || 'No se pudo eliminar el grupo.');
         }
