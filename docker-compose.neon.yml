@@ -1,0 +1,39 @@
+services:
+  # ─── 1. Backend Spring Boot (Conectado a Neon PostgreSQL) ──────────────────
+  backend:
+    build:
+      context: ./stitch-pickup-be
+      dockerfile: Dockerfile
+    container_name: stitch-backend
+    restart: always
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      # Reemplazar con tu URL de Neon
+      SPRING_DATASOURCE_URL: ${NEON_DATABASE_URL:-jdbc:postgresql://ep-xyz-pooler.us-east-2.aws.neon.tech/stitch_pickup_db?sslmode=require}
+      SPRING_DATASOURCE_USERNAME: ${NEON_USER:-stitch_user}
+      SPRING_DATASOURCE_PASSWORD: ${NEON_PASSWORD:-stitch_password}
+      JWT_SECRET: ${JWT_SECRET:-c3RpdGNoLXBpY2t1cC1qd3Qtc2VjcmV0LWtleS0yMDI2LXNlY3VyZS1oYXNoLWZvci1wcm9kdWN0aW9uLXN5c3RlbQ==}
+      JWT_EXPIRATION_HOURS: 24
+      SPRING_WEBSOCKET_ALLOWED_ORIGINS: "*"
+    ports:
+      - "8080:8080"
+    networks:
+      - stitch-network
+
+  # ─── 2. Frontend Angular + Nginx ─────────────────────────────────────────
+  frontend:
+    build:
+      context: ./stitch-pickup-fe
+      dockerfile: Dockerfile
+    container_name: stitch-frontend
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+    networks:
+      - stitch-network
+
+networks:
+  stitch-network:
+    driver: bridge
