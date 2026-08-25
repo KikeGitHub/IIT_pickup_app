@@ -71,7 +71,12 @@ public class DeliveryController {
         description = "El padre confirma haber recibido al alumno. Actualiza el estado a RECIBIDO_PADRE."
     )
     public ResponseEntity<DeliveryLogResponse> parentConfirm(
-            @PathVariable UUID deliveryId) {
-        return ResponseEntity.ok(deliveryService.confirmByParent(deliveryId));
+            @PathVariable UUID deliveryId,
+            HttpServletRequest request) {
+
+        String token = request.getHeader("Authorization").substring(7);
+        UUID parentId = UUID.fromString(tokenProvider.getUserIdFromToken(token));
+
+        return ResponseEntity.ok(deliveryService.confirmByParent(deliveryId, parentId));
     }
 }

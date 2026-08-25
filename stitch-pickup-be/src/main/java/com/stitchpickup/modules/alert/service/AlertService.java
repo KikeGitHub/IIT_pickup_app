@@ -45,11 +45,16 @@ public class AlertService {
             }
         }
 
-        ParentUser parent = parentUserRepository.findById(parentId)
+        ParentUser parent = parentUserRepository.findByIdWithStudents(parentId)
                 .orElseThrow(() -> new IllegalArgumentException("Padre no encontrado"));
 
         Student student = studentRepository.findById(UUID.fromString(request.studentId()))
                 .orElseThrow(() -> new IllegalArgumentException("Alumno no encontrado"));
+
+        boolean isMyChild = parent.getStudents().stream().anyMatch(s -> s.getId().equals(student.getId()));
+        if (!isMyChild) {
+            throw new SecurityException("No tienes autorización para emitir alertas para este alumno.");
+        }
 
         Alert.AlertStatus statusEnum = Alert.AlertStatus.valueOf(request.status());
         Alert.PickupMethod methodEnum = Alert.PickupMethod.valueOf(request.pickupMethod());

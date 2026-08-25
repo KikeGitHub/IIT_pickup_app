@@ -77,9 +77,13 @@ public class DeliveryService {
     }
 
     @Transactional
-    public DeliveryLogResponse confirmByParent(UUID deliveryId) {
+    public DeliveryLogResponse confirmByParent(UUID deliveryId, UUID parentId) {
         DeliveryLog log = deliveryLogRepository.findById(deliveryId)
                 .orElseThrow(() -> new IllegalArgumentException("Entrega no encontrada"));
+
+        if (log.getAlert() != null && !log.getAlert().getParent().getId().equals(parentId)) {
+            throw new SecurityException("No tienes autorización para confirmar esta entrega.");
+        }
 
         log.setStatus(DeliveryLog.DeliveryStatus.RECIBIDO_PADRE);
         log.setParentConfirmedAt(Instant.now());
