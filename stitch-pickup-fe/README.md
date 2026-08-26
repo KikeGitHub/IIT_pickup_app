@@ -1,8 +1,58 @@
-# StitchPickupFe
+# 🚗 Stitch Pickup — Frontend Web (Angular 20)
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.2.0.
+Aplicación Web Progresiva (PWA / SPA) para el sistema de logística escolar del **Instituto Inglés de Toluca (IIT)**.
 
-## Development server
+---
+
+## 🚀 Deployment en Hetzner Cloud
+
+### Infraestructura
+La aplicación está desplegada en un servidor **Hetzner Cloud (CPX22 - 4 GB RAM)** con:
+
+- Ubuntu 24.04 LTS
+- Docker & Docker Compose v2
+- PostgreSQL 16 (Alpine)
+- Spring Boot 3.3.5 + OpenJDK 21 (Temurin Alpine)
+- Angular 20 + Nginx Alpine (Reverse Proxy)
+- UFW Firewall (puertos 22 y 80)
+- SSH mediante Ed25519
+
+### Arquitectura de Red y Contenedores
+
+```text
+                         INTERNET
+                            │
+                            │ HTTP :80
+                            ▼
+                  ┌─────────────────────┐
+                  │   Angular + Nginx   │
+                  │   stitch-frontend   │
+                  │        :80          │
+                  └──────────┬──────────┘
+                             │
+                     Docker Network
+                       (Interna)
+                             │
+                  ┌──────────▼──────────┐
+                  │    Spring Boot      │
+                  │   stitch-backend    │
+                  │        :8080        │
+                  └──────────┬──────────┘
+                             │
+                     Docker Network
+                       (Interna)
+                             │
+                  ┌──────────▼──────────┐
+                  │     PostgreSQL      │
+                  │   stitch-postgres   │
+                  │        :5432        │
+                  └─────────────────────┘
+```
+
+> **🔒 Principio de Menor Exposición:**
+> Los contenedores de `PostgreSQL` y `Spring Boot` **no exponen puertos al Internet**. Únicamente el contenedor de `Nginx` (Frontend) expone el puerto `80`, redirigiendo el tráfico de API (`/api/`) y WebSocket (`/ws/`) al backend dentro de la red aislada `stitch-network`.
+
+---
 
 To start a local development server, run:
 
