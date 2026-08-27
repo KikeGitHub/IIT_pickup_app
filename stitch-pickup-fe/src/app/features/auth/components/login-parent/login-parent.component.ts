@@ -37,7 +37,7 @@ export class LoginParentComponent {
 
   // ── Reactive Form ──────────────────────────────────────────────────────────
   readonly loginForm = this.fb.group({
-    email: ['', [Validators.required, Validators.email]],
+    email: ['', [Validators.required]],
     password: ['', [Validators.required, Validators.minLength(6)]],
   });
 
@@ -70,7 +70,7 @@ export class LoginParentComponent {
       error: (err) => {
         this.state.set('error');
         const msg =
-          err?.error?.message ?? 'Credenciales incorrectas. Verifica tu email y contraseña.';
+          err?.error?.message ?? 'Credenciales incorrectas. Verifica tu usuario y contraseña.';
         this.errorMessage.set(msg);
         this.notification.error(msg);
       },
@@ -93,7 +93,6 @@ export class LoginParentComponent {
     if (!control?.errors || !control?.touched) return null;
 
     if (control.errors['required']) return 'Este campo es obligatorio.';
-    if (control.errors['email']) return 'Ingresa un email válido.';
     if (control.errors['minlength']) return 'La contraseña debe tener al menos 6 caracteres.';
 
     return null;

@@ -9,8 +9,7 @@ import jakarta.validation.constraints.Size;
  * Usado tanto para padres como para maestros.
  */
 public record LoginRequest(
-    @NotBlank(message = "El email es obligatorio")
-    @Email(message = "Formato de email inválido")
+    @NotBlank(message = "El usuario o correo es obligatorio")
     String email,
 
     @NotBlank(message = "La contraseña es obligatoria")

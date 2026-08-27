@@ -49,21 +49,21 @@
         novalidate
         aria-label="Formulario de acceso para padres"
       >
-        <!-- Email Field -->
+        <!-- Username/Email Field -->
         <div class="form-group" [class.form-group--error]="isFieldInvalid('email')">
-          <label for="parent-email" class="form-label">Correo electrónico</label>
+          <label for="parent-email" class="form-label">Usuario</label>
           <div class="input-wrapper">
             <svg class="input-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <rect x="2" y="4" width="20" height="16" rx="2" stroke="currentColor" stroke-width="2"/>
-              <path d="m2 7 10 7 10-7" stroke="currentColor" stroke-width="2"/>
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2"/>
+              <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
             </svg>
             <input
               id="parent-email"
-              type="email"
+              type="text"
               formControlName="email"
               class="form-input"
-              placeholder="ejemplo@gmail.com"
-              autocomplete="email"
+              placeholder="Ej: SCEJA"
+              autocomplete="username"
               [attr.aria-describedby]="isFieldInvalid('email') ? 'email-error' : null"
               [attr.aria-invalid]="isFieldInvalid('email')"
             />
