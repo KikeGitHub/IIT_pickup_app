@@ -58,15 +58,15 @@ app:
 # ─── Springdoc / Swagger UI ───────────────────────────────────────────────────
 springdoc:
   api-docs:
-    path: /api-docs
+    path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
     operations-sorter: method
     tags-sorter: alpha
     display-request-duration: true
   info:
-    title: Stitch Pickup API
-    description: Sistema de logística de recogida de alumnos — Instituto Inglés de Toluca
+    title: IIT Pickup API
+    description: API REST para el sistema de logística de recogida de alumnos del Instituto Inglés de Toluca (IIT).
     version: 1.0.0
 
 # ─── Actuator ─────────────────────────────────────────────────────────────────

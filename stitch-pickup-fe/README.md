@@ -1,6 +1,6 @@
-# 🚗 Stitch Pickup — Frontend Web (Angular 20)
+# 🚗 IIT Pickup — Frontend Web (Angular 20)
 
-Aplicación Web Progresiva (PWA / SPA) para el sistema de logística escolar del **Instituto Inglés de Toluca (IIT)**.
+Aplicación web SPA y Progressive Web App (PWA) para el sistema de logística de recogida de alumnos del **Instituto Inglés de Toluca (IIT)**.
 
 ---
 

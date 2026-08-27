@@ -26,9 +26,9 @@ public class SwaggerConfig {
 
         return new OpenAPI()
                 .info(new Info()
-                        .title("Stitch Pickup API")
+                        .title("IIT Pickup API")
                         .description("""
-                            Sistema de logística de recogida de alumnos para el **Instituto Inglés de Toluca**.
+                            API REST para el sistema de logística de recogida de alumnos del Instituto Inglés de Toluca (IIT).
                             
                             ## Flujos principales
                             - **Padre** → Envía alerta de proximidad (offline-first)

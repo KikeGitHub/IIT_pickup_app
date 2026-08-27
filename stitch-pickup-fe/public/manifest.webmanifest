@@ -1,6 +1,6 @@
 {
-  "name": "Stitch Pickup — IIT",
-  "short_name": "Stitch Pickup",
+  "name": "IIT Pickup",
+  "short_name": "IIT Pickup",
   "description": "Sistema de logística de recogida de alumnos del Instituto Inglés de Toluca.",
   "display": "standalone",
   "orientation": "portrait-primary",

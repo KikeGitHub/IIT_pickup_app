@@ -1,4 +1,4 @@
-# 🚗 Stitch Pickup — Sistema de Logística y Despacho Escolar
+# 🚗 IIT Pickup — Sistema de Logística y Despacho Escolar
 
 Sistema de recogida de alumnos y gestión de tráfico en tiempo real para el **Instituto Inglés de Toluca (IIT)**.
 Permite a los padres de familia notificar su proximidad al plantel mediante geolocalización o disparo manual, y a los docentes/personal operativo gestionar el flujo de entrega de alumnos mediante un monitor interactivo en tiempo real con WebSocket STOMP.

@@ -1,6 +1,7 @@
-# Stitch Pickup — Sistema de Logística Escolar
+# IIT Pickup — Sistema de Logística Escolar
 
-Sistema de recogida de alumnos en tiempo real para el **Instituto Inglés de Toluca (IIT)**.
+### Backend REST API & WebSocket Server
+**Instituto Inglés de Toluca (IIT)** — Módulo de Despacho Vehicular en Tiempo Real.
 Permite a padres de familia notificar su proximidad al plantel, y a maestros/guardias gestionar el flujo de entrega mediante un panel en tiempo real con WebSocket.
 
 ---
