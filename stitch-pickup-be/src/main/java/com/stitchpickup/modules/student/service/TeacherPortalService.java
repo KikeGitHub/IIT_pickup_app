@@ -32,16 +32,18 @@ public class TeacherPortalService {
 
     @Transactional(readOnly = true)
     public List<TeacherGroupDetailResponse> getMyGroupsWithStudents(UUID teacherId) {
-        TeacherUser teacher = teacherUserRepository.findByIdWithGroups(teacherId)
-                .orElseThrow(() -> new IllegalArgumentException("Maestro no encontrado: " + teacherId));
+        var teacherOpt = teacherUserRepository.findByIdWithGroups(teacherId);
+        if (teacherOpt.isEmpty()) {
+            teacherOpt = teacherUserRepository.findById(teacherId);
+        }
 
         List<TeacherGroupDetailResponse> result = new ArrayList<>();
         List<SchoolGroup> groupsToLoad;
 
-        if ("ADMIN".equalsIgnoreCase(teacher.getRole()) || teacher.getGroups().isEmpty()) {
+        if (teacherOpt.isEmpty() || "ADMIN".equalsIgnoreCase(teacherOpt.get().getRole()) || teacherOpt.get().getGroups() == null || teacherOpt.get().getGroups().isEmpty()) {
             groupsToLoad = schoolGroupRepository.findAllByOrderByLevelAscNameAsc();
         } else {
-            groupsToLoad = new ArrayList<>(teacher.getGroups());
+            groupsToLoad = new ArrayList<>(teacherOpt.get().getGroups());
         }
 
         for (SchoolGroup group : groupsToLoad) {

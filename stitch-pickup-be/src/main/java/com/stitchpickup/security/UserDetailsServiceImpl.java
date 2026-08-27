@@ -32,8 +32,30 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
 
-        // Buscar en padres primero
+        // Buscar en maestros/admin
+        var teacher = teacherRepo.findByEmail(email);
+        if (teacher.isEmpty()) {
+            teacher = teacherRepo.findByEmail(email.toUpperCase());
+        }
+        if (teacher.isPresent()) {
+            var t = teacher.get();
+            String springRole = "ADMIN".equalsIgnoreCase(t.getRole()) ? "ROLE_ADMIN" : "ROLE_TEACHER";
+            return User.builder()
+                    .username(t.getEmail())
+                    .password(t.getPasswordHash())
+                    .authorities(List.of(new SimpleGrantedAuthority(springRole)))
+                    .accountExpired(false)
+                    .accountLocked(!Boolean.TRUE.equals(t.getActive()))
+                    .credentialsExpired(false)
+                    .disabled(!Boolean.TRUE.equals(t.getActive()))
+                    .build();
+        }
+
+        // Buscar en padres
         var parent = parentRepo.findByEmail(email);
+        if (parent.isEmpty()) {
+            parent = parentRepo.findByEmail(email.toUpperCase());
+        }
         if (parent.isPresent()) {
             var p = parent.get();
             return User.builder()
@@ -41,25 +63,9 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                     .password(p.getPasswordHash())
                     .authorities(List.of(new SimpleGrantedAuthority("ROLE_PARENT")))
                     .accountExpired(false)
-                    .accountLocked(!p.getActive())
+                    .accountLocked(!Boolean.TRUE.equals(p.getActive()))
                     .credentialsExpired(false)
-                    .disabled(!p.getActive())
-                    .build();
-        }
-
-        // Buscar en maestros/admin
-        var teacher = teacherRepo.findByEmail(email);
-        if (teacher.isPresent()) {
-            var t = teacher.get();
-            String springRole = "ADMIN".equals(t.getRole()) ? "ROLE_ADMIN" : "ROLE_TEACHER";
-            return User.builder()
-                    .username(t.getEmail())
-                    .password(t.getPasswordHash())
-                    .authorities(List.of(new SimpleGrantedAuthority(springRole)))
-                    .accountExpired(false)
-                    .accountLocked(!t.getActive())
-                    .credentialsExpired(false)
-                    .disabled(!t.getActive())
+                    .disabled(!Boolean.TRUE.equals(p.getActive()))
                     .build();
         }
 
