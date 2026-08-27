@@ -78,7 +78,7 @@
         </div>
       </div>
 
-      <!-- Group Selection Tabs -->
+      <!-- Group Selection Tabs (Horizontal Scrollable on Mobile/Tablet) -->
       <div class="group-selector-pills">
         @for (g of teacherService.myGroups(); track g.id) {
           <button
@@ -88,62 +88,170 @@
             (click)="selectGroup(g.id)"
           >
             <span class="g-level">{{ g.level }}</span>
-            <span class="g-name">Grupo {{ g.name }}</span>
-            <span class="g-count">({{ g.students.length }} alumnos)</span>
+            <span class="g-name">{{ g.name }}</span>
+            <span class="g-count">({{ g.students.length }})</span>
           </button>
         } @empty {
-          <div class="no-groups-notice">No tienes grupos escolares asignados actualmente.</div>
+          @if (!teacherService.isLoading()) {
+            <div class="no-groups-notice">No tienes grupos escolares asignados actualmente.</div>
+          }
         }
       </div>
 
-      <!-- Student Roster Grid for Selected Group -->
+      <!-- Student Roster for Selected Group -->
       @if (currentGroup; as grp) {
-        <div class="roster-grid">
-          @for (s of grp.students; track s.id) {
-            <div class="roster-student-card">
-              <div class="r-card-header">
-                <div class="r-avatar-wrap">
-                  @if (s.avatarUrl) {
-                    <img [src]="s.avatarUrl" [alt]="s.name" class="r-avatar-img" />
-                  } @else {
-                    <span class="r-avatar-initial">{{ s.name.charAt(0) }}</span>
-                  }
-                </div>
-                <div class="r-student-main">
-                  <h3 class="r-name">{{ s.name }}</h3>
-                  <p class="r-meta">{{ s.level }} · {{ s.grade || grp.name }} <span *ngIf="s.birthday">· 🎂 {{ s.birthday }}</span></p>
-                  <p class="r-submeta" *ngIf="s.curp || s.gender">
-                    <span class="curp-badge" *ngIf="s.curp">🏷️ {{ s.curp }}</span>
-                    <span class="gender-pill" *ngIf="s.gender" [class.gender-pill--m]="s.gender === 'M'" [class.gender-pill--f]="s.gender === 'F'">
-                      {{ s.gender === 'M' ? '👦 Niño' : '👧 Niña' }}
-                    </span>
-                  </p>
-                </div>
-              </div>
-
-              <!-- Authorized Pickup Tutors -->
-              <div class="r-tutors-box">
-                <span class="tutors-title">🛡️ Tutores Autorizados para Recoger:</span>
-                <div class="tutors-chips">
-                  @for (t of s.familyMembers; track t.name) {
-                    <span class="tutor-chip" [title]="t.phone ? 'Tel: ' + t.phone : ''">
-                      {{ t.name }} ({{ t.relationship }})
-                    </span>
-                  } @empty {
-                    <span class="text-muted-xs">Sin tutores registrados</span>
-                  }
-                </div>
-              </div>
-
-              <div class="r-card-footer">
-                <button type="button" class="btn-edit-student" (click)="openEditStudentModal(s)">
-                  <span>✏️ Editar Alumno / Foto</span>
-                </button>
-              </div>
+        <div class="roster-table-card">
+          <!-- Toolbar for the Group -->
+          <div class="roster-toolbar">
+            <div class="search-box">
+              <span class="search-icon">🔍</span>
+              <input
+                type="text"
+                [(ngModel)]="studentSearchQuery"
+                placeholder="Buscar por nombre o CURP en {{ grp.name }}..."
+                class="search-input"
+              />
+              <button
+                type="button"
+                *ngIf="studentSearchQuery"
+                class="btn-clear-search"
+                (click)="studentSearchQuery = ''"
+              >&times;</button>
             </div>
-          } @empty {
-            <div class="empty-roster-box">
-              <p>No hay alumnos registrados en el Grupo {{ grp.name }}.</p>
+            <div class="roster-count-badge">
+              <span>{{ filteredGroupStudents.length }} de {{ grp.students.length }} alumnos</span>
+            </div>
+          </div>
+
+          <!-- Loading Skeleton State -->
+          @if (teacherService.isLoading()) {
+            <app-table-skeleton [rows]="6" [cols]="3"></app-table-skeleton>
+          } @else {
+            <!-- Desktop / Tablet Table View (>= 768px) -->
+            <div class="table-responsive roster-table-view">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Alumno</th>
+                    <th>Nivel & Grado</th>
+                    <th>Grupo</th>
+                    <th>Tutores Autorizados (Pickup)</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (s of filteredGroupStudents; track s.id) {
+                    <tr>
+                      <td>
+                        <div class="student-cell">
+                          <div class="student-avatar-wrap">
+                            @if (s.avatarUrl) {
+                              <img [src]="s.avatarUrl" [alt]="s.name" class="student-avatar-img" />
+                            } @else {
+                              <span class="student-avatar">{{ s.name.charAt(0) }}</span>
+                            }
+                          </div>
+                          <div>
+                            <p class="s-name">{{ s.name }}</p>
+                            <p class="s-meta" *ngIf="s.curp || s.gender">
+                              <span class="curp-badge" *ngIf="s.curp">🏷️ {{ s.curp }}</span>
+                              <span class="gender-pill" *ngIf="s.gender" [class.gender-pill--m]="s.gender === 'M'" [class.gender-pill--f]="s.gender === 'F'">
+                                {{ s.gender === 'M' ? '👦 M' : '👧 F' }}
+                              </span>
+                            </p>
+                            <p class="s-bday" *ngIf="s.birthday">🎂 {{ s.birthday }}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="level-badge-wrap">
+                          <span class="level-tag" [class]="'level-tag--' + s.level.toLowerCase()">{{ s.level }}</span>
+                          <span class="grade-tag" *ngIf="s.grade">{{ s.grade }}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <span class="group-pill">{{ grp.name }}</span>
+                      </td>
+                      <td>
+                        <div class="tutors-list">
+                          @for (t of s.familyMembers; track t.name) {
+                            <span class="tutor-pill" [class.tutor-pill--disabled]="!t.authorized" [title]="t.phone ? 'Tel: ' + t.phone : ''">
+                              {{ t.name }} ({{ t.relationship }})
+                            </span>
+                          } @empty {
+                            <span class="text-muted">Sin tutores asignados</span>
+                          }
+                        </div>
+                      </td>
+                      <td>
+                        <div class="action-btns">
+                          <button type="button" class="btn-action-edit" (click)="openEditStudentModal(s)" title="Editar alumno">
+                            <span>✏️ Editar</span>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr>
+                      <td colspan="5" class="empty-cell">
+                        No se encontraron alumnos con los criterios seleccionados en {{ grp.name }}.
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Mobile-First Cards View (< 768px) -->
+            <div class="roster-mobile-view">
+              @for (s of filteredGroupStudents; track s.id) {
+                <div class="mobile-student-card">
+                  <div class="m-card-top">
+                    <div class="m-avatar-wrap">
+                      @if (s.avatarUrl) {
+                        <img [src]="s.avatarUrl" [alt]="s.name" class="m-avatar-img" />
+                      } @else {
+                        <span class="m-avatar-initial">{{ s.name.charAt(0) }}</span>
+                      }
+                    </div>
+                    <div class="m-info">
+                      <h3 class="m-name">{{ s.name }}</h3>
+                      <div class="m-badges">
+                        <span class="level-tag" [class]="'level-tag--' + s.level.toLowerCase()">{{ s.level }}</span>
+                        <span class="grade-tag" *ngIf="s.grade">{{ s.grade }}</span>
+                        <span class="gender-pill" *ngIf="s.gender" [class.gender-pill--m]="s.gender === 'M'" [class.gender-pill--f]="s.gender === 'F'">
+                          {{ s.gender === 'M' ? '👦 M' : '👧 F' }}
+                        </span>
+                      </div>
+                      <p class="m-curp" *ngIf="s.curp">🏷️ {{ s.curp }}</p>
+                    </div>
+                  </div>
+
+                  <!-- Tutors for Mobile -->
+                  <div class="m-tutors-section">
+                    <span class="m-tutors-title">🛡️ Tutores de Pickup:</span>
+                    <div class="m-tutors-chips">
+                      @for (t of s.familyMembers; track t.name) {
+                        <span class="tutor-pill" [title]="t.phone ? 'Tel: ' + t.phone : ''">
+                          {{ t.name }} ({{ t.relationship }})
+                        </span>
+                      } @empty {
+                        <span class="text-muted-xs">Sin tutores registrados</span>
+                      }
+                    </div>
+                  </div>
+
+                  <div class="m-card-actions">
+                    <button type="button" class="btn-edit-mobile" (click)="openEditStudentModal(s)">
+                      <span>✏️ Editar Alumno / Fotografía</span>
+                    </button>
+                  </div>
+                </div>
+              } @empty {
+                <div class="empty-roster-box">
+                  <p>No se encontraron alumnos en {{ grp.name }}.</p>
+                </div>
+              }
             </div>
           }
         </div>
@@ -165,27 +273,31 @@
             <div class="alert-error">{{ editError }}</div>
           }
 
-          <div class="form-group">
-            <label for="editName">Nombre Completo *</label>
-            <input id="editName" type="text" [(ngModel)]="editName" class="form-control" />
+          <div class="form-grid form-grid--2col">
+            <div class="form-group">
+              <label for="editName">Nombre Completo *</label>
+              <input id="editName" type="text" [(ngModel)]="editName" placeholder="Nombre completo del alumno" class="form-control" />
+            </div>
+
+            <div class="form-group">
+              <label for="editGrade">Grado Escolar</label>
+              <input id="editGrade" type="text" [(ngModel)]="editGrade" placeholder="Ej: 3° Primaria" class="form-control" />
+            </div>
           </div>
 
-          <div class="form-group">
-            <label for="editGrade">Grado Escolar</label>
-            <input id="editGrade" type="text" [(ngModel)]="editGrade" placeholder="Ej: 3° Primaria" class="form-control" />
-          </div>
+          <div class="form-grid form-grid--2col">
+            <div class="form-group">
+              <label for="editBirthday">Fecha de Nacimiento</label>
+              <input id="editBirthday" type="date" [(ngModel)]="editBirthday" class="form-control" />
+            </div>
 
-          <div class="form-group">
-            <label for="editBirthday">Fecha de Nacimiento</label>
-            <input id="editBirthday" type="date" [(ngModel)]="editBirthday" class="form-control" />
-          </div>
-
-          <div class="form-group">
-            <label for="editGender">Sexo *</label>
-            <select id="editGender" [(ngModel)]="editGender" class="form-control">
-              <option value="M">👦 M - Masculino</option>
-              <option value="F">👧 F - Femenino</option>
-            </select>
+            <div class="form-group">
+              <label for="editGender">Sexo *</label>
+              <select id="editGender" [(ngModel)]="editGender" class="form-control">
+                <option value="M">👦 M - Masculino</option>
+                <option value="F">👧 F - Femenino</option>
+              </select>
+            </div>
           </div>
 
           <div class="form-group">

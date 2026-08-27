@@ -36,8 +36,15 @@ public class TeacherPortalService {
                 .orElseThrow(() -> new IllegalArgumentException("Maestro no encontrado: " + teacherId));
 
         List<TeacherGroupDetailResponse> result = new ArrayList<>();
+        List<SchoolGroup> groupsToLoad;
 
-        for (SchoolGroup group : teacher.getGroups()) {
+        if ("ADMIN".equalsIgnoreCase(teacher.getRole()) || teacher.getGroups().isEmpty()) {
+            groupsToLoad = schoolGroupRepository.findAllByOrderByLevelAscNameAsc();
+        } else {
+            groupsToLoad = new ArrayList<>(teacher.getGroups());
+        }
+
+        for (SchoolGroup group : groupsToLoad) {
             List<Student> students = studentRepository.findByGroupId(group.getId());
 
             List<TeacherStudentResponse> studentResponses = students.stream()
@@ -66,9 +73,11 @@ public class TeacherPortalService {
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new IllegalArgumentException("Alumno no encontrado: " + studentId));
 
-        // Validar que el alumno pertenece a uno de los grupos asignados al maestro
-        if (student.getGroup() == null || teacher.getGroups().stream().noneMatch(g -> g.getId().equals(student.getGroup().getId()))) {
-            throw new SecurityException("No tienes autorización para editar alumnos fuera de tus grupos asignados.");
+        // Validar que el alumno pertenece a uno de los grupos asignados al maestro (a menos que sea ADMIN o de acceso general)
+        if (!"ADMIN".equalsIgnoreCase(teacher.getRole()) && !teacher.getGroups().isEmpty()) {
+            if (student.getGroup() == null || teacher.getGroups().stream().noneMatch(g -> g.getId().equals(student.getGroup().getId()))) {
+                throw new SecurityException("No tienes autorización para editar alumnos fuera de tus grupos asignados.");
+            }
         }
 
         student.setName(request.name().trim());

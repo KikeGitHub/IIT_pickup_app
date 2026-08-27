@@ -10,6 +10,8 @@ import { StatsHeaderComponent } from '../stats-header/stats-header.component';
 import { LevelFilterSidebarComponent } from '../level-filter-sidebar/level-filter-sidebar.component';
 import { StudentMonitorCardComponent } from '../student-monitor-card/student-monitor-card.component';
 import { DispatchConfirmationComponent } from '../dispatch-confirmation/dispatch-confirmation.component';
+import { TableSkeletonComponent } from '../../../../shared/components/table-skeleton/table-skeleton.component';
+import { LoadingOverlayComponent } from '../../../../shared/components/loading-overlay/loading-overlay.component';
 
 @Component({
   selector: 'app-monitor-dashboard',
@@ -20,7 +22,9 @@ import { DispatchConfirmationComponent } from '../dispatch-confirmation/dispatch
     StatsHeaderComponent,
     LevelFilterSidebarComponent,
     StudentMonitorCardComponent,
-    DispatchConfirmationComponent
+    DispatchConfirmationComponent,
+    TableSkeletonComponent,
+    LoadingOverlayComponent
   ],
   templateUrl: './monitor-dashboard.component.html',
   styleUrl: './monitor-dashboard.component.scss',
@@ -96,13 +100,28 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
     }
   }
 
+  studentSearchQuery = '';
+
   selectGroup(groupId: string): void {
     this.selectedGroupId.set(groupId);
+    this.studentSearchQuery = '';
   }
 
   get currentGroup(): TeacherGroup | undefined {
     const gid = this.selectedGroupId();
     return this.teacherService.myGroups().find(g => g.id === gid) || this.teacherService.myGroups()[0];
+  }
+
+  get filteredGroupStudents(): TeacherStudent[] {
+    const grp = this.currentGroup;
+    if (!grp || !grp.students) return [];
+    if (!this.studentSearchQuery.trim()) return grp.students;
+    const q = this.studentSearchQuery.toLowerCase();
+    return grp.students.filter(s =>
+      s.name.toLowerCase().includes(q) ||
+      (s.curp && s.curp.toLowerCase().includes(q)) ||
+      (s.grade && s.grade.toLowerCase().includes(q))
+    );
   }
 
   openEditStudentModal(student: TeacherStudent): void {
