@@ -14,15 +14,35 @@
 
   <!-- Filter & Search Toolbar -->
   <div class="toolbar-card">
-    <div class="search-box">
-      <span class="search-icon">🔍</span>
-      <input
-        type="text"
-        [(ngModel)]="searchQuery"
-        (ngModelChange)="onSearchChange()"
-        placeholder="Buscar por nombre de alumno, CURP o grupo..."
-        class="search-input"
-      />
+    <div class="toolbar-left-group">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input
+          type="text"
+          [(ngModel)]="searchQuery"
+          (ngModelChange)="onSearchChange()"
+          placeholder="Buscar alumno o CURP..."
+          class="search-input"
+        />
+      </div>
+
+      <!-- Specific Grade & Group Filter -->
+      <div class="group-select-filter" [class.group-select-filter--active]="selectedGroupId !== 'ALL'">
+        <span class="filter-icon">🏫</span>
+        <select
+          [(ngModel)]="selectedGroupId"
+          (ngModelChange)="onGroupFilterChange($event)"
+          class="group-filter-dropdown"
+          aria-label="Filtrar por grado y grupo"
+        >
+          <option value="ALL">Todos los grupos ({{ filterableGroups.length }})</option>
+          @for (g of filterableGroups; track g.id) {
+            <option [value]="g.id">
+              {{ g.name }}
+            </option>
+          }
+        </select>
+      </div>
     </div>
 
     <div class="filter-pills">

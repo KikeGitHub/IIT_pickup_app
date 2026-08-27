@@ -29,6 +29,7 @@ export class StudentCrudComponent implements OnInit {
 
   searchQuery = '';
   levelFilter: 'ALL' | 'KINDER' | 'PRIMARIA' | 'SECUNDARIA' = 'ALL';
+  selectedGroupId: string = 'ALL';
 
   // Form Model
   studentName = '';
@@ -56,10 +57,23 @@ export class StudentCrudComponent implements OnInit {
     this.adminService.loadTeachers().subscribe();
   }
 
+  get filterableGroups(): SchoolGroup[] {
+    const all = this.adminService.groups();
+    if (this.levelFilter === 'ALL') {
+      return all;
+    }
+    return all.filter((g) => g.level === this.levelFilter);
+  }
+
   get filteredStudents(): StudentDetail[] {
     let list = this.adminService.students();
     if (this.levelFilter !== 'ALL') {
       list = list.filter((s) => s.level === this.levelFilter);
+    }
+    if (this.selectedGroupId !== 'ALL') {
+      list = list.filter(
+        (s) => s.groupId === this.selectedGroupId || (s.groupName && s.groupName === this.selectedGroupId)
+      );
     }
     if (this.searchQuery.trim()) {
       const q = this.searchQuery.toLowerCase();
@@ -84,6 +98,17 @@ export class StudentCrudComponent implements OnInit {
 
   setLevelFilter(level: 'ALL' | 'KINDER' | 'PRIMARIA' | 'SECUNDARIA'): void {
     this.levelFilter = level;
+    if (this.selectedGroupId !== 'ALL') {
+      const existsInLevel = this.filterableGroups.some(g => g.id === this.selectedGroupId);
+      if (!existsInLevel) {
+        this.selectedGroupId = 'ALL';
+      }
+    }
+    this.currentPage.set(1);
+  }
+
+  onGroupFilterChange(groupId: string): void {
+    this.selectedGroupId = groupId;
     this.currentPage.set(1);
   }
 
