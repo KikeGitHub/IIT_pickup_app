@@ -11,6 +11,7 @@ import { LevelFilterSidebarComponent } from '../level-filter-sidebar/level-filte
 import { StudentMonitorCardComponent } from '../student-monitor-card/student-monitor-card.component';
 import { DispatchConfirmationComponent } from '../dispatch-confirmation/dispatch-confirmation.component';
 import { TableSkeletonComponent } from '../../../../shared/components/table-skeleton/table-skeleton.component';
+import { PwaInstallBannerComponent } from '../../../../shared/components/pwa-install-banner/pwa-install-banner.component';
 
 @Component({
   selector: 'app-monitor-dashboard',
@@ -22,7 +23,8 @@ import { TableSkeletonComponent } from '../../../../shared/components/table-skel
     LevelFilterSidebarComponent,
     StudentMonitorCardComponent,
     DispatchConfirmationComponent,
-    TableSkeletonComponent
+    TableSkeletonComponent,
+    PwaInstallBannerComponent
   ],
   templateUrl: './monitor-dashboard.component.html',
   styleUrl: './monitor-dashboard.component.scss',

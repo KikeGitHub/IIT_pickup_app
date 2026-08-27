@@ -11,6 +11,8 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 
+import { PwaInstallBannerComponent } from '../../../../shared/components/pwa-install-banner/pwa-install-banner.component';
+
 type LoginState = 'idle' | 'loading' | 'error';
 
 /**
@@ -24,7 +26,7 @@ type LoginState = 'idle' | 'loading' | 'error';
 @Component({
   selector: 'app-login-parent',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, PwaInstallBannerComponent],
   templateUrl: './login-parent.component.html',
   styleUrl: './login-parent.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -35,6 +35,12 @@
   <!-- Main Container -->
   <main class="portal-main">
 
+    <!-- PWA Install Banner -->
+    <app-pwa-install-banner
+      title="Instala la App de IIT Pickup (Padres)"
+      message="Notifica tu llegada más rápido con un solo toque desde tu pantalla de inicio."
+    ></app-pwa-install-banner>
+
     @if (studentService.isLoading()) {
       <div class="loading-state">
         <div class="spinner"></div>

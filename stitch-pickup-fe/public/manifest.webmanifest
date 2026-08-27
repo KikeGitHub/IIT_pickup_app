@@ -1,16 +1,31 @@
 {
-  "name": "IIT Pickup",
+  "name": "IIT Pickup — Instituto Inglés de Toluca",
   "short_name": "IIT Pickup",
-  "description": "Sistema de logística de recogida de alumnos del Instituto Inglés de Toluca.",
+  "description": "Sistema de logística de recogida y entrega de alumnos del Instituto Inglés de Toluca.",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "scope": "./",
-  "start_url": "./auth/login",
+  "scope": "/",
+  "start_url": "/",
   "background_color": "#000e27",
   "theme_color": "#000e27",
   "lang": "es-MX",
   "categories": ["education", "productivity"],
-  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Portal de Padres",
+      "short_name": "Padres",
+      "description": "Acceso al portal de padres para notificar proximidad y recogida",
+      "url": "/parent",
+      "icons": [{ "src": "icons/icon-96x96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Monitor de Docentes",
+      "short_name": "Docentes",
+      "description": "Monitor de entrega y salida de alumnos para maestros y guardias",
+      "url": "/monitor",
+      "icons": [{ "src": "icons/icon-96x96.png", "sizes": "96x96" }]
+    }
+  ],
   "icons": [
     {
       "src": "icons/icon-72x72.png",
@@ -62,4 +77,3 @@
     }
   ]
 }
-

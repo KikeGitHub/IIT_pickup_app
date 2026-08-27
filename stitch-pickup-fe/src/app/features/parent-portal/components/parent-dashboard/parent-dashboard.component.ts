@@ -19,6 +19,7 @@ import { PickupModeSelectorComponent } from '../pickup-mode-selector/pickup-mode
 import { AlertButtonsComponent } from '../alert-buttons/alert-buttons.component';
 import { AlertStatusCardComponent } from '../alert-status-card/alert-status-card.component';
 import { DayHistoryComponent, HistoryEvent } from '../day-history/day-history.component';
+import { PwaInstallBannerComponent } from '../../../../shared/components/pwa-install-banner/pwa-install-banner.component';
 
 @Component({
   selector: 'app-parent-dashboard',
@@ -30,7 +31,8 @@ import { DayHistoryComponent, HistoryEvent } from '../day-history/day-history.co
     PickupModeSelectorComponent,
     AlertButtonsComponent,
     AlertStatusCardComponent,
-    DayHistoryComponent
+    DayHistoryComponent,
+    PwaInstallBannerComponent
   ],
   templateUrl: './parent-dashboard.component.html',
   styleUrl: './parent-dashboard.component.scss',
