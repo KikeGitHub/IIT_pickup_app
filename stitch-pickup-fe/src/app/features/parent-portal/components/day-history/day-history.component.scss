@@ -26,7 +26,7 @@
   position: relative;
   padding-left: v.$space-xs;
 
-  &::before {
+  &:has(.timeline-item)::before {
     content: '';
     position: absolute;
     top: 6px;

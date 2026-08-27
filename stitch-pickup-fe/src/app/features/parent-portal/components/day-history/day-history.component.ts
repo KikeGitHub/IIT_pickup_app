@@ -17,8 +17,5 @@ export interface HistoryEvent {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DayHistoryComponent {
-  @Input() events: HistoryEvent[] = [
-    { time: '14:05', title: 'Alerta Enviada (10 MIN)', description: 'Enviada desde la app', type: 'ALERT' },
-    { time: '14:18', title: 'Alumno en Línea de Espera', description: 'Prof. Solis confirmó en puerta', type: 'DISPATCH' }
-  ];
+  @Input() events: HistoryEvent[] = [];
 }

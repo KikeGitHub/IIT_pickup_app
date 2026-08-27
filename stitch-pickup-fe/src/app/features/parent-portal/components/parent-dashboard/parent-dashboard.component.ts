@@ -18,7 +18,7 @@ import { StudentCardComponent } from '../student-card/student-card.component';
 import { PickupModeSelectorComponent } from '../pickup-mode-selector/pickup-mode-selector.component';
 import { AlertButtonsComponent } from '../alert-buttons/alert-buttons.component';
 import { AlertStatusCardComponent } from '../alert-status-card/alert-status-card.component';
-import { DayHistoryComponent } from '../day-history/day-history.component';
+import { DayHistoryComponent, HistoryEvent } from '../day-history/day-history.component';
 
 @Component({
   selector: 'app-parent-dashboard',
@@ -50,6 +50,9 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
   private readonly apiUrl = environment.apiUrl;
   private wsSubscription?: Subscription;
 
+  // Real-time daily history map per student
+  readonly historyMap = signal<Record<string, HistoryEvent[]>>({});
+
   // Bi-directional Delivery Confirmation State
   readonly pendingDelivery = signal<DeliveryDispatchedEvent | null>(null);
   readonly isConfirmingDelivery = signal<boolean>(false);
@@ -79,6 +82,14 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
         this.pendingDelivery.set(event);
         this.sound.playAlertSound();
         this.notification.info(`🚗 ${event.teacherName || 'El docente'} ha entregado a ${event.studentName} en la puerta.`);
+
+        const timeStr = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false });
+        this.addHistoryEvent(event.studentId, {
+          time: timeStr,
+          title: 'Alumno en Línea de Espera',
+          description: `${event.teacherName || 'Docente'} confirmó en puerta`,
+          type: 'DISPATCH'
+        });
       }
     });
   }
@@ -91,6 +102,11 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
     return this.studentService.selectedStudentId();
   }
 
+  get currentStudentEvents(): HistoryEvent[] {
+    const id = this.currentStudentId;
+    return id ? (this.historyMap()[id] || []) : [];
+  }
+
   get currentAlertStatus() {
     const id = this.currentStudentId;
     return id ? this.alertService.getStudentStatus(id) : {
@@ -99,6 +115,16 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
       state: 'IDLE' as const,
       updatedAt: new Date().toISOString()
     };
+  }
+
+  private addHistoryEvent(studentId: string, event: HistoryEvent): void {
+    this.historyMap.update(map => {
+      const existing = map[studentId] || [];
+      return {
+        ...map,
+        [studentId]: [event, ...existing]
+      };
+    });
   }
 
   onSelectStudent(studentId: string): void {
@@ -117,6 +143,20 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
     if (!id) return;
     const method = this.currentAlertStatus.pickupMethod || 'CAR';
     this.alertService.sendAlert(id, status, method);
+
+    const timeStr = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false });
+    const statusLabels: Record<AlertStatus, string> = {
+      TEN_MIN: '10 MIN',
+      FIVE_MIN: '5 MIN',
+      EN_FILA: 'En Fila',
+      URGENTE: 'Urgente'
+    };
+    this.addHistoryEvent(id, {
+      time: timeStr,
+      title: `Alerta Enviada (${statusLabels[status] || status})`,
+      description: `Enviada en modalidad ${method === 'CAR' ? 'En Auto' : 'A Pie'}`,
+      type: 'ALERT'
+    });
   }
 
   // ─── Bi-directional Delivery Receipt Confirmation ────────────────────────
@@ -132,6 +172,14 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
         this.pendingDelivery.set(null);
         this.sound.playAlertSound();
         this.notification.success(`✅ Has confirmado la recepción de ${delivery.studentName}. ¡Buen regreso a casa!`);
+
+        const timeStr = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false });
+        this.addHistoryEvent(delivery.studentId, {
+          time: timeStr,
+          title: 'Recepción Confirmada',
+          description: 'Alumno recibido por el tutor familiar',
+          type: 'RECEIVED'
+        });
       },
       error: (err) => {
         this.isConfirmingDelivery.set(false);
