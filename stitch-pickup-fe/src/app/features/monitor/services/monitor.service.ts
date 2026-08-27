@@ -1,6 +1,6 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { tap, catchError, of } from 'rxjs';
+import { tap, catchError, of, forkJoin } from 'rxjs';
 import { WebSocketService } from '../../../core/services/websocket.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { NotificationSoundService } from '../../../core/services/notification-sound.service';
@@ -116,8 +116,14 @@ export class MonitorService {
 
   // ─── Private: HTTP Load (Grouped — one alert per student) ────────────────
   private loadTodayAlertsGrouped(): void {
-    this.http.get<AlertResponse[]>(`${this.apiUrl}/alerts/today/grouped`).pipe(
-      tap((alerts) => {
+    forkJoin({
+      alerts: this.http.get<AlertResponse[]>(`${this.apiUrl}/alerts/today/grouped`).pipe(catchError(() => of([]))),
+      deliveries: this.http.get<DeliveryRecord[]>(`${this.apiUrl}/deliveries/today`).pipe(catchError(() => of([])))
+    }).pipe(
+      tap(({ alerts, deliveries }) => {
+        this.deliveries.set(deliveries);
+        const deliveredStudentIds = new Set(deliveries.map(d => d.studentId));
+
         const monitorAlerts: MonitorAlert[] = alerts.map(a => ({
           id: a.id,
           parentId: a.parentId,
@@ -129,14 +135,10 @@ export class MonitorService {
           status: a.status,
           pickupMethod: a.pickupMethod,
           sentAt: a.sentAt,
-          isDispatched: false,
+          isDispatched: deliveredStudentIds.has(a.studentId),
           isUpdated: false
         }));
         this.alerts.set(monitorAlerts);
-      }),
-      catchError(() => {
-        this.alerts.set([]);
-        return of([]);
       })
     ).subscribe();
   }
@@ -255,8 +257,15 @@ export class MonitorService {
       }
     });
 
-    // 2. Listen for delivery status updates (e.g. parent confirmed receipt)
+    // 2. Listen for delivery status updates (when ANY teacher or admin dispatches or parent confirms)
     this.ws.onDeliveryEvent().subscribe(delivery => {
+      console.info('[MonitorService] 📦 Evento de entrega recibido por WebSocket:', delivery);
+
+      // Marca la tarjeta como despachada en tiempo real en todos los monitores abiertos (Admin y Docentes)
+      this.alerts.update(alerts =>
+        alerts.map(a => (a.studentId === delivery.studentId || a.id === delivery.id) ? { ...a, isDispatched: true } : a)
+      );
+
       this.deliveries.update(list => {
         const idx = list.findIndex(d => d.studentId === delivery.studentId || d.id === delivery.id);
         if (idx !== -1) {

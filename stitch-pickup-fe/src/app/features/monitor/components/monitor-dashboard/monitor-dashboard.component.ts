@@ -100,6 +100,94 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
 
   studentSearchQuery = '';
 
+  // Cascading filters for GROUPS tab
+  readonly selectedGroupLevel = signal<'ALL' | 'KINDER' | 'PRIMARIA' | 'SECUNDARIA'>('ALL');
+  readonly selectedGradeFilter = signal<string>('ALL');
+
+  get availableLevels(): { level: string; label: string; count: number }[] {
+    const groups = this.teacherService.myGroups();
+    const levelsMap = new Map<string, number>();
+    groups.forEach(g => {
+      const lvl = g.level ? g.level.toUpperCase() : 'PRIMARIA';
+      levelsMap.set(lvl, (levelsMap.get(lvl) || 0) + 1);
+    });
+
+    const list: { level: string; label: string; count: number }[] = [];
+    if (levelsMap.size > 1) {
+      list.push({ level: 'ALL', label: '🏢 Todos los Niveles', count: groups.length });
+    }
+    if (levelsMap.has('KINDER')) list.push({ level: 'KINDER', label: '🌱 Kinder', count: levelsMap.get('KINDER')! });
+    if (levelsMap.has('PRIMARIA')) list.push({ level: 'PRIMARIA', label: '📚 Primaria', count: levelsMap.get('PRIMARIA')! });
+    if (levelsMap.has('SECUNDARIA')) list.push({ level: 'SECUNDARIA', label: '🎓 Secundaria', count: levelsMap.get('SECUNDARIA')! });
+    return list;
+  }
+
+  get groupsByLevel(): TeacherGroup[] {
+    const groups = this.teacherService.myGroups();
+    const lvl = this.selectedGroupLevel();
+    if (lvl === 'ALL') return groups;
+    return groups.filter(g => (g.level || '').toUpperCase() === lvl);
+  }
+
+  get availableGradesInLevel(): string[] {
+    const groups = this.groupsByLevel;
+    const gradesSet = new Set<string>();
+    groups.forEach(g => {
+      const dashIdx = g.name.lastIndexOf('-');
+      const grade = dashIdx !== -1 ? g.name.substring(0, dashIdx).trim() : g.name.trim();
+      if (grade) gradesSet.add(grade);
+    });
+    return Array.from(gradesSet);
+  }
+
+  get filteredGroupsDropdown(): TeacherGroup[] {
+    const groups = this.groupsByLevel;
+    const grade = this.selectedGradeFilter();
+    if (grade === 'ALL') return groups;
+    return groups.filter(g => g.name.startsWith(grade));
+  }
+
+  setGroupLevel(level: string): void {
+    this.selectedGroupLevel.set(level as 'ALL' | 'KINDER' | 'PRIMARIA' | 'SECUNDARIA');
+    this.selectedGradeFilter.set('ALL');
+    const available = this.filteredGroupsDropdown;
+    if (available.length > 0) {
+      this.selectedGroupId.set(available[0].id);
+    }
+  }
+
+  setGradeFilter(grade: string): void {
+    this.selectedGradeFilter.set(grade);
+    const available = this.filteredGroupsDropdown;
+    if (available.length > 0) {
+      this.selectedGroupId.set(available[0].id);
+    }
+  }
+
+  goToPreviousGroup(): void {
+    const groups = this.filteredGroupsDropdown;
+    if (groups.length <= 1) return;
+    const currentId = this.selectedGroupId();
+    const currentIndex = groups.findIndex(g => g.id === currentId);
+    if (currentIndex > 0) {
+      this.selectGroup(groups[currentIndex - 1].id);
+    } else {
+      this.selectGroup(groups[groups.length - 1].id);
+    }
+  }
+
+  goToNextGroup(): void {
+    const groups = this.filteredGroupsDropdown;
+    if (groups.length <= 1) return;
+    const currentId = this.selectedGroupId();
+    const currentIndex = groups.findIndex(g => g.id === currentId);
+    if (currentIndex >= 0 && currentIndex < groups.length - 1) {
+      this.selectGroup(groups[currentIndex + 1].id);
+    } else {
+      this.selectGroup(groups[0].id);
+    }
+  }
+
   selectGroup(groupId: string): void {
     this.selectedGroupId.set(groupId);
     this.studentSearchQuery = '';

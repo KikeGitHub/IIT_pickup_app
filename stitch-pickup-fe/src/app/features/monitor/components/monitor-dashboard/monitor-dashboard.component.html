@@ -78,24 +78,89 @@
         </div>
       </div>
 
-      <!-- Group Selection Tabs (Horizontal Scrollable on Mobile/Tablet) -->
-      <div class="group-selector-pills">
-        @for (g of teacherService.myGroups(); track g.id) {
-          <button
-            type="button"
-            class="group-tab-btn"
-            [class.group-tab-btn--active]="selectedGroupId() === g.id"
-            (click)="selectGroup(g.id)"
-          >
-            <span class="g-level">{{ g.level }}</span>
-            <span class="g-name">{{ g.name }}</span>
-            <span class="g-count">({{ g.students.length }})</span>
-          </button>
-        } @empty {
-          @if (!teacherService.isLoading()) {
-            <div class="no-groups-notice">No tienes grupos escolares asignados actualmente.</div>
+      <!-- Premium Group & Grade Cascading Filter -->
+      <div class="roster-filter-card">
+        <!-- 1. Level Switcher Tabs (if multiple levels exist) -->
+        <div class="level-tabs-bar" *ngIf="availableLevels.length > 1">
+          @for (lvl of availableLevels; track lvl.level) {
+            <button
+              type="button"
+              class="level-filter-btn"
+              [class.level-filter-btn--active]="selectedGroupLevel() === lvl.level"
+              (click)="setGroupLevel(lvl.level)"
+            >
+              <span class="l-label">{{ lvl.label }}</span>
+              <span class="l-count">{{ lvl.count }}</span>
+            </button>
           }
-        }
+        </div>
+
+        <!-- 2. Cascading Grade & Group Selectors Row -->
+        <div class="selectors-row" *ngIf="teacherService.myGroups().length > 1">
+          <!-- Grade Filter Dropdown -->
+          <div class="select-field" *ngIf="availableGradesInLevel.length > 1">
+            <label class="field-label">📖 Filtrar por Grado:</label>
+            <select
+              [ngModel]="selectedGradeFilter()"
+              (ngModelChange)="setGradeFilter($event)"
+              class="form-select-premium"
+            >
+              <option value="ALL">Todos los Grados ({{ availableGradesInLevel.length }})</option>
+              @for (gr of availableGradesInLevel; track gr) {
+                <option [value]="gr">{{ gr }}</option>
+              }
+            </select>
+          </div>
+
+          <!-- Hero Classroom / Group Selector Dropdown with Quick Steppers -->
+          <div class="select-field select-field--hero">
+            <label class="field-label">🏫 Salón / Grupo Activo:</label>
+            <div class="hero-selector-wrapper">
+              <button
+                type="button"
+                class="btn-stepper"
+                [disabled]="filteredGroupsDropdown.length <= 1"
+                (click)="goToPreviousGroup()"
+                title="Salón anterior"
+              >
+                ◀
+              </button>
+
+              <select
+                [ngModel]="selectedGroupId()"
+                (ngModelChange)="selectGroup($event)"
+                class="form-select-hero"
+              >
+                @for (g of filteredGroupsDropdown; track g.id) {
+                  <option [value]="g.id">
+                    {{ g.level }} · Grupo {{ g.name }} ({{ g.students.length }} alumnos)
+                  </option>
+                }
+              </select>
+
+              <button
+                type="button"
+                class="btn-stepper"
+                [disabled]="filteredGroupsDropdown.length <= 1"
+                (click)="goToNextGroup()"
+                title="Salón siguiente"
+              >
+                ▶
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Single Assigned Group Banner (for teachers with only 1 classroom) -->
+        <div class="single-group-banner" *ngIf="teacherService.myGroups().length === 1 && currentGroup">
+          <span class="banner-icon">🏫</span>
+          <span class="banner-text">Grupo asignado: <strong>{{ currentGroup.level }} — Grupo {{ currentGroup.name }}</strong> ({{ currentGroup.students.length }} alumnos registrados)</span>
+        </div>
+
+        <!-- No groups notice -->
+        <div class="no-groups-notice" *ngIf="teacherService.myGroups().length === 0 && !teacherService.isLoading()">
+          No tienes grupos escolares asignados actualmente.
+        </div>
       </div>
 
       <!-- Student Roster for Selected Group -->

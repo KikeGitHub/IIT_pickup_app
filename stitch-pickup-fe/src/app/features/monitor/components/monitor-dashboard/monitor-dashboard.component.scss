@@ -104,30 +104,111 @@
     h2 { color: white; }
   }
 
-  .group-tab-btn {
+  .roster-filter-card {
     background: #131c2e;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    color: #e2e8f0;
+    border-color: rgba(255, 255, 255, 0.08);
 
-    &--active {
-      background: #2563eb;
-      color: white;
+    .level-tabs-bar {
+      border-color: rgba(255, 255, 255, 0.08);
+
+      .level-filter-btn {
+        background: rgba(255, 255, 255, 0.04);
+        border-color: rgba(255, 255, 255, 0.08);
+        color: #cbd5e1;
+
+        .l-count { background: rgba(255, 255, 255, 0.1); color: #e2e8f0; }
+
+        &--active {
+          background: #2563eb;
+          border-color: #2563eb;
+          color: white;
+        }
+      }
+    }
+
+    .form-select-premium {
+      background: #0b0f19;
+      border-color: rgba(255, 255, 255, 0.1);
+      color: #f1f5f9;
+    }
+
+    .form-select-hero {
+      background: #1e293b;
+      border-color: rgba(37, 99, 235, 0.4);
+      color: #93c5fd;
+    }
+
+    .btn-stepper {
+      background: #0b0f19;
+      border-color: rgba(255, 255, 255, 0.1);
+      color: #f1f5f9;
+    }
+
+    .single-group-banner {
+      background: rgba(37, 99, 235, 0.15);
+      border-color: rgba(37, 99, 235, 0.3);
+      color: #93c5fd;
     }
   }
 
-  .roster-student-card {
+  .roster-table-card {
     background: #131c2e;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.08);
 
-    .r-name { color: #f8fafc; }
-    .r-meta { color: rgba(255, 255, 255, 0.5); }
-    .r-tutors-box {
-      background: rgba(0, 0, 0, 0.2);
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      .tutors-title { color: rgba(255, 255, 255, 0.6); }
-      .tutor-chip { background: rgba(255, 255, 255, 0.06); color: #cbd5e1; border-color: rgba(255, 255, 255, 0.1); }
+    .roster-toolbar {
+      background: #131c2e;
+      border-color: rgba(255, 255, 255, 0.08);
+
+      .search-box {
+        background: #0b0f19;
+        border-color: rgba(255, 255, 255, 0.1);
+        .search-input { color: #f1f5f9; }
+      }
+
+      .roster-count-badge {
+        background: #0b0f19;
+        border-color: rgba(255, 255, 255, 0.1);
+        color: #94a3b8;
+      }
     }
-    .r-card-footer { border-top-color: rgba(255, 255, 255, 0.08); }
+
+    .data-table {
+      th {
+        background: #0b0f19;
+        border-color: rgba(255, 255, 255, 0.08);
+        color: #94a3b8;
+      }
+
+      td {
+        border-color: rgba(255, 255, 255, 0.06);
+      }
+
+      tr:hover td {
+        background: rgba(255, 255, 255, 0.02);
+      }
+
+      .s-name { color: #f8fafc; }
+      .tutor-pill {
+        background: rgba(255, 255, 255, 0.04);
+        border-color: rgba(255, 255, 255, 0.08);
+        color: #cbd5e1;
+      }
+    }
+
+    .mobile-student-card {
+      background: #131c2e;
+      border-color: rgba(255, 255, 255, 0.08);
+
+      .m-name { color: #f8fafc; }
+      .m-tutors-section {
+        background: rgba(0, 0, 0, 0.2);
+        border-color: rgba(255, 255, 255, 0.05);
+        .tutor-pill {
+          background: rgba(255, 255, 255, 0.06);
+          color: #cbd5e1;
+        }
+      }
+    }
   }
 }
 
@@ -240,27 +321,190 @@
   p { margin: 2px 0 0 0; font-size: 12px; color: #64748b; }
 }
 
-.group-selector-pills {
+// ─── Premium Cascading Filter Card ──────────────────────────────────────────
+.roster-filter-card {
+  background: white;
+  border-radius: v.$radius-lg;
+  border: 1px solid v.$color-outline-variant;
+  padding: v.$space-md v.$space-lg;
+  box-shadow: v.$shadow-sm;
   display: flex;
-  gap: v.$space-sm;
-  overflow-x: auto;
-  padding-bottom: 4px;
+  flex-direction: column;
+  gap: v.$space-md;
+}
 
-  .group-tab-btn {
-    display: flex;
+.level-tabs-bar {
+  display: flex;
+  gap: v.$space-xs;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  border-bottom: 1px solid v.$color-outline-variant;
+  padding-bottom: v.$space-sm;
+
+  .level-filter-btn {
+    display: inline-flex;
     align-items: center;
     gap: 6px;
     padding: 7px 14px;
     border-radius: v.$radius-full;
-    cursor: pointer;
+    border: 1px solid v.$color-outline-variant;
+    background: v.$color-surface-container-low;
+    color: v.$color-on-surface-variant;
     font-size: 12px;
     font-weight: 600;
+    cursor: pointer;
     white-space: nowrap;
-    transition: all 0.2s;
+    transition: all 0.2s ease;
 
-    .g-level { font-size: 10px; opacity: 0.8; }
-    .g-count { font-size: 10px; opacity: 0.7; }
+    .l-count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+      background: rgba(0, 0, 0, 0.06);
+      padding: 1px 6px;
+      border-radius: v.$radius-full;
+    }
+
+    &:hover {
+      border-color: v.$color-primary;
+      color: v.$color-primary;
+    }
+
+    &--active {
+      background: v.$color-primary;
+      border-color: v.$color-primary;
+      color: white;
+
+      .l-count {
+        background: rgba(255, 255, 255, 0.25);
+        color: white;
+      }
+    }
   }
+}
+
+.selectors-row {
+  display: flex;
+  gap: v.$space-md;
+  align-items: flex-end;
+  flex-wrap: wrap;
+
+  .select-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 200px;
+    flex: 1;
+
+    &--hero {
+      flex: 2;
+      min-width: 280px;
+    }
+
+    .field-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: v.$color-on-surface-variant;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-select-premium {
+      padding: 8px 12px;
+      border-radius: v.$radius-md;
+      border: 1px solid v.$color-outline-variant;
+      background: v.$color-surface-container-low;
+      color: v.$color-on-surface;
+      font-size: 13px;
+      font-weight: 500;
+      outline: none;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+
+      &:focus {
+        border-color: v.$color-primary;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+        background: white;
+      }
+    }
+
+    .hero-selector-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+
+      .form-select-hero {
+        flex: 1;
+        padding: 9px 14px;
+        border-radius: v.$radius-md;
+        border: 2px solid rgba(37, 99, 235, 0.25);
+        background: #f0f7ff;
+        color: #1e3a8a;
+        font-size: 13px;
+        font-weight: 700;
+        outline: none;
+        cursor: pointer;
+        font-family: inherit;
+        transition: all 0.2s;
+
+        &:focus {
+          border-color: v.$color-primary;
+          box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+          background: white;
+        }
+      }
+
+      .btn-stepper {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 38px;
+        height: 38px;
+        border-radius: v.$radius-md;
+        border: 1px solid v.$color-outline-variant;
+        background: white;
+        color: v.$color-on-surface;
+        font-size: 12px;
+        cursor: pointer;
+        transition: all 0.15s;
+        flex-shrink: 0;
+
+        &:hover:not(:disabled) {
+          background: v.$color-primary;
+          color: white;
+          border-color: v.$color-primary;
+        }
+
+        &:disabled {
+          opacity: 0.3;
+          cursor: not-allowed;
+        }
+      }
+    }
+  }
+}
+
+.single-group-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f0f7ff;
+  border: 1px solid #bfdbfe;
+  color: #1e40af;
+  padding: 10px 16px;
+  border-radius: v.$radius-md;
+  font-size: 13px;
+
+  .banner-icon { font-size: 16px; }
+}
+
+.no-groups-notice {
+  font-size: 13px;
+  color: #64748b;
+  font-style: italic;
 }
 
 // ─── Roster Table Card (Homologated Admin Design + Mobile-First) ────────────
