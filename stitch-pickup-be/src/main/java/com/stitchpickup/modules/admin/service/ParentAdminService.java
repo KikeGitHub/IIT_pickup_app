@@ -46,7 +46,7 @@ public class ParentAdminService {
         }
 
         String rawPassword = (request.password() != null && !request.password().isBlank())
-                ? request.password() : "demo1234";
+                ? request.password() : "IIT2026";
 
         Set<Student> students = new HashSet<>();
         if (request.studentIds() != null && !request.studentIds().isEmpty()) {

@@ -48,7 +48,7 @@ public class TeacherAdminService {
         }
 
         String rawPassword = (request.password() != null && !request.password().isBlank())
-                ? request.password() : "demo1234";
+                ? request.password() : "IIT2026";
 
         TeacherUser.SchoolLevel level = (request.level() != null && !request.level().isBlank())
                 ? TeacherUser.SchoolLevel.valueOf(request.level().toUpperCase()) : null;

@@ -216,7 +216,7 @@ public class CsvImportService {
                     ParentUser parent = parentUserRepository.findByEmail(email)
                             .orElse(ParentUser.builder()
                                     .email(email)
-                                    .passwordHash(passwordEncoder.encode("demo1234"))
+                                    .passwordHash(passwordEncoder.encode("IIT2026"))
                                     .tempPassword(true)
                                     .active(true)
                                     .build());

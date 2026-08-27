@@ -2824,7 +2824,7 @@ INSERT INTO family_members (id, student_id, name, relationship, authorized) VALU
     ('040583f9-6316-4f36-a510-b2ecd2cace77', '98cbe050-d63e-41ca-ad8a-7323529278c9', 'RANGEL , HANIA', 'Padre', TRUE);
 
 -- --- USUARIOS PADRES (1160) ----------------------------------
--- Contrasena temporal: demo1234  (temp_password=TRUE)
+-- Contrasena temporal: IIT2026  (temp_password=TRUE)
 
 INSERT INTO parent_users (id, nombre, email, password_hash, temp_password) VALUES
     ('852ed6d1-36d7-4512-ad84-716f056e295a', 'CEJA MENDOZA SAÚL', 'SCEJA', '$2a$12$QhHsVgsFFljyjDk9trac2e.JTebR56XvsgYE12w4veajFYio62zNa', TRUE),
