@@ -136,20 +136,27 @@
             <div class="alert-error">{{ formError }}</div>
           }
 
-          <div class="form-grid">
+          <div class="form-grid form-grid--2col">
             <div class="form-group">
               <label for="teacherName">Nombre Completo *</label>
               <input id="teacherName" type="text" [(ngModel)]="teacherName" placeholder="Ej: Prof. María Fernanda Solís" class="form-control" />
             </div>
 
             <div class="form-group">
-              <label for="teacherEmail">Correo Institucional *</label>
-              <input id="teacherEmail" type="email" [(ngModel)]="teacherEmail" placeholder="maestro@iit.edu.mx" class="form-control" />
+              <label for="teacherEmail">Usuario / Correo *</label>
+              <input id="teacherEmail" type="text" [(ngModel)]="teacherEmail" placeholder="Ej: MDIAZ" class="form-control" />
             </div>
+          </div>
 
+          <div class="form-grid form-grid--2col">
             <div class="form-group">
-              <label for="teacherPassword">{{ isEditing() ? 'Nueva Contraseña (dejar en blanco para mantener)' : 'Contraseña Temporal' }}</label>
+              <label for="teacherPassword">
+                {{ isEditing() ? 'Nueva Contraseña' : 'Contraseña Temporal' }}
+              </label>
               <input id="teacherPassword" type="password" [(ngModel)]="teacherPassword" placeholder="IIT2026" class="form-control" />
+              @if (isEditing()) {
+                <span class="form-hint">Dejar en blanco para mantener la actual</span>
+              }
             </div>
 
             <div class="form-group">
@@ -160,7 +167,9 @@
                 <option value="SECUNDARIA">Secundaria</option>
               </select>
             </div>
+          </div>
 
+          <div class="form-grid form-grid--2col">
             <div class="form-group">
               <label for="teacherRole">Rol en Sistema</label>
               <select id="teacherRole" [(ngModel)]="teacherRole" class="form-control">

@@ -36,7 +36,7 @@ export class LoginTeacherComponent {
   private readonly fb = inject(FormBuilder);
 
   readonly loginForm = this.fb.group({
-    email: ['', [Validators.required, Validators.email]],
+    email: ['', [Validators.required]],
     password: ['', [Validators.required, Validators.minLength(6)]],
   });
 
@@ -91,7 +91,6 @@ export class LoginTeacherComponent {
     const control = this.loginForm.get(field);
     if (!control?.errors || !control?.touched) return null;
     if (control.errors['required']) return 'Este campo es obligatorio.';
-    if (control.errors['email']) return 'Ingresa un email válido.';
     if (control.errors['minlength']) return 'La contraseña debe tener al menos 6 caracteres.';
     return null;
   }

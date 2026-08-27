@@ -132,27 +132,36 @@
             <div class="alert-error">{{ formError }}</div>
           }
 
-          <div class="form-grid">
+          <div class="form-grid form-grid--2col">
             <div class="form-group">
               <label for="parentName">Nombre Completo *</label>
               <input id="parentName" type="text" [(ngModel)]="parentName" placeholder="Ej: Carlos Ramírez Soto" class="form-control" />
             </div>
 
             <div class="form-group">
-              <label for="parentEmail">Correo Electrónico *</label>
-              <input id="parentEmail" type="email" [(ngModel)]="parentEmail" placeholder="padre@iit.edu.mx" class="form-control" />
+              <label for="parentEmail">Usuario / Correo *</label>
+              <input id="parentEmail" type="text" [(ngModel)]="parentEmail" placeholder="Ej: JPEREZ" class="form-control" />
             </div>
+          </div>
 
+          <div class="form-grid form-grid--2col">
             <div class="form-group">
-              <label for="parentPassword">{{ isEditing() ? 'Nueva Contraseña (dejar en blanco para mantener)' : 'Contraseña Temporal' }}</label>
+              <label for="parentPassword">
+                {{ isEditing() ? 'Nueva Contraseña' : 'Contraseña Temporal' }}
+              </label>
               <input id="parentPassword" type="password" [(ngModel)]="parentPassword" placeholder="IIT2026" class="form-control" />
+              @if (isEditing()) {
+                <span class="form-hint">Dejar en blanco para mantener la actual</span>
+              }
             </div>
 
             <div class="form-group">
               <label for="parentPhone">Teléfono de Contacto</label>
               <input id="parentPhone" type="tel" [(ngModel)]="parentPhone" placeholder="722-123-4567" class="form-control" />
             </div>
+          </div>
 
+          <div class="form-grid form-grid--2col">
             <div class="form-group form-group--checkbox">
               <label>
                 <input type="checkbox" [(ngModel)]="parentActive" />

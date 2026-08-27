@@ -282,8 +282,10 @@
     align-items: center;
     padding: v.$space-md v.$space-lg;
     border-bottom: 1px solid v.$color-outline-variant;
-    h3 { margin: 0; font-size: 18px; font-weight: v.$font-weight-bold; }
-    .btn-close { background: none; border: none; font-size: 24px; cursor: pointer; color: v.$color-on-surface-variant; }
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+    color: white;
+    h3 { margin: 0; font-size: 18px; font-weight: v.$font-weight-bold; color: white; }
+    .btn-close { background: none; border: none; font-size: 24px; cursor: pointer; color: rgba(255,255,255,0.7); &:hover { color: white; } }
   }
 
   .modal-body {
@@ -306,8 +308,16 @@
 
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: 1fr;
   gap: v.$space-md;
+
+  &--2col {
+    grid-template-columns: 1fr 1fr;
+
+    @media (max-width: 560px) {
+      grid-template-columns: 1fr;
+    }
+  }
 }
 
 .form-group {
@@ -318,17 +328,26 @@
   label { font-size: 13px; font-weight: v.$font-weight-semibold; color: v.$color-on-surface; }
 
   .form-control {
-    padding: 8px 12px;
+    padding: 10px 12px;
     border-radius: v.$radius-md;
     border: 1px solid v.$color-outline-variant;
     font-size: 13px;
     outline: none;
     font-family: inherit;
+    background: white;
+    transition: border-color 0.15s, box-shadow 0.15s;
 
     &:focus {
       border-color: v.$color-primary;
-      box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.1);
+      box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08);
     }
+  }
+
+  .form-hint {
+    font-size: 11px;
+    color: v.$color-on-surface-variant;
+    font-style: italic;
+    margin-top: -2px;
   }
 
   &--checkbox {
