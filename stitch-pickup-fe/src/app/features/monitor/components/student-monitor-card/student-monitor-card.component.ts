@@ -71,10 +71,42 @@ export class StudentMonitorCardComponent {
   }
 
   get timeAgo(): string {
-    const diff = (Date.now() - new Date(this.alert.sentAt).getTime()) / 1000;
-    if (diff < 60) return `hace ${Math.round(diff)}s`;
-    const m = Math.round(diff / 60);
-    return `hace ${m} min`;
+    if (!this.alert?.sentAt) return 'hace un momento';
+
+    let date: Date;
+
+    // Si viene en formato solo hora "HH:mm" o "HH:mm:ss"
+    if (typeof this.alert.sentAt === 'string' && /^\d{1,2}:\d{2}(:\d{2})?$/.test(this.alert.sentAt.trim())) {
+      const parts = this.alert.sentAt.trim().split(':');
+      const now = new Date();
+      date = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate(),
+        parseInt(parts[0], 10),
+        parseInt(parts[1], 10),
+        parts[2] ? parseInt(parts[2], 10) : 0
+      );
+    } else {
+      date = new Date(this.alert.sentAt);
+    }
+
+    const timestamp = date.getTime();
+    if (isNaN(timestamp) || timestamp <= 0) {
+      return 'hace un momento';
+    }
+
+    const diff = Math.floor((Date.now() - timestamp) / 1000);
+    if (diff < 0 || diff < 30) return 'hace un momento';
+    if (diff < 60) return `hace ${diff}s`;
+
+    const minutes = Math.floor(diff / 60);
+    if (minutes < 60) return `hace ${minutes} min`;
+
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `hace ${hours} h`;
+
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }
 
   onDispatch(): void {

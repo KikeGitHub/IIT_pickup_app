@@ -11,7 +11,6 @@ import { LevelFilterSidebarComponent } from '../level-filter-sidebar/level-filte
 import { StudentMonitorCardComponent } from '../student-monitor-card/student-monitor-card.component';
 import { DispatchConfirmationComponent } from '../dispatch-confirmation/dispatch-confirmation.component';
 import { TableSkeletonComponent } from '../../../../shared/components/table-skeleton/table-skeleton.component';
-import { LoadingOverlayComponent } from '../../../../shared/components/loading-overlay/loading-overlay.component';
 
 @Component({
   selector: 'app-monitor-dashboard',
@@ -23,8 +22,7 @@ import { LoadingOverlayComponent } from '../../../../shared/components/loading-o
     LevelFilterSidebarComponent,
     StudentMonitorCardComponent,
     DispatchConfirmationComponent,
-    TableSkeletonComponent,
-    LoadingOverlayComponent
+    TableSkeletonComponent
   ],
   templateUrl: './monitor-dashboard.component.html',
   styleUrl: './monitor-dashboard.component.scss',
