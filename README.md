@@ -5,53 +5,64 @@ Permite a los padres de familia notificar su proximidad al plantel mediante geol
 
 ---
 
-## 🚀 Deployment en Hetzner Cloud
+## 🚀 Deployment en Hetzner Cloud & Dominio Institucional
 
 ### Infraestructura de Producción
-La aplicación se encuentra desplegada en un servidor **Hetzner Cloud (CPX22 - 4 GB RAM)** con la siguiente configuración:
+La aplicación se encuentra desplegada en un servidor **Hetzner Cloud (CPX22 - 4 GB RAM)** bajo el dominio institucional seguro:
 
+- **Dominio Oficial:** [https://pickup.institutoingles.edu.mx](https://pickup.institutoingles.edu.mx)
+- **IP Pública del Servidor:** `5.161.82.24` (Hetzner Cloud)
+- **Gestión DNS:** cPanel Zone Editor (Registro A `pickup` ➡️ `5.161.82.24`)
+- **Certificado SSL/TLS:** Let's Encrypt con renovación automatizada por Certbot hook
+- **Protocolos de Seguridad:** HTTPS / HTTP/2, HSTS (`max-age=31536000`), Redirección Forzada 301 (HTTP ➡️ HTTPS)
 - **Sistema Operativo:** Ubuntu 24.04 LTS (Noble Numbat)
+- **Ruta de Despliegue:** `/opt/iit_pickup`
 - **Contenedores:** Docker & Docker Compose v2
 - **Base de Datos:** PostgreSQL 16 (Alpine) con volumen persistente `pgdata`
 - **Backend:** Spring Boot 3.3.5 con OpenJDK 21 (Temurin Alpine) y GC optimizado (`-XX:+UseG1GC`)
-- **Frontend:** Angular 19/20 SPA servido por Nginx Alpine (Reverse Proxy & Gzip)
-- **Seguridad Perimetral:** UFW Firewall (solo puertos 22 y 80 abiertos hacia el exterior)
-- **Acceso:** SSH autenticado mediante llave criptográfica Ed25519
+- **Frontend:** Angular 20 SPA servido por Nginx Alpine (Reverse Proxy, SSL, Gzip y WebSockets STOMP)
+- **Seguridad Perimetral:** UFW Firewall (puertos 22, 80 y 443)
 
-### Arquitectura de Red y Contenedores
+### Arquitectura de Red, Dominio y Contenedores
 
 ```text
-                         INTERNET
-                            │
-                            │ HTTP :80
-                            ▼
-                  ┌─────────────────────┐
-                  │   Angular + Nginx   │
-                  │   stitch-frontend   │
-                  │        :80          │
-                  └──────────┬──────────┘
-                             │
-                     Docker Network
-                       (Interna)
-                             │
-                  ┌──────────▼──────────┐
-                  │    Spring Boot      │
-                  │   stitch-backend    │
-                  │        :8080        │
-                  └──────────┬──────────┘
-                             │
-                     Docker Network
-                       (Interna)
-                             │
-                  ┌──────────▼──────────┐
-                  │     PostgreSQL      │
-                  │   stitch-postgres   │
-                  │        :5432        │
-                  └─────────────────────┘
+                                INTERNET
+                                   │
+              ┌────────────────────┴────────────────────┐
+              │                                         │
+        HTTP :80 (Redirect 301)                  HTTPS :443 (SSL/TLS)
+              │                                         │
+              └────────────────────┬────────────────────┘
+                                   │
+                                   ▼
+                   ┌───────────────────────────────┐
+                   │        Angular + Nginx        │
+                   │        stitch-frontend        │
+                   │    pickup.institutoingles.    │
+                   │            edu.mx             │
+                   └───────────────┬───────────────┘
+                                   │
+                           Docker Network
+                         (stitch-network)
+                                   │
+                   ┌───────────────▼───────────────┐
+                   │         Spring Boot           │
+                   │        stitch-backend         │
+                   │             :8080             │
+                   └───────────────┬───────────────┘
+                                   │
+                           Docker Network
+                         (stitch-network)
+                                   │
+                   ┌───────────────▼───────────────┐
+                   │          PostgreSQL           │
+                   │        stitch-postgres        │
+                   │             :5432             │
+                   └───────────────────────────────┘
 ```
 
 > **🔒 Principio de Menor Exposición:**
-> Los contenedores de `PostgreSQL` y `Spring Boot` **no exponen puertos al Internet**. Únicamente el contenedor de `Nginx` (Frontend) expone el puerto `80`, redirigiendo el tráfico de API (`/api/`) y WebSocket (`/ws/`) al backend dentro de la red aislada `stitch-network`.
+> Los contenedores de `PostgreSQL` y `Spring Boot` **no exponen puertos al Internet**. Únicamente el contenedor de `Nginx` (Frontend) expone los puertos `80` (redirección) y `443` (HTTPS/WSS), redirigiendo de forma interna las peticiones REST (`/api/`) y WebSocket (`/ws/`) al backend dentro de la red aislada `stitch-network`.
 
 ---
 
@@ -60,19 +71,19 @@ La aplicación se encuentra desplegada en un servidor **Hetzner Cloud (CPX22 - 4
 | Capa | Tecnologías | Descripción |
 |---|---|---|
 | **Frontend** | Angular 20, TypeScript, SCSS, RxJS, Angular Signals | SPA reactiva y PWA optimizada para móviles y tablets |
-| **Tiempo Real** | `@stomp/stompjs` v7, SockJS | Comunicación bidireccional STOMP sobre WebSockets |
+| **Tiempo Real** | `@stomp/stompjs` v7, SockJS | Comunicación bidireccional STOMP sobre WebSockets seguros (`wss://`) |
 | **Backend** | Spring Boot 3.3.5, Java 21, Spring Security, Spring Data JPA | API REST y broker de mensajería WebSocket |
 | **Base de Datos** | PostgreSQL 16, Flyway Migrations | Migraciones versionadas DDL e inserts homologados |
-| **Infraestructura** | Docker, Nginx, Hetzner Cloud | Despliegue contenerizado con reverse proxy y compresión gzip |
+| **Infraestructura & SSL** | Docker, Nginx, Let's Encrypt, Hetzner Cloud | Despliegue contenerizado con reverse proxy, SSL/TLS y compresión gzip |
 
 ---
 
 ## 🌐 URLs de Acceso en Producción
 
-* **Portal de Padres:** 👉 [http://5.161.82.24/auth/login](http://5.161.82.24/auth/login)
-* **Portal de Maestros & Admin:** 👉 [http://5.161.82.24/auth/maestros](http://5.161.82.24/auth/maestros)
-* **Monitor de Entregas (Circuito):** 👉 [http://5.161.82.24/monitor](http://5.161.82.24/monitor)
-* **Panel de Control Admin:** 👉 [http://5.161.82.24/admin](http://5.161.82.24/admin)
+* **Portal de Padres:** 👉 [https://pickup.institutoingles.edu.mx/auth/login](https://pickup.institutoingles.edu.mx/auth/login)
+* **Portal de Maestros & Admin:** 👉 [https://pickup.institutoingles.edu.mx/auth/maestros](https://pickup.institutoingles.edu.mx/auth/maestros)
+* **Monitor de Entregas (Circuito):** 👉 [https://pickup.institutoingles.edu.mx/monitor](https://pickup.institutoingles.edu.mx/monitor)
+* **Panel de Control Admin:** 👉 [https://pickup.institutoingles.edu.mx/admin](https://pickup.institutoingles.edu.mx/admin)
 
 ---
 
@@ -89,23 +100,25 @@ La aplicación se encuentra desplegada en un servidor **Hetzner Cloud (CPX22 - 4
 
 ---
 
-## 📦 Comandos de Despliegue en el Servidor
+## 📦 Comandos de Despliegue y Mantenimiento en el Servidor
 
 ```bash
-# 1. Clonar o actualizar el repositorio
+# 1. Entrar a la carpeta del proyecto en Hetzner
 cd /opt/iit_pickup
-git pull origin main
 
-# 2. Configurar variables de entorno (solo la primera vez)
-cp .env.example .env
-nano .env
+# 2. Actualizar el código desde GitHub
+git pull origin develop
 
 # 3. Compilar y levantar contenedores en segundo plano
 docker compose up -d --build
 
 # 4. Verificar salud de los servicios
 docker compose ps
-docker compose logs -f backend
+docker compose logs -f frontend backend
+
+# 5. Renovación de Certificados SSL (Automatizada)
+# El cron/timer del sistema renueva los certificados y recarga Nginx mediante el hook:
+# /etc/letsencrypt/renewal-hooks/post/reload-nginx.sh
 ```
 
 ---
