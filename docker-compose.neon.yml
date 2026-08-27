@@ -8,10 +8,10 @@ services:
     restart: always
     environment:
       SPRING_PROFILES_ACTIVE: prod
-      # Reemplazar con tu URL de Neon
-      SPRING_DATASOURCE_URL: ${NEON_DATABASE_URL:-jdbc:postgresql://ep-xyz-pooler.us-east-2.aws.neon.tech/stitch_pickup_db?sslmode=require}
-      SPRING_DATASOURCE_USERNAME: ${NEON_USER:-stitch_user}
-      SPRING_DATASOURCE_PASSWORD: ${NEON_PASSWORD:-stitch_password}
+      # Configuración de Neon PostgreSQL
+      SPRING_DATASOURCE_URL: ${NEON_DATABASE_URL:-${SPRING_DATASOURCE_URL:-jdbc:postgresql://ep-holy-band-awa2j4it.c-12.us-east-1.aws.neon.tech/stitch_pickup_db?sslmode=require}}
+      SPRING_DATASOURCE_USERNAME: ${NEON_USER:-${SPRING_DATASOURCE_USERNAME:-neondb_owner}}
+      SPRING_DATASOURCE_PASSWORD: ${NEON_PASSWORD:-${SPRING_DATASOURCE_PASSWORD:-npg_OIhk9Zy2lczM}}
       JWT_SECRET: ${JWT_SECRET:-c3RpdGNoLXBpY2t1cC1qd3Qtc2VjcmV0LWtleS0yMDI2LXNlY3VyZS1oYXNoLWZvci1wcm9kdWN0aW9uLXN5c3RlbQ==}
       JWT_EXPIRATION_HOURS: 24
       SPRING_WEBSOCKET_ALLOWED_ORIGINS: "*"
