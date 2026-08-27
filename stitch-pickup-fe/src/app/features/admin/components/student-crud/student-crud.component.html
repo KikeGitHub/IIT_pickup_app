@@ -35,29 +35,31 @@
 
   <!-- Students Table Card -->
   <div class="table-card">
-    <!-- Table Loading Indicator -->
-    <div *ngIf="adminService.isLoading()" class="table-loading-bar">
-      <div class="loading-spinner-sm"></div>
-      <span>Cargando catálogo de alumnos...</span>
-    </div>
-
-    <div class="table-responsive">
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Alumno</th>
-            <th>Nivel & Grado</th>
-            <th>Grupo</th>
-            <th>Maestro(s) Asignado(s)</th>
-            <th>Tutores Autorizados (Pickup)</th>
-            <th>Estado</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (s of pagedStudents; track s.id) {
+    <!-- Modern Loading Skeleton State -->
+    @if (adminService.isLoading()) {
+      <div class="table-loading-header">
+        <div class="loading-spinner-sm"></div>
+        <span>Cargando catálogo de alumnos y tutores...</span>
+      </div>
+      <app-table-skeleton [rows]="8" [cols]="4"></app-table-skeleton>
+    } @else {
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
             <tr>
-              <td>
+              <th>Alumno</th>
+              <th>Nivel & Grado</th>
+              <th>Grupo</th>
+              <th>Maestro(s) Asignado(s)</th>
+              <th>Tutores Autorizados (Pickup)</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (s of pagedStudents; track s.id) {
+              <tr>
+                <td>
                 <div class="student-cell">
                   <span class="student-avatar">{{ s.name.charAt(0) }}</span>
                   <div>
@@ -125,6 +127,7 @@
         </tbody>
       </table>
     </div>
+    }
 
     <!-- Pagination Footer -->
     <app-pagination

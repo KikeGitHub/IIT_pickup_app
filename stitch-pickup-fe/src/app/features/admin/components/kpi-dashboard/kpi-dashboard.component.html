@@ -34,7 +34,24 @@
     </div>
   </div>
 
-  @if (adminService.kpis(); as kpis) {
+  <!-- Loading Skeleton State -->
+  @if (adminService.isLoading()) {
+    <div class="kpi-skeleton-grid">
+      @for (i of [1,2,3,4]; track i) {
+        <div class="kpi-skeleton-card">
+          <div class="kpi-sk-icon"></div>
+          <div class="kpi-sk-lines">
+            <div class="kpi-sk-line kpi-sk-line--val"></div>
+            <div class="kpi-sk-line kpi-sk-line--lbl"></div>
+          </div>
+        </div>
+      }
+    </div>
+    <div class="charts-skeleton-grid">
+      <div class="chart-sk-box"></div>
+      <div class="chart-sk-box"></div>
+    </div>
+  } @else if (adminService.kpis(); as kpis) {
     <!-- Metric Cards Grid -->
     <div class="kpi-grid">
       <div class="metric-card">

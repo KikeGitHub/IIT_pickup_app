@@ -320,3 +320,77 @@
     color: v.$color-on-surface-variant;
   }
 }
+
+/* KPI Dashboard Loading Skeletons */
+.kpi-skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: v.$space-md;
+}
+
+.kpi-skeleton-card {
+  background: white;
+  padding: v.$space-lg;
+  border-radius: v.$radius-lg;
+  border: 1px solid v.$color-outline-variant;
+  box-shadow: v.$shadow-sm;
+  display: flex;
+  align-items: center;
+  gap: v.$space-md;
+
+  .kpi-sk-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 35%, #f8fafc 65%, #f1f5f9 100%);
+    background-size: 300% 100%;
+    animation: skShimmer 1.6s infinite cubic-bezier(0.4, 0, 0.2, 1);
+    flex-shrink: 0;
+  }
+
+  .kpi-sk-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+  }
+
+  .kpi-sk-line {
+    background: linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 35%, #f8fafc 65%, #f1f5f9 100%);
+    background-size: 300% 100%;
+    animation: skShimmer 1.6s infinite cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 4px;
+
+    &--val {
+      height: 24px;
+      width: 60%;
+    }
+
+    &--lbl {
+      height: 12px;
+      width: 85%;
+    }
+  }
+}
+
+.charts-skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: v.$space-lg;
+
+  .chart-sk-box {
+    height: 280px;
+    background: white;
+    border-radius: v.$radius-lg;
+    border: 1px solid v.$color-outline-variant;
+    box-shadow: v.$shadow-sm;
+    background-image: linear-gradient(90deg, #f8fafc 0%, #f1f5f9 35%, #ffffff 65%, #f8fafc 100%);
+    background-size: 300% 100%;
+    animation: skShimmer 1.8s infinite cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+@keyframes skShimmer {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}

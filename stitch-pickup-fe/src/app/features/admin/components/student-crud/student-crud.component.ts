@@ -5,11 +5,12 @@ import { finalize } from 'rxjs';
 import { AdminService, StudentDetail, SchoolGroup, FamilyMember } from '../../services/admin.service';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination.component';
 import { LoadingOverlayComponent } from '../../../../shared/components/loading-overlay/loading-overlay.component';
+import { TableSkeletonComponent } from '../../../../shared/components/table-skeleton/table-skeleton.component';
 
 @Component({
   selector: 'app-student-crud',
   standalone: true,
-  imports: [CommonModule, FormsModule, PaginationComponent, LoadingOverlayComponent],
+  imports: [CommonModule, FormsModule, PaginationComponent, LoadingOverlayComponent, TableSkeletonComponent],
   templateUrl: './student-crud.component.html',
   styleUrl: './student-crud.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

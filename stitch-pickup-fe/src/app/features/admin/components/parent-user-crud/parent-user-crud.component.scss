@@ -87,15 +87,16 @@
   position: relative;
 }
 
+.table-loading-header,
 .table-loading-bar {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 18px;
-  background: #eff6ff;
-  border-bottom: 1px solid #bfdbfe;
-  color: #1d4ed8;
-  font-size: 12px;
+  padding: 12px 20px;
+  background: linear-gradient(90deg, #eff6ff 0%, #f8fafc 100%);
+  border-bottom: 1px solid #dbeafe;
+  color: #1e40af;
+  font-size: 13px;
   font-weight: 600;
   animation: fadeIn 0.2s ease-in;
 }

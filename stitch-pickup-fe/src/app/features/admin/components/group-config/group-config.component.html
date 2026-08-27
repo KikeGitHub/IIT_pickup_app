@@ -29,19 +29,25 @@
       </div>
 
       <div class="groups-list">
-        @for (g of kinderGroups; track g.id) {
-          <div class="group-card">
-            <div class="card-info">
-              <span class="group-name">{{ g.name }}</span>
-              <span class="student-count">👥 {{ g.studentCount }} alumnos</span>
+        @if (adminService.isLoading()) {
+          @for (i of [1,2,3]; track i) {
+            <div class="group-card-skeleton"></div>
+          }
+        } @else {
+          @for (g of kinderGroups; track g.id) {
+            <div class="group-card">
+              <div class="card-info">
+                <span class="group-name">{{ g.name }}</span>
+                <span class="student-count">👥 {{ g.studentCount }} alumnos</span>
+              </div>
+              <div class="card-actions">
+                <button type="button" class="btn-icon-action" (click)="openEditModal(g)" title="Editar">✏️</button>
+                <button type="button" class="btn-icon-action btn-icon-action--del" (click)="deleteGroup(g)" title="Eliminar">🗑️</button>
+              </div>
             </div>
-            <div class="card-actions">
-              <button type="button" class="btn-icon-action" (click)="openEditModal(g)" title="Editar">✏️</button>
-              <button type="button" class="btn-icon-action btn-icon-action--del" (click)="deleteGroup(g)" title="Eliminar">🗑️</button>
-            </div>
-          </div>
-        } @empty {
-          <div class="empty-column">Sin grupos en Kinder</div>
+          } @empty {
+            <div class="empty-column">Sin grupos en Kinder</div>
+          }
         }
       </div>
     </div>
@@ -60,19 +66,25 @@
       </div>
 
       <div class="groups-list">
-        @for (g of primariaGroups; track g.id) {
-          <div class="group-card">
-            <div class="card-info">
-              <span class="group-name">{{ g.name }}</span>
-              <span class="student-count">👥 {{ g.studentCount }} alumnos</span>
+        @if (adminService.isLoading()) {
+          @for (i of [1,2,3,4]; track i) {
+            <div class="group-card-skeleton"></div>
+          }
+        } @else {
+          @for (g of primariaGroups; track g.id) {
+            <div class="group-card">
+              <div class="card-info">
+                <span class="group-name">{{ g.name }}</span>
+                <span class="student-count">👥 {{ g.studentCount }} alumnos</span>
+              </div>
+              <div class="card-actions">
+                <button type="button" class="btn-icon-action" (click)="openEditModal(g)" title="Editar">✏️</button>
+                <button type="button" class="btn-icon-action btn-icon-action--del" (click)="deleteGroup(g)" title="Eliminar">🗑️</button>
+              </div>
             </div>
-            <div class="card-actions">
-              <button type="button" class="btn-icon-action" (click)="openEditModal(g)" title="Editar">✏️</button>
-              <button type="button" class="btn-icon-action btn-icon-action--del" (click)="deleteGroup(g)" title="Eliminar">🗑️</button>
-            </div>
-          </div>
-        } @empty {
-          <div class="empty-column">Sin grupos en Primaria</div>
+          } @empty {
+            <div class="empty-column">Sin grupos en Primaria</div>
+          }
         }
       </div>
     </div>
@@ -91,19 +103,25 @@
       </div>
 
       <div class="groups-list">
-        @for (g of secundariaGroups; track g.id) {
-          <div class="group-card">
-            <div class="card-info">
-              <span class="group-name">{{ g.name }}</span>
-              <span class="student-count">👥 {{ g.studentCount }} alumnos</span>
+        @if (adminService.isLoading()) {
+          @for (i of [1,2,3]; track i) {
+            <div class="group-card-skeleton"></div>
+          }
+        } @else {
+          @for (g of secundariaGroups; track g.id) {
+            <div class="group-card">
+              <div class="card-info">
+                <span class="group-name">{{ g.name }}</span>
+                <span class="student-count">👥 {{ g.studentCount }} alumnos</span>
+              </div>
+              <div class="card-actions">
+                <button type="button" class="btn-icon-action" (click)="openEditModal(g)" title="Editar">✏️</button>
+                <button type="button" class="btn-icon-action btn-icon-action--del" (click)="deleteGroup(g)" title="Eliminar">🗑️</button>
+              </div>
             </div>
-            <div class="card-actions">
-              <button type="button" class="btn-icon-action" (click)="openEditModal(g)" title="Editar">✏️</button>
-              <button type="button" class="btn-icon-action btn-icon-action--del" (click)="deleteGroup(g)" title="Eliminar">🗑️</button>
-            </div>
-          </div>
-        } @empty {
-          <div class="empty-column">Sin grupos en Secundaria</div>
+          } @empty {
+            <div class="empty-column">Sin grupos en Secundaria</div>
+          }
         }
       </div>
     </div>

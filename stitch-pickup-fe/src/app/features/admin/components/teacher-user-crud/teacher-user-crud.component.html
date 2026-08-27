@@ -35,74 +35,76 @@
 
   <!-- Teachers Table -->
   <div class="table-card">
-    <!-- Table Loading Indicator -->
-    <div *ngIf="adminService.isLoading()" class="table-loading-bar">
-      <div class="loading-spinner-sm"></div>
-      <span>Cargando catálogo de maestros...</span>
-    </div>
-
-    <div class="table-responsive">
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Maestro</th>
-            <th>Nivel</th>
-            <th>Grupos Asignados</th>
-            <th>Rol</th>
-            <th>Estado</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (t of pagedTeachers; track t.id) {
+    <!-- Modern Loading Skeleton State -->
+    @if (adminService.isLoading()) {
+      <div class="table-loading-header">
+        <div class="loading-spinner-sm"></div>
+        <span>Cargando catálogo de maestros y personal...</span>
+      </div>
+      <app-table-skeleton [rows]="7" [cols]="3"></app-table-skeleton>
+    } @else {
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
             <tr>
-              <td>
-                <div class="user-cell">
-                  <span class="user-avatar">{{ t.nombre.charAt(0) }}</span>
-                  <div>
-                    <p class="u-name">{{ t.nombre }}</p>
-                    <p class="u-email">{{ t.email }}</p>
+              <th>Maestro</th>
+              <th>Nivel</th>
+              <th>Grupos Asignados</th>
+              <th>Rol</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (t of pagedTeachers; track t.id) {
+              <tr>
+                <td>
+                  <div class="user-cell">
+                    <span class="user-avatar">{{ t.nombre.charAt(0) }}</span>
+                    <div>
+                      <p class="u-name">{{ t.nombre }}</p>
+                      <p class="u-email">{{ t.email }}</p>
+                    </div>
                   </div>
-                </div>
-              </td>
-              <td>
-                <span class="level-tag">{{ t.level || 'General' }}</span>
-              </td>
-              <td>
-                <div class="group-badges">
-                  @for (g of t.groups || []; track g.id) {
-                    <span class="group-pill">{{ g.level }} - {{ g.name }}</span>
-                  } @empty {
-                    <span class="text-muted">Sin grupos asignados</span>
-                  }
-                </div>
-              </td>
-              <td>
-                <span class="role-badge" [class.role-badge--admin]="t.role === 'ADMIN'">{{ t.role }}</span>
-              </td>
-              <td>
-                <span class="status-indicator" [class.status-indicator--active]="t.active">
-                  {{ t.active ? 'Activo' : 'Inactivo' }}
-                </span>
-              </td>
-              <td>
-                <div class="action-btns">
-                  <button type="button" class="btn-action" (click)="openEditModal(t)" title="Editar">✏️</button>
-                  <button type="button" class="btn-action btn-action--del" (click)="deleteTeacher(t)" title="Eliminar">🗑️</button>
-                </div>
-              </td>
-            </tr>
-          } @empty {
-            <tr>
-              <td colspan="6" class="empty-cell">
-                <span *ngIf="!adminService.isLoading()">No se encontraron maestros registrados.</span>
-                <span *ngIf="adminService.isLoading()">Cargando información...</span>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
+                </td>
+                <td>
+                  <span class="level-tag">{{ t.level || 'General' }}</span>
+                </td>
+                <td>
+                  <div class="group-badges">
+                    @for (g of t.groups || []; track g.id) {
+                      <span class="group-pill">{{ g.level }} - {{ g.name }}</span>
+                    } @empty {
+                      <span class="text-muted">Sin grupos asignados</span>
+                    }
+                  </div>
+                </td>
+                <td>
+                  <span class="role-badge" [class.role-badge--admin]="t.role === 'ADMIN'">{{ t.role }}</span>
+                </td>
+                <td>
+                  <span class="status-indicator" [class.status-indicator--active]="t.active">
+                    {{ t.active ? 'Activo' : 'Inactivo' }}
+                  </span>
+                </td>
+                <td>
+                  <div class="action-btns">
+                    <button type="button" class="btn-action" (click)="openEditModal(t)" title="Editar">✏️</button>
+                    <button type="button" class="btn-action btn-action--del" (click)="deleteTeacher(t)" title="Eliminar">🗑️</button>
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="6" class="empty-cell">
+                  <span>No se encontraron maestros registrados.</span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
 
     <!-- Pagination Footer -->
     <app-pagination

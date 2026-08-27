@@ -5,11 +5,12 @@ import { finalize } from 'rxjs';
 import { AdminService, TeacherUser, SchoolGroup } from '../../services/admin.service';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination.component';
 import { LoadingOverlayComponent } from '../../../../shared/components/loading-overlay/loading-overlay.component';
+import { TableSkeletonComponent } from '../../../../shared/components/table-skeleton/table-skeleton.component';
 
 @Component({
   selector: 'app-teacher-user-crud',
   standalone: true,
-  imports: [CommonModule, FormsModule, PaginationComponent, LoadingOverlayComponent],
+  imports: [CommonModule, FormsModule, PaginationComponent, LoadingOverlayComponent, TableSkeletonComponent],
   templateUrl: './teacher-user-crud.component.html',
   styleUrl: './teacher-user-crud.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

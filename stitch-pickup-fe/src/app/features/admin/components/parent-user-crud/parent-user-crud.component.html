@@ -32,73 +32,76 @@
   <!-- Parents Table -->
   <div class="table-card">
     <!-- Table Loading Indicator -->
-    <div *ngIf="adminService.isLoading()" class="table-loading-bar">
-      <div class="loading-spinner-sm"></div>
-      <span>Cargando catálogo de padres...</span>
-    </div>
-
-    <div class="table-responsive">
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Padre de Familia</th>
-            <th>Teléfono</th>
-            <th>Alumnos Vinculados</th>
-            <th>Estado</th>
-            <th>Último Acceso</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (p of pagedParents; track p.id) {
+    <!-- Modern Loading Skeleton State -->
+    @if (adminService.isLoading()) {
+      <div class="table-loading-header">
+        <div class="loading-spinner-sm"></div>
+        <span>Cargando catálogo de padres y tutores...</span>
+      </div>
+      <app-table-skeleton [rows]="7" [cols]="3"></app-table-skeleton>
+    } @else {
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
             <tr>
-              <td>
-                <div class="user-cell">
-                  <span class="user-avatar">{{ p.nombre.charAt(0) }}</span>
-                  <div>
-                    <p class="u-name">{{ p.nombre }}</p>
-                    <p class="u-email">{{ p.email }}</p>
+              <th>Padre de Familia</th>
+              <th>Teléfono</th>
+              <th>Alumnos Vinculados</th>
+              <th>Estado</th>
+              <th>Último Acceso</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (p of pagedParents; track p.id) {
+              <tr>
+                <td>
+                  <div class="user-cell">
+                    <span class="user-avatar">{{ p.nombre.charAt(0) }}</span>
+                    <div>
+                      <p class="u-name">{{ p.nombre }}</p>
+                      <p class="u-email">{{ p.email }}</p>
+                    </div>
                   </div>
-                </div>
-              </td>
-              <td>
-                <span class="phone-txt">{{ p.phone || 'No registrado' }}</span>
-              </td>
-              <td>
-                <div class="student-badges">
-                  @for (s of p.students || []; track s.id) {
-                    <span class="student-pill">🎓 {{ s.name }} ({{ s.level }})</span>
-                  } @empty {
-                    <span class="text-muted">Sin alumnos vinculados</span>
-                  }
-                </div>
-              </td>
-              <td>
-                <span class="status-indicator" [class.status-indicator--active]="p.active">
-                  {{ p.active ? 'Activo' : 'Inactivo' }}
-                </span>
-              </td>
-              <td class="text-muted">
-                {{ p.lastLogin || 'Nunca' }}
-              </td>
-              <td>
-                <div class="action-btns">
-                  <button type="button" class="btn-action" (click)="openEditModal(p)" title="Editar">✏️</button>
-                  <button type="button" class="btn-action btn-action--del" (click)="deleteParent(p)" title="Eliminar">🗑️</button>
-                </div>
-              </td>
-            </tr>
-          } @empty {
-            <tr>
-              <td colspan="6" class="empty-cell">
-                <span *ngIf="!adminService.isLoading()">No se encontraron padres de familia registrados.</span>
-                <span *ngIf="adminService.isLoading()">Cargando información...</span>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
+                </td>
+                <td>
+                  <span class="phone-txt">{{ p.phone || 'No registrado' }}</span>
+                </td>
+                <td>
+                  <div class="student-badges">
+                    @for (s of p.students || []; track s.id) {
+                      <span class="student-pill">🎓 {{ s.name }} ({{ s.level }})</span>
+                    } @empty {
+                      <span class="text-muted">Sin alumnos vinculados</span>
+                    }
+                  </div>
+                </td>
+                <td>
+                  <span class="status-indicator" [class.status-indicator--active]="p.active">
+                    {{ p.active ? 'Activo' : 'Inactivo' }}
+                  </span>
+                </td>
+                <td class="text-muted">
+                  {{ p.lastLogin || 'Nunca' }}
+                </td>
+                <td>
+                  <div class="action-btns">
+                    <button type="button" class="btn-action" (click)="openEditModal(p)" title="Editar">✏️</button>
+                    <button type="button" class="btn-action btn-action--del" (click)="deleteParent(p)" title="Eliminar">🗑️</button>
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="6" class="empty-cell">
+                  <span>No se encontraron padres de familia registrados.</span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
 
     <!-- Pagination Footer -->
     <app-pagination
