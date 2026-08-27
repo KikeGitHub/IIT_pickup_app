@@ -96,7 +96,7 @@ La aplicación se encuentra desplegada en un servidor **Hetzner Cloud (CPX22 - 4
 | 💻 **Admin Plataforma** | `alva.flores@iit.edu.mx` | `ITT2026` | Panel de Control (`/admin`) |
 | 👨‍🏫 **Profesor (6A)** | `alva.ortiz@iit.edu.mx` | `ITT2026` | Monitor de Entregas (`/monitor`) |
 | 👨‍🏫 **Profesor (4C)** | `angeles.hidalgo@iit.edu.mx` | `ITT2026` | Monitor de Entregas (`/monitor`) |
-| 👨‍👩‍👧 **Padres de Familia** | Usuario (Ej: `SCEJA`, `IDELACRUZ`) | `IIT2026` | Portal de Padres (`/auth/login`) |
+| 👨‍👩‍👧 **Padres de Familia** | Usuario asignado (Ej: `JPEREZ`) | `IIT2026` | Portal de Padres (`/auth/login`) |
 
 ---
 
