@@ -13,8 +13,8 @@
             [attr.aria-selected]="s.id === selectedStudentId"
             (click)="onSelect(s.id)"
           >
-            <span class="tab-avatar">{{ s.name.charAt(0) }}</span>
-            <span class="tab-name">{{ s.name.split(' ')[0] }}</span>
+            <span class="tab-avatar">{{ getDisplayInitial(s.name) }}</span>
+            <span class="tab-name">{{ getDisplayName(s.name) }}</span>
           </button>
         }
       </div>
@@ -27,7 +27,7 @@
           <img [src]="student.avatarUrl" [alt]="student.name" class="avatar-img" />
         } @else {
           <div class="avatar-placeholder">
-            {{ student.name.charAt(0) }}
+            {{ getDisplayInitial(student.name) }}
           </div>
         }
         <span class="level-badge" [class]="'level-badge--' + student.level.toLowerCase()">

@@ -35,4 +35,27 @@ export class StudentCardComponent {
   toggleMembersModal(): void {
     this.showMembersModal.update(v => !v);
   }
+
+  getDisplayName(fullName: string): string {
+    if (!fullName) return '';
+    let raw = fullName;
+    if (fullName.includes(',')) {
+      const parts = fullName.split(',');
+      raw = parts[1].trim() || parts[0].trim();
+    } else {
+      const parts = fullName.trim().split(/\s+/);
+      raw = parts.length > 2 ? parts.slice(2).join(' ') : parts[0];
+    }
+    return raw
+      .toLowerCase()
+      .split(' ')
+      .filter(Boolean)
+      .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(' ');
+  }
+
+  getDisplayInitial(fullName: string): string {
+    const name = this.getDisplayName(fullName);
+    return name.charAt(0).toUpperCase() || 'A';
+  }
 }
