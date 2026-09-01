@@ -102,10 +102,21 @@
   padding-top: v.$space-xs;
   border-top: 1px solid #f1f5f9;
 
+  @media (max-width: 600px) {
+    flex-direction: column-reverse;
+    align-items: stretch;
+    gap: 8px;
+    padding-top: 8px;
+  }
+
   .time-ago {
     font-size: 11px;
     color: #94a3b8;
     font-weight: 500;
+
+    @media (max-width: 600px) {
+      text-align: right;
+    }
   }
 }
 
@@ -124,6 +135,14 @@
   cursor: pointer;
   transition: all 0.18s ease;
 
+  @media (max-width: 600px) {
+    width: 100%;
+    height: 46px;
+    justify-content: center;
+    font-size: 14px;
+    border-radius: 10px;
+  }
+
   .dispatch-icon { width: 16px; height: 16px; }
 
   .dispatch-spinner {
@@ -139,6 +158,10 @@
     background: #15803d;
     transform: translateY(-1px);
     box-shadow: 0 4px 10px rgba(22, 163, 74, 0.3);
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.98);
   }
 
   &:disabled {

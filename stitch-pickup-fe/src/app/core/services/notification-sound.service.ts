@@ -1,17 +1,67 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal, PLATFORM_ID, inject } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 
 /**
- * NotificationSoundService — Generates notification sounds using the Web Audio API.
+ * NotificationSoundService — Generates notification sounds and haptic feedback.
  *
- * No external .mp3 files needed. Synthesizes tones programmatically.
- * - playAlertSound(): short pleasant chime for new/updated alerts
- * - playUrgentSound(): louder, more insistent alarm for URGENTE status
- *
- * SOLID — S: Only handles sound generation.
+ * Implements mobile AudioContext unlocking (iOS Safari / Android Chrome)
+ * and haptic vibration for instant teacher awareness.
  */
 @Injectable({ providedIn: 'root' })
 export class NotificationSoundService {
+  private readonly platformId = inject(PLATFORM_ID);
   private audioContext: AudioContext | null = null;
+  private isUnlocked = false;
+
+  readonly soundEnabled = signal<boolean>(true);
+
+  constructor() {
+    if (isPlatformBrowser(this.platformId)) {
+      this.setupGlobalUnlockListeners();
+    }
+  }
+
+  /**
+   * Sets up touch/click listeners to permanently unlock AudioContext
+   * on the first user interaction (standard iOS Safari / Chrome policy).
+   */
+  private setupGlobalUnlockListeners(): void {
+    const unlockHandler = () => {
+      this.unlockAudio();
+      window.removeEventListener('touchstart', unlockHandler);
+      window.removeEventListener('touchend', unlockHandler);
+      window.removeEventListener('click', unlockHandler);
+      window.removeEventListener('keydown', unlockHandler);
+    };
+
+    window.addEventListener('touchstart', unlockHandler, { passive: true });
+    window.addEventListener('touchend', unlockHandler, { passive: true });
+    window.addEventListener('click', unlockHandler, { passive: true });
+    window.addEventListener('keydown', unlockHandler, { passive: true });
+  }
+
+  public unlockAudio(): void {
+    if (this.isUnlocked) return;
+
+    try {
+      const ctx = this.getContext();
+      if (ctx.state === 'suspended') {
+        ctx.resume();
+      }
+
+      // Play a tiny silent buffer to warm up iOS Audio pipeline
+      const buffer = ctx.createBuffer(1, 1, 22050);
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      source.connect(ctx.destination);
+      source.start(0);
+
+      this.isUnlocked = true;
+      console.info('[Sound] 🔊 AudioContext desbloqueado para móvil exitosamente.');
+    } catch (e) {
+      console.warn('[Sound] Error al desbloquear AudioContext:', e);
+    }
+  }
 
   private getContext(): AudioContext {
     if (!this.audioContext) {
@@ -22,10 +72,14 @@ export class NotificationSoundService {
   }
 
   /**
-   * Plays a pleasant notification chime (two rising tones).
+   * Plays a pleasant notification chime (two rising tones) and vibrates.
    * Used for normal alerts: TEN_MIN, FIVE_MIN, EN_FILA.
    */
   playAlertSound(): void {
+    if (!this.soundEnabled()) return;
+
+    this.triggerHaptic([120, 60, 120]);
+
     try {
       const ctx = this.getContext();
       if (ctx.state === 'suspended') {
@@ -39,10 +93,14 @@ export class NotificationSoundService {
   }
 
   /**
-   * Plays an urgent alarm sound (rapid descending tones).
-   * Used for URGENTE alerts to grab attention.
+   * Plays an urgent alarm sound (four rapid loud tones) and strong vibration.
+   * Used for URGENTE alerts to grab teacher attention.
    */
   playUrgentSound(): void {
+    if (!this.soundEnabled()) return;
+
+    this.triggerHaptic([200, 100, 200, 100, 300]);
+
     try {
       const ctx = this.getContext();
       if (ctx.state === 'suspended') {
@@ -52,6 +110,24 @@ export class NotificationSoundService {
       }
     } catch (e) {
       console.warn('[Sound] Could not play urgent sound:', e);
+    }
+  }
+
+  /**
+   * User-triggered test sound to verify mobile audio and vibration.
+   */
+  testSound(): void {
+    this.unlockAudio();
+    this.playAlertSound();
+  }
+
+  private triggerHaptic(pattern: number[]): void {
+    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+      try {
+        navigator.vibrate(pattern);
+      } catch (err) {
+        // Ignore vibration errors on non-supported platforms
+      }
     }
   }
 

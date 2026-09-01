@@ -76,8 +76,20 @@
     </div>
   </div>
 
-  <!-- Connection status + Theme Toggle + logout -->
+  <!-- Connection status + Theme Toggle + Sound Toggle + logout -->
   <div class="header-right">
+    <!-- Sound Toggle & Test Button -->
+    <button
+      type="button"
+      class="btn-sound-toggle"
+      [class.btn-sound-toggle--muted]="!soundService.soundEnabled()"
+      (click)="soundService.testSound()"
+      title="Toca para probar o activar el sonido en tu celular"
+    >
+      <span class="sound-icon">🔔</span>
+      <span class="sound-text">Sonido</span>
+    </button>
+
     <!-- Theme Switcher Button -->
     <button
       type="button"
@@ -85,7 +97,8 @@
       (click)="onToggleTheme()"
       [title]="currentTheme === 'light' ? 'Cambiar a Modo Oscuro' : 'Cambiar a Modo Claro'"
     >
-      <span>{{ currentTheme === 'light' ? '🌙 Modo Oscuro' : '☀️ Modo Claro' }}</span>
+      <span class="theme-icon">{{ currentTheme === 'light' ? '🌙' : '☀️' }}</span>
+      <span class="theme-text">{{ currentTheme === 'light' ? 'Oscuro' : 'Claro' }}</span>
     </button>
 
     @if (authService.userRole() === 'ADMIN') {

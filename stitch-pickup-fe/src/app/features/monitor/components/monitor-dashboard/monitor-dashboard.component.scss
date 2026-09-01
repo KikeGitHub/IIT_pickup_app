@@ -391,6 +391,12 @@
   align-items: flex-end;
   flex-wrap: wrap;
 
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
   .select-field {
     display: flex;
     flex-direction: column;
@@ -398,9 +404,21 @@
     min-width: 200px;
     flex: 1;
 
+    @media (max-width: 768px) {
+      width: 100%;
+      min-width: 0;
+      flex: none;
+    }
+
     &--hero {
       flex: 2;
       min-width: 280px;
+
+      @media (max-width: 768px) {
+        width: 100%;
+        min-width: 0;
+        flex: none;
+      }
     }
 
     .field-label {

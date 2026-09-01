@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy, inject
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
+import { NotificationSoundService } from '../../../../core/services/notification-sound.service';
 
 @Component({
   selector: 'app-stats-header',
@@ -13,6 +14,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 })
 export class StatsHeaderComponent {
   readonly authService = inject(AuthService);
+  readonly soundService = inject(NotificationSoundService);
 
   @Input() totalActive: number = 0;
   @Input() urgentCount: number = 0;
