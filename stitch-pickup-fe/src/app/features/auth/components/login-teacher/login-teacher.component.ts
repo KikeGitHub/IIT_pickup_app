@@ -42,6 +42,12 @@ export class LoginTeacherComponent {
     password: ['', [Validators.required, Validators.minLength(6)]],
   });
 
+  constructor() {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('iit_preferred_portal', 'teacher');
+    }
+  }
+
   readonly state = signal<LoginState>('idle');
   readonly showPassword = signal(false);
   readonly errorMessage = signal<string | null>(null);

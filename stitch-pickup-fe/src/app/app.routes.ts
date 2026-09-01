@@ -1,12 +1,37 @@
-import { Routes } from '@angular/router';
+import { inject } from '@angular/core';
+import { Routes, Router, CanActivateFn } from '@angular/router';
+import { AuthService } from './core/services/auth.service';
 import { authGuard } from './core/auth/guards/auth.guard';
 import { roleGuard } from './core/auth/guards/role.guard';
 
+const rootRedirectGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+
+  if (auth.isAuthenticated()) {
+    const role = auth.userRole();
+    if (role === 'TEACHER') {
+      return router.createUrlTree(['/monitor']);
+    } else if (role === 'ADMIN') {
+      return router.createUrlTree(['/admin']);
+    } else if (role === 'PARENT') {
+      return router.createUrlTree(['/parent']);
+    }
+  }
+
+  const preferred = typeof window !== 'undefined' ? localStorage.getItem('iit_preferred_portal') : null;
+  if (preferred === 'teacher') {
+    return router.createUrlTree(['/auth/maestros']);
+  }
+  return router.createUrlTree(['/auth/login']);
+};
+
 export const routes: Routes = [
-  // ── Default redirect ──────────────────────────────────────────────────────
+  // ── Default smart redirect (supports standalone PWA and role persistence) ───
   {
     path: '',
-    redirectTo: 'auth/login',
+    canActivate: [rootRedirectGuard],
+    children: [],
     pathMatch: 'full',
   },
 

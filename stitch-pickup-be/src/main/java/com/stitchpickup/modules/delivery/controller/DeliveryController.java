@@ -79,4 +79,16 @@ public class DeliveryController {
 
         return ResponseEntity.ok(deliveryService.confirmByParent(deliveryId, parentId));
     }
+
+    @GetMapping("/student/{studentId}/today-events")
+    @PreAuthorize("hasAnyRole('PARENT', 'TEACHER', 'ADMIN')")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(
+        summary = "Obtener historial del día para un alumno",
+        description = "Devuelve el historial cronológico de alertas enviadas y entregas del día para un alumno."
+    )
+    public ResponseEntity<List<com.stitchpickup.modules.delivery.dto.ParentDayHistoryEventResponse>> getStudentTodayEvents(
+            @PathVariable UUID studentId) {
+        return ResponseEntity.ok(deliveryService.getTodayEventsForStudent(studentId));
+    }
 }

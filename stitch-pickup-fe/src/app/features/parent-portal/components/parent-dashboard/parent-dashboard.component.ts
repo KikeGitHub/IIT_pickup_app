@@ -73,7 +73,11 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
       this.ws.connect(token);
     }
 
-    this.studentService.loadMyStudents().subscribe();
+    this.studentService.loadMyStudents().subscribe({
+      next: (students) => {
+        students.forEach(s => this.loadHistoryForStudent(s.id));
+      }
+    });
 
     // Subscribe to delivery events for bi-directional confirmation
     this.wsSubscription = this.ws.onDeliveryEvent().subscribe(event => {
@@ -85,13 +89,22 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
         this.sound.playAlertSound();
         this.notification.info(`🚗 ${event.teacherName || 'El docente'} ha entregado a ${event.studentName} en la puerta.`);
 
-        const timeStr = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false });
-        this.addHistoryEvent(event.studentId, {
-          time: timeStr,
-          title: 'Alumno en Línea de Espera',
-          description: `${event.teacherName || 'Docente'} confirmó en puerta`,
-          type: 'DISPATCH'
-        });
+        this.loadHistoryForStudent(event.studentId);
+      }
+    });
+  }
+
+  loadHistoryForStudent(studentId: string): void {
+    if (!studentId) return;
+    this.http.get<HistoryEvent[]>(`${this.apiUrl}/deliveries/student/${studentId}/today-events`).subscribe({
+      next: (events) => {
+        this.historyMap.update(map => ({
+          ...map,
+          [studentId]: events
+        }));
+      },
+      error: (err) => {
+        console.warn('[History] No se pudo cargar el historial del backend:', err);
       }
     });
   }
@@ -131,6 +144,7 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
 
   onSelectStudent(studentId: string): void {
     this.studentService.selectStudent(studentId);
+    this.loadHistoryForStudent(studentId);
   }
 
   onPickupMethodChange(method: PickupMethod): void {
@@ -159,6 +173,8 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
       description: `Enviada en modalidad ${method === 'CAR' ? 'En Auto' : 'A Pie'}`,
       type: 'ALERT'
     });
+
+    setTimeout(() => this.loadHistoryForStudent(id), 1200);
   }
 
   // ─── Bi-directional Delivery Receipt Confirmation ────────────────────────
@@ -175,13 +191,7 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
         this.sound.playAlertSound();
         this.notification.success(`✅ Has confirmado la recepción de ${delivery.studentName}. ¡Buen regreso a casa!`);
 
-        const timeStr = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false });
-        this.addHistoryEvent(delivery.studentId, {
-          time: timeStr,
-          title: 'Recepción Confirmada',
-          description: 'Alumno recibido por el tutor familiar',
-          type: 'RECEIVED'
-        });
+        this.loadHistoryForStudent(delivery.studentId);
       },
       error: (err) => {
         this.isConfirmingDelivery.set(false);
@@ -194,64 +204,11 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
     this.pendingDelivery.set(null);
   }
 
-  readonly maxBirthdayDate = new Date().toISOString().split('T')[0];
-  readonly minBirthdayDate = '2005-01-01';
-
-  editFamilyMembers: Array<{ name: string; relationship: string; phone: string; authorized: boolean }> = [];
-
-  readonly relationshipOptions = [
-    'Mamá',
-    'Papá',
-    'Abuela',
-    'Abuelo',
-    'Tía',
-    'Tío',
-    'Hermano/a',
-    'Tutor Legal',
-    'Chofer / Transporte',
-    'Familiar Autorizado'
-  ];
-
   onEditStudent(student: Student): void {
     this.editingStudent.set(student);
     this.editAvatarUrl = student.avatarUrl || '';
-    this.editBirthday = student.birthday || '';
     this.editError = '';
-
-    this.editFamilyMembers = (student.familyMembers || []).map(m => ({
-      name: m.name || '',
-      relationship: m.relationship || 'Mamá',
-      phone: m.phone || '',
-      authorized: m.authorized !== false
-    }));
-
-    if (this.editFamilyMembers.length === 0) {
-      this.editFamilyMembers.push({
-        name: '',
-        relationship: 'Mamá',
-        phone: '',
-        authorized: true
-      });
-    }
-
     this.showEditModal.set(true);
-  }
-
-  addFamilyMember(): void {
-    if (this.editFamilyMembers.length >= 4) {
-      this.editError = 'Máximo 4 tutores autorizados por alumno.';
-      return;
-    }
-    this.editFamilyMembers.push({
-      name: '',
-      relationship: 'Familiar Autorizado',
-      phone: '',
-      authorized: true
-    });
-  }
-
-  removeFamilyMember(index: number): void {
-    this.editFamilyMembers.splice(index, 1);
   }
 
   onPhotoFileSelected(event: Event): void {
@@ -283,38 +240,22 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
     const student = this.editingStudent();
     if (!student) return;
 
-    if (this.editBirthday && this.editBirthday > this.maxBirthdayDate) {
-      this.editError = `La fecha de nacimiento no puede ser futura (${this.editBirthday}). El año actual es ${new Date().getFullYear()}.`;
-      return;
-    }
-
     this.isSavingStudent.set(true);
     this.editError = '';
 
-    const validMembers = this.editFamilyMembers
-      .filter(m => m.name.trim().length > 0)
-      .map(m => ({
-        name: m.name.trim(),
-        relationship: m.relationship.trim() || 'Familiar',
-        phone: m.phone.trim(),
-        authorized: m.authorized
-      }));
-
     const payload = {
-      avatarUrl: this.editAvatarUrl.trim() || undefined,
-      birthday: this.editBirthday || undefined,
-      familyMembers: validMembers
+      avatarUrl: this.editAvatarUrl.trim() || undefined
     };
 
     this.studentService.updateStudentByParent(student.id, payload).subscribe({
       next: () => {
         this.isSavingStudent.set(false);
         this.closeEditModal();
-        this.notification.success('Perfil y tutores autorizados actualizados correctamente.');
+        this.notification.success('Fotografía del alumno actualizada correctamente.');
       },
       error: (err) => {
         this.isSavingStudent.set(false);
-        this.editError = err.error?.message || 'Error al guardar los cambios.';
+        this.editError = err.error?.message || 'Error al guardar la fotografía.';
       }
     });
   }

@@ -94,6 +94,62 @@ public class DeliveryService {
         return response;
     }
 
+    @Transactional(readOnly = true)
+    public List<com.stitchpickup.modules.delivery.dto.ParentDayHistoryEventResponse> getTodayEventsForStudent(UUID studentId) {
+        java.time.ZoneId zoneId = java.time.ZoneId.of("America/Mexico_City");
+        LocalDate today = LocalDate.now(zoneId);
+        Instant startOfDay = today.atStartOfDay(zoneId).toInstant();
+        java.time.format.DateTimeFormatter timeFormatter = java.time.format.DateTimeFormatter.ofPattern("HH:mm").withZone(zoneId);
+
+        List<com.stitchpickup.modules.delivery.dto.ParentDayHistoryEventResponse> events = new java.util.ArrayList<>();
+
+        // 1. Alertas enviadas hoy por el padre
+        List<Alert> alerts = alertRepository.findLatestTodayAlertForStudent(studentId, startOfDay);
+        for (Alert a : alerts) {
+            String statusLabel = switch (a.getStatus().name()) {
+                case "TEN_MIN" -> "10 MIN";
+                case "FIVE_MIN" -> "5 MIN";
+                case "EN_FILA" -> "En Fila";
+                case "URGENTE" -> "Urgente";
+                default -> a.getStatus().name();
+            };
+            String methodLabel = "CAR".equalsIgnoreCase(a.getPickupMethod()) ? "En Auto" : "A Pie";
+            events.add(new com.stitchpickup.modules.delivery.dto.ParentDayHistoryEventResponse(
+                timeFormatter.format(a.getSentAt()),
+                "Alerta Enviada (" + statusLabel + ")",
+                "Enviada en modalidad " + methodLabel,
+                "ALERT",
+                a.getSentAt()
+            ));
+        }
+
+        // 2. Registro de entrega (despacho del maestro y confirmación del padre)
+        deliveryLogRepository.findByStudentIdAndLogDate(studentId, today).ifPresent(d -> {
+            if (d.getTeacherConfirmedAt() != null) {
+                events.add(new com.stitchpickup.modules.delivery.dto.ParentDayHistoryEventResponse(
+                    timeFormatter.format(d.getTeacherConfirmedAt()),
+                    "Alumno Despachado",
+                    "Entregado en puerta por " + (d.getTeacherName() != null ? d.getTeacherName() : "Docente"),
+                    "DISPATCHED",
+                    d.getTeacherConfirmedAt()
+                ));
+            }
+            if (d.getParentConfirmedAt() != null) {
+                events.add(new com.stitchpickup.modules.delivery.dto.ParentDayHistoryEventResponse(
+                    timeFormatter.format(d.getParentConfirmedAt()),
+                    "Recepción Confirmada",
+                    "Alumno recibido por el tutor familiar",
+                    "RECEIVED",
+                    d.getParentConfirmedAt()
+                ));
+            }
+        });
+
+        // Ordenar del más reciente al más antiguo
+        events.sort(java.util.Comparator.comparing(com.stitchpickup.modules.delivery.dto.ParentDayHistoryEventResponse::timestamp).reversed());
+        return events;
+    }
+
     private DeliveryLogResponse mapToResponse(DeliveryLog d) {
         String groupName = d.getStudent().getGroup() != null ? d.getStudent().getGroup().getName() : "";
         return new DeliveryLogResponse(
