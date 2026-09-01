@@ -17,6 +17,11 @@ export class AlertButtonsComponent {
 
   onAlertClick(status: AlertStatus): void {
     if (this.disabled) return;
+    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+      try {
+        navigator.vibrate(60);
+      } catch (e) {}
+    }
     this.sendAlert.emit(status);
   }
 }

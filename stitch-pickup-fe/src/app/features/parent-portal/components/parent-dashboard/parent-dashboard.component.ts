@@ -194,12 +194,64 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
     this.pendingDelivery.set(null);
   }
 
+  readonly maxBirthdayDate = new Date().toISOString().split('T')[0];
+  readonly minBirthdayDate = '2005-01-01';
+
+  editFamilyMembers: Array<{ name: string; relationship: string; phone: string; authorized: boolean }> = [];
+
+  readonly relationshipOptions = [
+    'Mamá',
+    'Papá',
+    'Abuela',
+    'Abuelo',
+    'Tía',
+    'Tío',
+    'Hermano/a',
+    'Tutor Legal',
+    'Chofer / Transporte',
+    'Familiar Autorizado'
+  ];
+
   onEditStudent(student: Student): void {
     this.editingStudent.set(student);
     this.editAvatarUrl = student.avatarUrl || '';
-    this.editBirthday = '';
+    this.editBirthday = student.birthday || '';
     this.editError = '';
+
+    this.editFamilyMembers = (student.familyMembers || []).map(m => ({
+      name: m.name || '',
+      relationship: m.relationship || 'Mamá',
+      phone: m.phone || '',
+      authorized: m.authorized !== false
+    }));
+
+    if (this.editFamilyMembers.length === 0) {
+      this.editFamilyMembers.push({
+        name: '',
+        relationship: 'Mamá',
+        phone: '',
+        authorized: true
+      });
+    }
+
     this.showEditModal.set(true);
+  }
+
+  addFamilyMember(): void {
+    if (this.editFamilyMembers.length >= 4) {
+      this.editError = 'Máximo 4 tutores autorizados por alumno.';
+      return;
+    }
+    this.editFamilyMembers.push({
+      name: '',
+      relationship: 'Familiar Autorizado',
+      phone: '',
+      authorized: true
+    });
+  }
+
+  removeFamilyMember(index: number): void {
+    this.editFamilyMembers.splice(index, 1);
   }
 
   onPhotoFileSelected(event: Event): void {
@@ -231,19 +283,34 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
     const student = this.editingStudent();
     if (!student) return;
 
+    if (this.editBirthday && this.editBirthday > this.maxBirthdayDate) {
+      this.editError = `La fecha de nacimiento no puede ser futura (${this.editBirthday}). El año actual es ${new Date().getFullYear()}.`;
+      return;
+    }
+
     this.isSavingStudent.set(true);
     this.editError = '';
 
+    const validMembers = this.editFamilyMembers
+      .filter(m => m.name.trim().length > 0)
+      .map(m => ({
+        name: m.name.trim(),
+        relationship: m.relationship.trim() || 'Familiar',
+        phone: m.phone.trim(),
+        authorized: m.authorized
+      }));
+
     const payload = {
       avatarUrl: this.editAvatarUrl.trim() || undefined,
-      birthday: this.editBirthday || undefined
+      birthday: this.editBirthday || undefined,
+      familyMembers: validMembers
     };
 
     this.studentService.updateStudentByParent(student.id, payload).subscribe({
       next: () => {
         this.isSavingStudent.set(false);
         this.closeEditModal();
-        this.notification.success('Fotografía y fecha de nacimiento actualizadas.');
+        this.notification.success('Perfil y tutores autorizados actualizados correctamente.');
       },
       error: (err) => {
         this.isSavingStudent.set(false);

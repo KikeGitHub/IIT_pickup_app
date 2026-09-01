@@ -322,60 +322,189 @@
   }
 }
 
-.tutors-section-parent {
+.field-label-wrap {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+
+  .field-tip {
+    font-size: 11px;
+    color: #64748b;
+    font-weight: 500;
+  }
+}
+
+.date-picker-modern {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+  font-size: 14px;
+  padding: 10px 12px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #0f172a;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  }
+}
+
+.field-helper {
+  font-size: 11px;
+  color: #dc2626;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+// ─── Intuitive Tutors Section ────────────────────────────────────────────────
+.tutors-section-wrap {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  border-top: 1px solid #f1f5f9;
-  padding-top: 10px;
+  gap: 12px;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 14px;
+  margin-top: 6px;
 
-  .tutors-header-row {
+  .tutors-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
+    gap: 10px;
 
-    h4 { margin: 0; font-size: 12px; font-weight: bold; color: #1e293b; }
+    .tutors-title-block {
+      h4 { margin: 0; font-size: 14px; font-weight: 700; color: #0f172a; }
+      .tutors-sub { margin: 2px 0 0 0; font-size: 11px; color: #64748b; }
+    }
+
     .btn-add-tutor {
-      padding: 3px 8px;
-      background: rgba(37, 99, 235, 0.1);
+      padding: 6px 12px;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
       color: #2563eb;
-      border: 1px solid rgba(37, 99, 235, 0.3);
-      border-radius: 4px;
-      font-size: 11px;
-      font-weight: 600;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
       cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+
+      &:hover:not(:disabled) {
+        background: #2563eb;
+        color: white;
+        border-color: #2563eb;
+      }
+      &:disabled { opacity: 0.5; cursor: not-allowed; }
     }
   }
 
-  .tutor-edit-row {
+  .tutors-cards-list {
     display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .tutor-edit-card {
     background: #f8fafc;
     border: 1px solid #e2e8f0;
-    border-radius: v.$radius-md;
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: all 0.2s;
 
-    .tutor-fields {
-      flex: 1;
+    &:hover {
+      border-color: #cbd5e1;
+      background: #ffffff;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    }
+
+    .tutor-card-head {
       display: flex;
-      flex-direction: column;
-      gap: 4px;
+      align-items: center;
+      gap: 8px;
 
-      .row-2 {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 4px;
+      .tutor-avatar-mini {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: #2563eb;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .tutor-num {
+        font-size: 12px;
+        font-weight: 700;
+        color: #334155;
+        flex: 1;
+      }
+
+      .btn-remove-tutor {
+        background: transparent;
+        border: none;
+        color: #94a3b8;
+        padding: 4px;
+        border-radius: 6px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+
+        .trash-icon { width: 16px; height: 16px; }
+
+        &:hover {
+          color: #dc2626;
+          background: #fee2e2;
+        }
       }
     }
 
-    .btn-remove-tutor {
-      background: none;
-      border: none;
-      font-size: 20px;
-      color: #ef4444;
-      cursor: pointer;
-      padding: 4px;
+    .tutor-inputs-grid {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr 1fr;
+      gap: 8px;
+
+      @media (max-width: 580px) {
+        grid-template-columns: 1fr;
+      }
+
+      .tutor-field {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+
+        label {
+          font-size: 11px;
+          font-weight: 600;
+          color: #475569;
+        }
+
+        .form-control-sm {
+          padding: 8px 10px;
+          border-radius: 8px;
+          border: 1px solid #cbd5e1;
+          font-size: 12px;
+          background: white;
+          color: #0f172a;
+          outline: none;
+
+          &:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+          }
+        }
+      }
     }
   }
 }

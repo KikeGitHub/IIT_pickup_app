@@ -184,8 +184,106 @@
           </div>
 
           <div class="form-group">
-            <label for="pBirthday">Fecha de Nacimiento</label>
-            <input id="pBirthday" type="date" [(ngModel)]="editBirthday" class="form-control" />
+            <label for="pBirthday" class="field-label-wrap">
+              <span>📅 Fecha de Nacimiento</span>
+              <small class="field-tip">Máx: año {{ maxBirthdayDate.substring(0,4) }}</small>
+            </label>
+            <div class="date-input-wrapper">
+              <input
+                id="pBirthday"
+                type="date"
+                [(ngModel)]="editBirthday"
+                [max]="maxBirthdayDate"
+                [min]="minBirthdayDate"
+                class="form-control date-picker-modern"
+              />
+            </div>
+            <small class="field-helper" *ngIf="editBirthday && editBirthday > maxBirthdayDate">
+              ⚠️ La fecha no puede ser futura (máximo hoy).
+            </small>
+          </div>
+
+          <!-- Section: Authorized Pickup Tutors (Intuitive for parents) -->
+          <div class="tutors-section-wrap">
+            <div class="tutors-header">
+              <div class="tutors-title-block">
+                <h4>👥 Personas Autorizadas para Recoger</h4>
+                <p class="tutors-sub">Solo las personas registradas aquí podrán retirar al alumno en puerta.</p>
+              </div>
+              <button
+                type="button"
+                class="btn-add-tutor"
+                (click)="addFamilyMember()"
+                [disabled]="editFamilyMembers.length >= 4"
+                title="Agregar otra persona autorizada"
+              >
+                <span>➕ Agregar Persona</span>
+              </button>
+            </div>
+
+            <div class="tutors-cards-list">
+              @for (m of editFamilyMembers; track $index) {
+                <div class="tutor-edit-card">
+                  <div class="tutor-card-head">
+                    <div class="tutor-avatar-mini">
+                      {{ m.name ? m.name.charAt(0).toUpperCase() : ($index + 1) }}
+                    </div>
+                    <span class="tutor-num">Persona #{{ $index + 1 }}</span>
+
+                    <button
+                      type="button"
+                      class="btn-remove-tutor"
+                      *ngIf="editFamilyMembers.length > 1"
+                      (click)="removeFamilyMember($index)"
+                      title="Eliminar este tutor"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" class="trash-icon">
+                        <polyline points="3 6 5 6 21 6" stroke="currentColor" stroke-width="2"/>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="currentColor" stroke-width="2"/>
+                      </svg>
+                    </button>
+                  </div>
+
+                  <div class="tutor-inputs-grid">
+                    <div class="tutor-field">
+                      <label [for]="'tName' + $index">Nombre Completo *</label>
+                      <input
+                        [id]="'tName' + $index"
+                        type="text"
+                        [(ngModel)]="m.name"
+                        placeholder="Ej. María López (Abuela)"
+                        class="form-control form-control-sm"
+                      />
+                    </div>
+
+                    <div class="tutor-field">
+                      <label [for]="'tRel' + $index">Parentesco</label>
+                      <select
+                        [id]="'tRel' + $index"
+                        [(ngModel)]="m.relationship"
+                        class="form-control form-control-sm"
+                      >
+                        @for (rel of relationshipOptions; track rel) {
+                          <option [value]="rel">{{ rel }}</option>
+                        }
+                      </select>
+                    </div>
+
+                    <div class="tutor-field">
+                      <label [for]="'tPhone' + $index">Teléfono (10 dígitos)</label>
+                      <input
+                        [id]="'tPhone' + $index"
+                        type="tel"
+                        maxlength="15"
+                        [(ngModel)]="m.phone"
+                        placeholder="Ej. 3312345678"
+                        class="form-control form-control-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
           </div>
         </div>
 

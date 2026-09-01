@@ -215,7 +215,14 @@
 
             <div class="form-group">
               <label for="studentBirthday">Fecha de Nacimiento</label>
-              <input id="studentBirthday" type="date" [(ngModel)]="studentBirthday" class="form-control" />
+              <input
+                id="studentBirthday"
+                type="date"
+                [(ngModel)]="studentBirthday"
+                [max]="maxBirthdayDate"
+                [min]="minBirthdayDate"
+                class="form-control"
+              />
             </div>
 
             <div class="form-group">

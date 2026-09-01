@@ -37,6 +37,8 @@ export class StudentCrudComponent implements OnInit {
   studentGrade = '3°';
   studentGroupId = '';
   studentBirthday = '';
+  readonly maxBirthdayDate = new Date().toISOString().split('T')[0];
+  readonly minBirthdayDate = '2005-01-01';
   studentGender: 'M' | 'F' = 'M';
   studentCurp = '';
   studentAvatarUrl = '';
@@ -213,6 +215,11 @@ export class StudentCrudComponent implements OnInit {
   saveStudent(): void {
     if (!this.studentName.trim()) {
       this.formError = 'El nombre del alumno es obligatorio.';
+      return;
+    }
+
+    if (this.studentBirthday && this.studentBirthday > this.maxBirthdayDate) {
+      this.formError = `La fecha de nacimiento no puede ser futura (${this.studentBirthday}). El año actual es ${new Date().getFullYear()}.`;
       return;
     }
 

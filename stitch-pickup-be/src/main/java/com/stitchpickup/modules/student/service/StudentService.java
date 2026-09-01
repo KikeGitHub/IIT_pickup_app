@@ -52,8 +52,28 @@ public class StudentService {
 
         if (request.birthday() != null && !request.birthday().isBlank()) {
             try {
-                student.setBirthday(LocalDate.parse(request.birthday()));
+                LocalDate bday = LocalDate.parse(request.birthday());
+                // Validar que la fecha de nacimiento no sea futura
+                if (!bday.isAfter(LocalDate.now())) {
+                    student.setBirthday(bday);
+                }
             } catch (Exception ignored) {}
+        }
+
+        if (request.familyMembers() != null) {
+            familyMemberRepository.deleteByStudentId(student.getId());
+            for (var memberInput : request.familyMembers()) {
+                if (memberInput.name() != null && !memberInput.name().isBlank()) {
+                    com.stitchpickup.modules.student.entity.FamilyMember member = com.stitchpickup.modules.student.entity.FamilyMember.builder()
+                            .student(student)
+                            .name(memberInput.name().trim())
+                            .relationship(memberInput.relationship() != null ? memberInput.relationship().trim() : "Familiar")
+                            .phone(memberInput.phone() != null ? memberInput.phone().trim() : "")
+                            .authorized(memberInput.authorized() != null ? memberInput.authorized() : true)
+                            .build();
+                    familyMemberRepository.save(member);
+                }
+            }
         }
 
         Student saved = studentRepository.save(student);
