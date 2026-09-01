@@ -30,7 +30,7 @@ services:
     depends_on:
       - backend
     ports:
-      - "80:80"
+      - "3001:80"
     networks:
       - stitch-network
 
