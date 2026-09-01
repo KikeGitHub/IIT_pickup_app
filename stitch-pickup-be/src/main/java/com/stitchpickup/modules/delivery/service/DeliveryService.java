@@ -113,7 +113,7 @@ public class DeliveryService {
                 case "URGENTE" -> "Urgente";
                 default -> a.getStatus().name();
             };
-            String methodLabel = "CAR".equalsIgnoreCase(a.getPickupMethod()) ? "En Auto" : "A Pie";
+            String methodLabel = (a.getPickupMethod() == Alert.PickupMethod.CAR) ? "En Auto" : "A Pie";
             events.add(new com.stitchpickup.modules.delivery.dto.ParentDayHistoryEventResponse(
                 timeFormatter.format(a.getSentAt()),
                 "Alerta Enviada (" + statusLabel + ")",
