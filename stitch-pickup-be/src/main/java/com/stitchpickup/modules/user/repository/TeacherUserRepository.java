@@ -22,8 +22,8 @@ public interface TeacherUserRepository extends JpaRepository<TeacherUser, UUID> 
 
     boolean existsByEmail(String email);
 
-    /** Carga maestro con sus grupos asignados */
-    @Query("SELECT t FROM TeacherUser t LEFT JOIN FETCH t.groups WHERE t.email = :email")
+    /** Carga maestro con sus grupos asignados (insensible a mayúsculas) */
+    @Query("SELECT t FROM TeacherUser t LEFT JOIN FETCH t.groups WHERE LOWER(t.email) = LOWER(:email)")
     Optional<TeacherUser> findByEmailWithGroups(@Param("email") String email);
 
     /** Carga maestro por ID con sus grupos asignados */

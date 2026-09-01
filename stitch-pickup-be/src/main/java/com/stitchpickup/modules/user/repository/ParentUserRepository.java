@@ -23,8 +23,8 @@ public interface ParentUserRepository extends JpaRepository<ParentUser, UUID> {
 
     boolean existsByEmail(String email);
 
-    /** Carga al padre con sus alumnos en una sola consulta (evita N+1) */
-    @Query("SELECT p FROM ParentUser p LEFT JOIN FETCH p.students WHERE p.email = :email")
+    /** Carga al padre con sus alumnos en una sola consulta (insensible a mayúsculas) */
+    @Query("SELECT p FROM ParentUser p LEFT JOIN FETCH p.students WHERE LOWER(p.email) = LOWER(:email)")
     Optional<ParentUser> findByEmailWithStudents(@Param("email") String email);
 
     @Query("SELECT p FROM ParentUser p LEFT JOIN FETCH p.students WHERE p.id = :id")
