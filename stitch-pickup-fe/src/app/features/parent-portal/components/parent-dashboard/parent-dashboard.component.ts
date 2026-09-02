@@ -11,6 +11,7 @@ import { ConnectivityService } from '../../../../core/services/connectivity.serv
 import { WebSocketService, DeliveryDispatchedEvent } from '../../../../core/services/websocket.service';
 import { NotificationSoundService } from '../../../../core/services/notification-sound.service';
 import { NotificationService } from '../../../../core/services/notification.service';
+import { ImageUploadService } from '../../../../core/services/image-upload.service';
 import { AlertStatus, PickupMethod } from '../../../../core/models/alert.model';
 import { Student } from '../../../../core/models/student.model';
 import { environment } from '../../../../../environments/environment';
@@ -46,6 +47,7 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
   readonly ws = inject(WebSocketService);
   private readonly sound = inject(NotificationSoundService);
   private readonly notification = inject(NotificationService);
+  private readonly imageUpload = inject(ImageUploadService);
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
 
@@ -211,20 +213,35 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
     this.showEditModal.set(true);
   }
 
+  /**
+   * Sube la foto seleccionada a Cloudinary (carpeta iit-pickup-fotos/students)
+   * y actualiza editAvatarUrl con la URL pública resultante.
+   */
   onPhotoFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
-    if (input.files && input.files[0]) {
-      const file = input.files[0];
-      if (file.size > 2 * 1024 * 1024) {
-        this.editError = 'La fotografía no debe superar 2MB.';
-        return;
-      }
-      const reader = new FileReader();
-      reader.onload = () => {
-        this.editAvatarUrl = reader.result as string;
-      };
-      reader.readAsDataURL(file);
-    }
+    const file  = input.files?.[0];
+    if (!file) return;
+
+    const student = this.editingStudent();
+    this.editError = '';
+    this.isSavingStudent.set(true);
+
+    this.imageUpload
+      .uploadFile(file, 'student', student?.id, student?.name)
+      .subscribe({
+        next: (url) => {
+          // Aplica thumbnail 400x400 si viene de Cloudinary
+          this.editAvatarUrl = this.imageUpload.applyTransform(url, {
+            width: 400, height: 400, crop: 'fill', gravity: 'face',
+            format: 'auto', quality: 'auto'
+          });
+          this.isSavingStudent.set(false);
+        },
+        error: (err) => {
+          this.editError = err.message || 'Error al subir la fotografía.';
+          this.isSavingStudent.set(false);
+        }
+      });
   }
 
   clearPhoto(): void {
@@ -236,6 +253,10 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
     this.editingStudent.set(null);
   }
 
+  /**
+   * Guarda el perfil del alumno con la URL ya subida a Cloudinary.
+   * La foto fue procesada en onPhotoFileSelected() — aquí solo se persiste la URL.
+   */
   saveStudentProfile(): void {
     const student = this.editingStudent();
     if (!student) return;
@@ -243,9 +264,7 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
     this.isSavingStudent.set(true);
     this.editError = '';
 
-    const payload = {
-      avatarUrl: this.editAvatarUrl.trim() || undefined
-    };
+    const payload = { avatarUrl: this.editAvatarUrl.trim() || undefined };
 
     this.studentService.updateStudentByParent(student.id, payload).subscribe({
       next: () => {

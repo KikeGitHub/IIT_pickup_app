@@ -2,6 +2,18 @@ spring:
   application:
     name: stitch-pickup-be
 
+  # ─── Cloudinary ───────────────────────────────────────────────────────────────
+cloudinary:
+  url: ${CLOUDINARY_URL:}
+  cloud_name: ${CLOUDINARY_CLOUD_NAME:}
+  api_key: ${CLOUDINARY_API_KEY:}
+  api_secret: ${CLOUDINARY_SECRET:}
+
+# ─── Almacenamiento local (fallback) ──────────────────────────────────────────
+iit-pickup:
+  upload-dir: ${UPLOAD_DIR:/app/uploads}
+  cloudinary-folder: iit-pickup-fotos
+
   # ─── DataSource ───────────────────────────────────────────────────────────────
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/stitch_pickup_db}

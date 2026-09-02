@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { AdminService, StudentDetail, SchoolGroup, FamilyMember } from '../../services/admin.service';
+import { ImageUploadService } from '../../../../core/services/image-upload.service';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination.component';
 import { LoadingOverlayComponent } from '../../../../shared/components/loading-overlay/loading-overlay.component';
 import { TableSkeletonComponent } from '../../../../shared/components/table-skeleton/table-skeleton.component';
@@ -16,7 +17,10 @@ import { TableSkeletonComponent } from '../../../../shared/components/table-skel
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class StudentCrudComponent implements OnInit {
-  readonly adminService = inject(AdminService);
+  readonly adminService  = inject(AdminService);
+  readonly imageUpload   = inject(ImageUploadService);
+
+  readonly isUploadingPhoto = signal<boolean>(false);
 
   readonly showModal = signal<boolean>(false);
   readonly isEditing = signal<boolean>(false);
@@ -192,20 +196,34 @@ export class StudentCrudComponent implements OnInit {
     this.showModal.set(false);
   }
 
+  /**
+   * Sube la foto a Cloudinary (iit-pickup-fotos/students) al seleccionarla.
+   * El resultado (URL pública) se asigna a studentAvatarUrl para guardarse en el payload.
+   */
   onPhotoFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
-    if (input.files && input.files[0]) {
-      const file = input.files[0];
-      if (file.size > 2 * 1024 * 1024) {
-        this.formError = 'La fotografía no debe superar 2MB.';
-        return;
-      }
-      const reader = new FileReader();
-      reader.onload = () => {
-        this.studentAvatarUrl = reader.result as string;
-      };
-      reader.readAsDataURL(file);
-    }
+    const file  = input.files?.[0];
+    if (!file) return;
+
+    this.formError = '';
+    this.isUploadingPhoto.set(true);
+
+    this.imageUpload
+      .uploadFile(file, 'student', this.editingStudentId() ?? undefined, this.studentName || undefined)
+      .subscribe({
+        next: (url) => {
+          // Thumbnail 400x400 con detección de cara si viene de Cloudinary
+          this.studentAvatarUrl = this.imageUpload.applyTransform(url, {
+            width: 400, height: 400, crop: 'fill', gravity: 'face',
+            format: 'auto', quality: 'auto'
+          });
+          this.isUploadingPhoto.set(false);
+        },
+        error: (err) => {
+          this.formError = err.message || 'Error al subir la fotografía.';
+          this.isUploadingPhoto.set(false);
+        }
+      });
   }
 
   clearPhoto(): void {

@@ -94,6 +94,13 @@
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
 
+        <!-- ─── CLOUDINARY (Image Storage + CDN) ─── -->
+        <dependency>
+            <groupId>com.cloudinary</groupId>
+            <artifactId>cloudinary-http5</artifactId>
+            <version>2.1.0</version>
+        </dependency>
+
         <!-- ─── ACTUATOR ─── -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

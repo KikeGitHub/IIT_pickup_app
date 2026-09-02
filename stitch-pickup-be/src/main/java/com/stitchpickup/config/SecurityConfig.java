@@ -72,6 +72,10 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 // Públicos
                 .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
+                // Imágenes locales: público (CDN fallback, sirve los archivos del disco)
+                .requestMatchers(HttpMethod.GET, "/api/v1/images/file/**").permitAll()
+                // Subida de imágenes: cualquier usuario autenticado
+                .requestMatchers(HttpMethod.POST, "/api/v1/images/upload").authenticated()
                 // Solo ADMIN
                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/v1/users/**").hasRole("ADMIN")
