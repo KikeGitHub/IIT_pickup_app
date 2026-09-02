@@ -43,8 +43,6 @@
           <span class="meta-group">Grupo {{ student.groupName }}</span>
           <span class="meta-separator" *ngIf="student.gender">•</span>
           <span class="meta-gender" *ngIf="student.gender">{{ student.gender === 'M' ? '👦 Niño' : '👧 Niña' }}</span>
-          <span class="meta-separator" *ngIf="student.birthday">•</span>
-          <span class="meta-bday" *ngIf="student.birthday">🎂 {{ student.birthday }}</span>
         </p>
 
         <p class="student-curp-meta" *ngIf="student.curp">

@@ -65,7 +65,6 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
   readonly showEditModal = signal<boolean>(false);
   readonly editingStudent = signal<Student | null>(null);
   editAvatarUrl = '';
-  editBirthday = '';
   editError = '';
   isSavingStudent = signal<boolean>(false);
 

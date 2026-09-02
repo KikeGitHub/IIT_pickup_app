@@ -18,11 +18,13 @@ RUN mvn clean package -DskipTests
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
-# Create non-root system user for security
-RUN addgroup -S spring && adduser -S spring -G spring
+# Create non-root system user for security and prepare uploads directory
+RUN addgroup -S spring && adduser -S spring -G spring && \
+    mkdir -p /app/uploads && chown -R spring:spring /app
+
 USER spring:spring
 
-COPY --from=build /app/target/stitch-pickup-be-1.0.0-SNAPSHOT.jar app.jar
+COPY --from=build --chown=spring:spring /app/target/stitch-pickup-be-1.0.0-SNAPSHOT.jar app.jar
 
 EXPOSE 8080
 

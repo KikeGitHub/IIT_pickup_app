@@ -57,7 +57,13 @@ public class StudentAdminService {
         LocalDate bday = null;
         if (request.birthday() != null && !request.birthday().isBlank()) {
             try {
-                bday = LocalDate.parse(request.birthday());
+                LocalDate parsed = LocalDate.parse(request.birthday());
+                if (parsed.isAfter(LocalDate.now())) {
+                    throw new IllegalArgumentException("La fecha de nacimiento no puede ser una fecha futura (" + request.birthday() + ")");
+                }
+                bday = parsed;
+            } catch (IllegalArgumentException e) {
+                throw e;
             } catch (Exception ignored) {}
         }
 
@@ -114,7 +120,13 @@ public class StudentAdminService {
 
         if (request.birthday() != null && !request.birthday().isBlank()) {
             try {
-                student.setBirthday(LocalDate.parse(request.birthday()));
+                LocalDate parsed = LocalDate.parse(request.birthday());
+                if (parsed.isAfter(LocalDate.now())) {
+                    throw new IllegalArgumentException("La fecha de nacimiento no puede ser una fecha futura (" + request.birthday() + ")");
+                }
+                student.setBirthday(parsed);
+            } catch (IllegalArgumentException e) {
+                throw e;
             } catch (Exception ignored) {}
         } else {
             student.setBirthday(null);
