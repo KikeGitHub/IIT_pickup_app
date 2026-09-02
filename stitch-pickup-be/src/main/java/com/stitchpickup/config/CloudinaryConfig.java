@@ -39,26 +39,33 @@ public class CloudinaryConfig {
 
     @Bean
     public Cloudinary cloudinary() {
-        // Opción 1: CLOUDINARY_URL única
-        if (cloudinaryUrl != null && !cloudinaryUrl.isBlank()) {
-            log.info("[Cloudinary] Configurado via CLOUDINARY_URL");
-            return new Cloudinary(cloudinaryUrl);
+        String url = (cloudinaryUrl != null && !cloudinaryUrl.isBlank()) 
+                ? cloudinaryUrl : System.getenv("CLOUDINARY_URL");
+        
+        if (url != null && !url.isBlank()) {
+            log.info("[Cloudinary] Configurado exitosamente via CLOUDINARY_URL");
+            return new Cloudinary(url);
         }
 
-        // Opción 2: credenciales individuales
-        if (cloudName != null && !cloudName.isBlank()
-                && apiKey != null && !apiKey.isBlank()
-                && apiSecret != null && !apiSecret.isBlank()) {
+        String cName = (cloudName != null && !cloudName.isBlank()) 
+                ? cloudName : System.getenv("CLOUDINARY_CLOUD_NAME");
+        String aKey = (apiKey != null && !apiKey.isBlank()) 
+                ? apiKey : System.getenv("CLOUDINARY_API_KEY");
+        String aSecret = (apiSecret != null && !apiSecret.isBlank()) 
+                ? apiSecret : System.getenv("CLOUDINARY_SECRET");
+
+        if (cName != null && !cName.isBlank()
+                && aKey != null && !aKey.isBlank()
+                && aSecret != null && !aSecret.isBlank()) {
             Map<String, String> config = new HashMap<>();
-            config.put("cloud_name", cloudName);
-            config.put("api_key",    apiKey);
-            config.put("api_secret", apiSecret);
-            log.info("[Cloudinary] Configurado via credenciales individuales (cloud={})", cloudName);
+            config.put("cloud_name", cName);
+            config.put("api_key",    aKey);
+            config.put("api_secret", aSecret);
+            log.info("[Cloudinary] Configurado exitosamente via credenciales individuales (cloud={})", cName);
             return new Cloudinary(config);
         }
 
-        // Opción 3: sin credenciales → fallback a disco local
-        log.warn("[Cloudinary] Sin credenciales configuradas. Las imágenes se guardarán en disco local.");
+        log.warn("[Cloudinary] Sin credenciales configuradas.");
         return new Cloudinary(new HashMap<>());
     }
 }
