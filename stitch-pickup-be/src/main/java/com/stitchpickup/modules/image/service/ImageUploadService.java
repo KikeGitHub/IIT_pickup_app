@@ -122,7 +122,7 @@ public class ImageUploadService {
             }
             log.warn("[ImageUpload] Cloudinary no retornó secure_url. Usando fallback local.");
         } catch (Exception ex) {
-            log.warn("[ImageUpload] Cloudinary no disponible ({}). Guardando en disco local.", ex.getMessage());
+            log.error("[ImageUpload] Error al conectar/subir a Cloudinary: {}. Usando fallback a disco local.", ex.getMessage(), ex);
         }
         return saveLocally(bytes, publicId);
     }
@@ -152,8 +152,14 @@ public class ImageUploadService {
     /** Guarda en disco local y retorna URL relativa servida por ImageController. */
     private String saveLocally(byte[] bytes, String name) throws IOException {
         String safeName = sanitize(name) + "_" + System.currentTimeMillis() + ".png";
-        Path dir  = Paths.get(uploadDir);
-        Files.createDirectories(dir);
+        Path dir = Paths.get(uploadDir);
+        try {
+            Files.createDirectories(dir);
+        } catch (Exception e) {
+            // Fallback a /tmp/uploads si el directorio configurado no tiene permisos
+            dir = Paths.get(System.getProperty("java.io.tmpdir"), "uploads");
+            Files.createDirectories(dir);
+        }
         Path file = dir.resolve(safeName);
         Files.write(file, bytes);
         log.info("[ImageUpload] Imagen guardada localmente: {}", file.toAbsolutePath());
