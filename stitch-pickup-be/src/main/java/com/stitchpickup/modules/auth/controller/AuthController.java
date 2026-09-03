@@ -105,7 +105,7 @@ public class AuthController {
     }
 
     @PostMapping("/teacher/change-password")
-    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN', 'MONITOR')")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(
         summary = "Cambiar contraseña de maestro/admin",

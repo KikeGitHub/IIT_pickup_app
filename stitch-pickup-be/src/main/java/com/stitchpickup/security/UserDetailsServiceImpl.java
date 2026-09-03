@@ -39,7 +39,11 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         }
         if (teacher.isPresent()) {
             var t = teacher.get();
-            String springRole = "ADMIN".equalsIgnoreCase(t.getRole()) ? "ROLE_ADMIN" : "ROLE_TEACHER";
+            String springRole = switch (t.getRole().toUpperCase()) {
+                case "ADMIN" -> "ROLE_ADMIN";
+                case "MONITOR" -> "ROLE_MONITOR";
+                default -> "ROLE_TEACHER";
+            };
             return User.builder()
                     .username(t.getEmail())
                     .password(t.getPasswordHash())

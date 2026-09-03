@@ -80,7 +80,7 @@
                   </div>
                 </td>
                 <td>
-                  <span class="role-badge" [class.role-badge--admin]="t.role === 'ADMIN'">{{ t.role }}</span>
+                  <span class="role-badge" [class.role-badge--admin]="t.role === 'ADMIN'" [class.role-badge--monitor]="t.role === 'MONITOR'">{{ t.role }}</span>
                 </td>
                 <td>
                   <span class="status-indicator" [class.status-indicator--active]="t.active">
@@ -176,7 +176,8 @@
             <div class="form-group">
               <label for="teacherRole">Rol en Sistema</label>
               <select id="teacherRole" [(ngModel)]="teacherRole" class="form-control">
-                <option value="TEACHER">Maestro / Monitor</option>
+                <option value="TEACHER">Maestro</option>
+                <option value="MONITOR">Monitor de Entregas</option>
                 <option value="ADMIN">Administrador</option>
               </select>
             </div>

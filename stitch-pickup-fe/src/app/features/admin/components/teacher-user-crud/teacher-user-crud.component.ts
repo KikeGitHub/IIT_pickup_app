@@ -45,7 +45,7 @@ export class TeacherUserCrudComponent implements OnInit {
   teacherName = '';
   teacherEmail = '';
   teacherPassword = '';
-  teacherRole: 'TEACHER' | 'ADMIN' = 'TEACHER';
+  teacherRole: 'TEACHER' | 'ADMIN' | 'MONITOR' = 'TEACHER';
   teacherLevel = 'PRIMARIA';
   teacherActive = true;
   selectedGroupIds: string[] = [];

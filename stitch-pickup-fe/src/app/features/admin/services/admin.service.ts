@@ -26,7 +26,7 @@ export interface AdminUser {
   id: string;
   nombre: string;
   email: string;
-  role: 'PARENT' | 'TEACHER' | 'ADMIN';
+  role: 'PARENT' | 'TEACHER' | 'ADMIN' | 'MONITOR';
   active: boolean;
   lastLogin?: string;
 }

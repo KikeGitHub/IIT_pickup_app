@@ -32,6 +32,7 @@ export const roleGuard = (...allowedRoles: UserRole[]): CanActivateFn => {
         router.navigate(['/monitor']);
         break;
       case 'ADMIN':
+      case 'MONITOR':
         router.navigate(['/admin']);
         break;
       default:

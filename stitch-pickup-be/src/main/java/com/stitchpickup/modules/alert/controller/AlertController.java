@@ -44,7 +44,7 @@ public class AlertController {
     }
 
     @GetMapping("/today")
-    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN', 'MONITOR')")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(
         summary = "Obtener alertas del día",

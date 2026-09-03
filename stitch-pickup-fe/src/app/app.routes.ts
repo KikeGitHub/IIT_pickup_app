@@ -12,7 +12,7 @@ const rootRedirectGuard: CanActivateFn = () => {
     const role = auth.userRole();
     if (role === 'TEACHER') {
       return router.createUrlTree(['/monitor']);
-    } else if (role === 'ADMIN') {
+    } else if (role === 'ADMIN' || role === 'MONITOR') {
       return router.createUrlTree(['/admin']);
     } else if (role === 'PARENT') {
       return router.createUrlTree(['/parent']);
@@ -52,18 +52,18 @@ export const routes: Routes = [
       ),
   },
 
-  // ── Monitor Dashboard (TEACHER + ADMIN) ──────────────────────────────────
+  // ── Monitor Dashboard (TEACHER + ADMIN + MONITOR) ────────────────────────
   {
     path: 'monitor',
-    canActivate: [authGuard, roleGuard('TEACHER', 'ADMIN')],
+    canActivate: [authGuard, roleGuard('TEACHER', 'ADMIN', 'MONITOR')],
     loadChildren: () =>
       import('./features/monitor/monitor.routes').then((m) => m.MONITOR_ROUTES),
   },
 
-  // ── Admin Panel (ADMIN only) ──────────────────────────────────────────────
+  // ── Admin Panel (ADMIN + MONITOR) ─────────────────────────────────────────
   {
     path: 'admin',
-    canActivate: [authGuard, roleGuard('ADMIN')],
+    canActivate: [authGuard, roleGuard('ADMIN', 'MONITOR')],
     loadChildren: () =>
       import('./features/admin/admin.routes').then((m) => m.ADMIN_ROUTES),
   },

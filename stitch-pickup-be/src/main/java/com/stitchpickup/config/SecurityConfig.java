@@ -79,13 +79,15 @@ public class SecurityConfig {
                 // Solo ADMIN
                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/v1/users/**").hasRole("ADMIN")
-                .requestMatchers("/api/v1/kpis/**").hasRole("ADMIN")
+                // KPIs (ADMIN y MONITOR de entregas)
+                .requestMatchers("/api/v1/kpis/**").hasAnyRole("ADMIN", "MONITOR")
                 // Monitor público y autenticado
                 .requestMatchers(HttpMethod.GET, "/api/v1/alerts/today/grouped").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/v1/alerts/today").hasAnyRole("TEACHER", "ADMIN")
-                .requestMatchers(HttpMethod.GET, "/api/v1/deliveries/today").hasAnyRole("TEACHER", "ADMIN")
-                .requestMatchers("/api/v1/deliveries/*/dispatch").hasAnyRole("TEACHER", "ADMIN")
-                .requestMatchers(HttpMethod.GET, "/api/v1/deliveries/student/*/today-events").hasAnyRole("PARENT", "TEACHER", "ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/v1/alerts/today").hasAnyRole("TEACHER", "ADMIN", "MONITOR")
+                .requestMatchers(HttpMethod.GET, "/api/v1/deliveries/today").hasAnyRole("TEACHER", "ADMIN", "MONITOR")
+                .requestMatchers("/api/v1/deliveries/*/dispatch").hasAnyRole("TEACHER", "ADMIN", "MONITOR")
+                .requestMatchers("/api/v1/deliveries/*/revert").hasAnyRole("TEACHER", "ADMIN", "MONITOR")
+                .requestMatchers(HttpMethod.GET, "/api/v1/deliveries/student/*/today-events").hasAnyRole("PARENT", "TEACHER", "ADMIN", "MONITOR")
                 .requestMatchers("/api/v1/teacher/**").hasAnyRole("TEACHER", "ADMIN")
                 // Solo PARENT — envío de alertas, consulta y confirmación de entregas
                 .requestMatchers(HttpMethod.POST, "/api/v1/alerts").hasRole("PARENT")

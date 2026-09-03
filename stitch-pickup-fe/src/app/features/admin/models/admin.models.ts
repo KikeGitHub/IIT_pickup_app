@@ -35,7 +35,7 @@ export interface TeacherUser {
   id: string;
   nombre: string;
   email: string;
-  role: 'TEACHER' | 'ADMIN';
+  role: 'TEACHER' | 'ADMIN' | 'MONITOR';
   level?: 'KINDER' | 'PRIMARIA' | 'SECUNDARIA';
   avatarUrl?: string;
   active: boolean;

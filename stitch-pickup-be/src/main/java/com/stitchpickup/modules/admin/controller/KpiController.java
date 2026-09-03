@@ -19,7 +19,7 @@ public class KpiController {
     private final KpiService kpiService;
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MONITOR')")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(
         summary = "Obtener KPIs por período",
@@ -36,7 +36,7 @@ public class KpiController {
     }
 
     @GetMapping("/today")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MONITOR')")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "Obtener KPIs del día (alias de legacy)", description = "Alias para GET /kpis?period=day")
     public ResponseEntity<KpisResponse> getTodayKpis() {

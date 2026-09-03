@@ -40,7 +40,7 @@ public class TeacherUser {
     @Column(name = "password_hash", nullable = false, length = 255)
     private String passwordHash;
 
-    /** TEACHER o ADMIN */
+    /** TEACHER, ADMIN o MONITOR */
     @Column(nullable = false, length = 20)
     @Builder.Default
     private String role = "TEACHER";

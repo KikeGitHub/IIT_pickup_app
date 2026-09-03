@@ -71,7 +71,7 @@ export class LoginTeacherComponent {
         }
 
         // Route based on role
-        if (user?.role === 'ADMIN') {
+        if (user?.role === 'ADMIN' || user?.role === 'MONITOR') {
           this.router.navigate(['/admin']);
         } else {
           this.router.navigate(['/monitor']);

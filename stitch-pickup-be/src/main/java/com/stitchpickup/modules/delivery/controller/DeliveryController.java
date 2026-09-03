@@ -37,7 +37,7 @@ public class DeliveryController {
     private final JwtTokenProvider tokenProvider;
 
     @GetMapping("/today")
-    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN', 'MONITOR')")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(
         summary = "Obtener entregas del día",
@@ -48,7 +48,7 @@ public class DeliveryController {
     }
 
     @PostMapping("/{alertId}/dispatch")
-    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN', 'MONITOR')")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(
         summary = "Despachar alumno (maestro confirma en puerta)",
@@ -102,7 +102,7 @@ public class DeliveryController {
     }
 
     @PostMapping("/{deliveryId}/revert")
-    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN', 'MONITOR')")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(
         summary = "Maestro/Admin revierte una entrega errónea",
@@ -120,7 +120,7 @@ public class DeliveryController {
     }
 
     @GetMapping("/student/{studentId}/today-events")
-    @PreAuthorize("hasAnyRole('PARENT', 'TEACHER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('PARENT', 'TEACHER', 'ADMIN', 'MONITOR')")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(
         summary = "Obtener historial del día para un alumno",
