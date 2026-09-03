@@ -21,6 +21,8 @@ export interface MonitorAlert {
   sentAt: string;
   isDispatched: boolean;
   isUpdated: boolean;
+  /** Indica que el padre reportó no haber recibido al alumno — mostrar badge 🚨 */
+  isRejectedByParent?: boolean;
 }
 
 export interface DeliveryRecord {
@@ -31,9 +33,12 @@ export interface DeliveryRecord {
   groupName: string;
   teacherName: string;
   pickupMethod: string;
-  status: 'ENTREGADO_ESCUELA' | 'RECIBIDO_PADRE';
+  status: 'ENTREGADO_ESCUELA' | 'RECIBIDO_PADRE' | 'RECHAZADO_PADRE' | 'REVERTIDO_DOCENTE';
   teacherConfirmedAt: string;
   parentConfirmedAt?: string;
+  parentRejectedAt?: string;
+  revertedAt?: string;
+  revertedBy?: string;
   logDate: string;
 }
 
@@ -56,6 +61,7 @@ export class MonitorService {
   readonly deliveries = signal<DeliveryRecord[]>([]);
   readonly selectedLevel = signal<LevelFilter>('ALL');
   readonly dispatchingAlertId = signal<string | null>(null);
+  readonly revertingDeliveryId = signal<string | null>(null);
 
   // ─── Computed KPIs ────────────────────────────────────────────────────────
   readonly urgentCount = computed(() =>
@@ -65,7 +71,7 @@ export class MonitorService {
     this.alerts().filter(a => a.status === 'EN_FILA' && !a.isDispatched).length
   );
   readonly dispatchedCount = computed(() =>
-    this.deliveries().length
+    this.deliveries().filter(d => d.status !== 'REVERTIDO_DOCENTE').length
   );
   readonly totalActive = computed(() =>
     this.alerts().filter(a => !a.isDispatched).length
@@ -114,6 +120,31 @@ export class MonitorService {
     ).subscribe();
   }
 
+  /**
+   * revertDelivery — Maestro/Admin deshace una entrega errónea.
+   * El alumno regresa al board activo en estado EN_FILA.
+   */
+  revertDelivery(deliveryId: string, studentName: string): void {
+    this.revertingDeliveryId.set(deliveryId);
+
+    this.http.post<DeliveryRecord>(`${this.apiUrl}/deliveries/${deliveryId}/revert`, {}).pipe(
+      tap((reverted) => {
+        this.revertingDeliveryId.set(null);
+        // Quitar de la lista de entregados
+        this.deliveries.update(list =>
+          list.filter(d => d.id !== deliveryId)
+        );
+        // El alumno volverá al board por WebSocket (/topic/delivery/reverted o /topic/school/alerts)
+        this.notification.success(`🔄 Entrega de ${studentName} revertida. El alumno regresó al board.`);
+      }),
+      catchError(() => {
+        this.revertingDeliveryId.set(null);
+        this.notification.error('Error al revertir la entrega. Intente nuevamente.');
+        return of(null);
+      })
+    ).subscribe();
+  }
+
   // ─── Private: HTTP Load (Grouped — one alert per student) ────────────────
   private loadTodayAlertsGrouped(): void {
     forkJoin({
@@ -136,7 +167,8 @@ export class MonitorService {
           pickupMethod: a.pickupMethod,
           sentAt: a.sentAt,
           isDispatched: deliveredStudentIds.has(a.studentId),
-          isUpdated: false
+          isUpdated: false,
+          isRejectedByParent: false
         }));
         this.alerts.set(monitorAlerts);
       })
@@ -157,13 +189,11 @@ export class MonitorService {
       const currentUser = this.auth.currentUser();
 
       // STRICT TEACHER GROUP FILTERING:
-      // If user is a TEACHER, verify if student belongs to one of their assigned groups
       if (currentUser && currentUser.role === 'TEACHER') {
         const teacherGroups: string[] = currentUser.groups || [];
         const eventGroup = (event.groupName || '').trim().toLowerCase();
         const eventLevelGroup = `${event.level}-${event.groupName}`.trim().toLowerCase();
 
-        // Match if no groups specified, or if matches group name, or LEVEL-GROUP format
         const matchesGroup = teacherGroups.length === 0 || teacherGroups.some(g => {
           const gNorm = g.trim().toLowerCase();
           return (
@@ -173,8 +203,6 @@ export class MonitorService {
             gNorm.includes(eventGroup)
           );
         }) || (currentUser.level && currentUser.level.toUpperCase() === event.level.toUpperCase());
-
-        console.info(`[MonitorService] Alerta Alumno: "${event.studentName}" (Grupo: "${event.groupName}", Nivel: "${event.level}"). Grupos Docente:`, teacherGroups, `=> Coincide: ${matchesGroup}`);
 
         if (!matchesGroup) {
           console.info('[MonitorService] ⏭️ Alerta ignorada (no pertenece a los grupos de este maestro).');
@@ -186,7 +214,6 @@ export class MonitorService {
       const existingIndex = this.alerts().findIndex(a => a.studentId === event.studentId && !a.isDispatched);
 
       if (existingIndex !== -1) {
-        // UPDATE existing card (same student, new status)
         this.alerts.update(alerts =>
           alerts.map((a, i) => {
             if (i === existingIndex) {
@@ -212,7 +239,6 @@ export class MonitorService {
           );
         }, 2000);
 
-        // Sound + notification for update
         if (event.status === 'URGENTE') {
           this.sound.playUrgentSound();
           this.notification.warning(`🚨 ${event.studentName} — URGENTE`);
@@ -222,7 +248,6 @@ export class MonitorService {
           this.notification.info(`📍 ${event.studentName} — ${statusLabel[event.status] || event.status}`);
         }
       } else {
-        // NEW card for a new student
         const newAlert: MonitorAlert = {
           id: event.id,
           parentId: event.parentId,
@@ -235,7 +260,8 @@ export class MonitorService {
           pickupMethod: event.pickupMethod,
           sentAt: event.sentAt,
           isDispatched: false,
-          isUpdated: true
+          isUpdated: true,
+          isRejectedByParent: false
         };
         this.alerts.update(alerts => [newAlert, ...alerts]);
 
@@ -245,7 +271,6 @@ export class MonitorService {
           );
         }, 2000);
 
-        // Sound + notification for new alert
         if (event.status === 'URGENTE') {
           this.sound.playUrgentSound();
           this.notification.warning(`🚨 NUEVA: ${event.studentName} — URGENTE`);
@@ -257,11 +282,17 @@ export class MonitorService {
       }
     });
 
-    // 2. Listen for delivery status updates (when ANY teacher or admin dispatches or parent confirms)
+    // 2. Listen for delivery status updates (dispatch, confirm, reject, revert)
     this.ws.onDeliveryEvent().subscribe(delivery => {
       console.info('[MonitorService] 📦 Evento de entrega recibido por WebSocket:', delivery);
 
-      // Marca la tarjeta como despachada en tiempo real en todos los monitores abiertos (Admin y Docentes)
+      if (delivery.status === 'REVERTIDO_DOCENTE') {
+        // Quitar de la lista de entregados si fue revertido
+        this.deliveries.update(list => list.filter(d => d.id !== delivery.id));
+        return;
+      }
+
+      // Actualizar el flag isDispatched en el alert correspondiente
       this.alerts.update(alerts =>
         alerts.map(a => (a.studentId === delivery.studentId || a.id === delivery.id) ? { ...a, isDispatched: true } : a)
       );
@@ -282,10 +313,55 @@ export class MonitorService {
             status: delivery.status,
             teacherConfirmedAt: delivery.teacherConfirmedAt || new Date().toISOString(),
             parentConfirmedAt: delivery.parentConfirmedAt,
+            parentRejectedAt: delivery.parentRejectedAt,
+            revertedAt: delivery.revertedAt,
+            revertedBy: delivery.revertedBy,
             logDate: delivery.logDate
           }, ...list];
         }
       });
+    });
+
+    // 3. Listen for delivery REJECTED by parent → alumno vuelve al board con badge 🚨
+    this.ws.onDeliveryRejected().subscribe(delivery => {
+      console.info('[MonitorService] 🚨 Entrega rechazada por padre:', delivery);
+      this.sound.playUrgentSound();
+      this.notification.warning(`🚨 ¡ATENCIÓN! El padre de ${delivery.studentName} reporta NO haber recibido al alumno.`);
+
+      // Devolver la card al board con isDispatched=false e isRejectedByParent=true
+      this.alerts.update(alerts => {
+        const existingIdx = alerts.findIndex(a => a.studentId === delivery.studentId);
+        if (existingIdx !== -1) {
+          return alerts.map((a, i) => i === existingIdx
+            ? { ...a, isDispatched: false, isUpdated: true, isRejectedByParent: true, status: 'URGENTE' }
+            : a
+          );
+        }
+        return alerts;
+      });
+
+      // Quitar de la lista de "Entregados Hoy"
+      this.deliveries.update(list => list.filter(d => d.id !== delivery.id));
+    });
+
+    // 4. Listen for delivery REVERTED by teacher/admin → alumno regresa al board
+    this.ws.onDeliveryReverted().subscribe(delivery => {
+      console.info('[MonitorService] 🔄 Entrega revertida por docente:', delivery);
+
+      // Devolver la card al board con isDispatched=false
+      this.alerts.update(alerts => {
+        const existingIdx = alerts.findIndex(a => a.studentId === delivery.studentId);
+        if (existingIdx !== -1) {
+          return alerts.map((a, i) => i === existingIdx
+            ? { ...a, isDispatched: false, isUpdated: true, isRejectedByParent: false, status: 'EN_FILA' }
+            : a
+          );
+        }
+        return alerts;
+      });
+
+      // Quitar de entregados
+      this.deliveries.update(list => list.filter(d => d.id !== delivery.id));
     });
   }
 }

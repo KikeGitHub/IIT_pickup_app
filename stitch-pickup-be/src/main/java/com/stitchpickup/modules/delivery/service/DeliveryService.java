@@ -19,11 +19,15 @@ import java.util.UUID;
 /**
  * DeliveryService — Gestión del ciclo de entrega.
  *
- * Flujo:
+ * Flujo principal:
  *   1. Maestro/guardia llama a dispatch(alertId, teacherName)
  *   2. Se crea o actualiza el DeliveryLog del día para ese alumno
  *   3. Se emite WebSocket broadcast a /topic/deliveries
  *   4. Se notifica al padre vía /user/{parentId}/queue/delivery
+ *
+ * Flujo de corrección:
+ *   - parentReject(id, parentId)      → Padre rechaza; alumno vuelve al board como URGENTE
+ *   - revertDelivery(id, teacherName) → Maestro/Admin deshace entrega; alumno regresa al board
  *
  * SOLID — S: Solo lógica de entrega. No maneja HTTP.
  */
@@ -56,6 +60,10 @@ public class DeliveryService {
         log.setPickupMethod(alert.getPickupMethod());
         log.setStatus(DeliveryLog.DeliveryStatus.ENTREGADO_ESCUELA);
         log.setTeacherConfirmedAt(Instant.now());
+        // Limpiar campos de reversión previos si se re-despacha
+        log.setParentRejectedAt(null);
+        log.setRevertedAt(null);
+        log.setRevertedBy(null);
 
         DeliveryLog saved = deliveryLogRepository.save(log);
         DeliveryLogResponse response = mapToResponse(saved);
@@ -73,7 +81,9 @@ public class DeliveryService {
     @Transactional(readOnly = true)
     public List<DeliveryLogResponse> getTodayDeliveries() {
         return deliveryLogRepository.findByLogDateWithStudent(LocalDate.now())
-                .stream().map(this::mapToResponse).toList();
+                .stream()
+                .filter(d -> d.getStatus() != DeliveryLog.DeliveryStatus.REVERTIDO_DOCENTE)
+                .map(this::mapToResponse).toList();
     }
 
     @Transactional
@@ -91,6 +101,100 @@ public class DeliveryService {
         DeliveryLogResponse response = mapToResponse(saved);
 
         publisher.publishDelivery(response);
+        return response;
+    }
+
+    /**
+     * parentReject — El padre reporta que NO ha recibido a su hijo.
+     *
+     * Efecto:
+     *   1. El DeliveryLog queda en estado RECHAZADO_PADRE (permanece en el historial).
+     *   2. Se re-activa la Alerta del alumno en estado URGENTE.
+     *   3. Se emite WebSocket a /topic/school/alerts (el alumno aparece en el board con badge 🚨).
+     *   4. Se emite WebSocket a /topic/deliveries para que el monitor lo quite de "Entregados Hoy".
+     */
+    @Transactional
+    public DeliveryLogResponse parentReject(UUID deliveryId, UUID parentId) {
+        DeliveryLog deliveryLog = deliveryLogRepository.findById(deliveryId)
+                .orElseThrow(() -> new IllegalArgumentException("Entrega no encontrada: " + deliveryId));
+
+        if (deliveryLog.getStatus() == DeliveryLog.DeliveryStatus.RECIBIDO_PADRE) {
+            throw new IllegalStateException("No se puede rechazar una entrega ya confirmada por el padre.");
+        }
+
+        if (deliveryLog.getAlert() != null && !deliveryLog.getAlert().getParent().getId().equals(parentId)) {
+            throw new SecurityException("No tienes autorización para rechazar esta entrega.");
+        }
+
+        deliveryLog.setStatus(DeliveryLog.DeliveryStatus.RECHAZADO_PADRE);
+        deliveryLog.setParentRejectedAt(Instant.now());
+        DeliveryLog saved = deliveryLogRepository.save(deliveryLog);
+        DeliveryLogResponse response = mapToResponse(saved);
+
+        log.info("[Delivery] ⚠️ Padre rechazó entrega. DeliveryId={} Alumno={}",
+                deliveryId, saved.getStudent().getName());
+
+        // Reactivar la alerta del alumno en estado URGENTE
+        if (saved.getAlert() != null) {
+            Alert alert = saved.getAlert();
+            alert.setStatus(Alert.AlertStatus.URGENTE);
+            alertRepository.save(alert);
+            log.info("[Delivery] 🔁 Alerta reactivada como URGENTE para alumno={}", saved.getStudent().getName());
+
+            // Emitir alerta de alerta reactivada al monitor
+            publisher.publishRejectedDeliveryAlert(response);
+        }
+
+        // Emitir actualización de entrega (cambia status → RECHAZADO_PADRE)
+        publisher.publishDelivery(response);
+
+        return response;
+    }
+
+    /**
+     * revertDelivery — Maestro o Admin deshace una entrega errónea.
+     *
+     * Efecto:
+     *   1. El DeliveryLog queda en estado REVERTIDO_DOCENTE (queda en bitácora para auditoría).
+     *   2. La tarjeta del alumno reaparece en el board en su estado anterior (EN_FILA por defecto).
+     *   3. Se emite WebSocket al monitor y al celular del padre para cerrar el modal.
+     */
+    @Transactional
+    public DeliveryLogResponse revertDelivery(UUID deliveryId, String revertedBy) {
+        DeliveryLog deliveryLog = deliveryLogRepository.findById(deliveryId)
+                .orElseThrow(() -> new IllegalArgumentException("Entrega no encontrada: " + deliveryId));
+
+        if (deliveryLog.getStatus() == DeliveryLog.DeliveryStatus.RECIBIDO_PADRE) {
+            throw new IllegalStateException("No se puede revertir una entrega ya confirmada por el padre.");
+        }
+
+        deliveryLog.setStatus(DeliveryLog.DeliveryStatus.REVERTIDO_DOCENTE);
+        deliveryLog.setRevertedAt(Instant.now());
+        deliveryLog.setRevertedBy(revertedBy);
+        DeliveryLog saved = deliveryLogRepository.save(deliveryLog);
+        DeliveryLogResponse response = mapToResponse(saved);
+
+        log.info("[Delivery] 🔄 Entrega revertida por {}. DeliveryId={} Alumno={}",
+                revertedBy, deliveryId, saved.getStudent().getName());
+
+        // Reactivar la alerta del alumno en estado EN_FILA
+        if (saved.getAlert() != null) {
+            Alert alert = saved.getAlert();
+            alert.setStatus(Alert.AlertStatus.EN_FILA);
+            alertRepository.save(alert);
+            log.info("[Delivery] 🔁 Alerta reactivada como EN_FILA para alumno={}", saved.getStudent().getName());
+
+            // Notificar al monitor que el alumno vuelve al board
+            publisher.publishRevertedDelivery(response);
+
+            // Notificar al padre que la entrega fue cancelada
+            String parentId = alert.getParent().getId().toString();
+            publisher.notifyParentDeliveryReverted(parentId, response);
+        }
+
+        // Broadcast final del estado REVERTIDO para que el historial del monitor lo actualice
+        publisher.publishDelivery(response);
+
         return response;
     }
 
@@ -123,7 +227,7 @@ public class DeliveryService {
             ));
         }
 
-        // 2. Registro de entrega (despacho del maestro y confirmación del padre)
+        // 2. Registro de entrega (despacho, confirmación, rechazo o reversión)
         deliveryLogRepository.findByStudentIdAndLogDate(studentId, today).ifPresent(d -> {
             if (d.getTeacherConfirmedAt() != null) {
                 events.add(new com.stitchpickup.modules.delivery.dto.ParentDayHistoryEventResponse(
@@ -141,6 +245,24 @@ public class DeliveryService {
                     "Alumno recibido por el tutor familiar",
                     "RECEIVED",
                     d.getParentConfirmedAt()
+                ));
+            }
+            if (d.getParentRejectedAt() != null) {
+                events.add(new com.stitchpickup.modules.delivery.dto.ParentDayHistoryEventResponse(
+                    timeFormatter.format(d.getParentRejectedAt()),
+                    "⚠️ Entrega Reportada No Recibida",
+                    "El padre/tutor reportó no haber recibido al alumno",
+                    "REJECTED",
+                    d.getParentRejectedAt()
+                ));
+            }
+            if (d.getRevertedAt() != null) {
+                events.add(new com.stitchpickup.modules.delivery.dto.ParentDayHistoryEventResponse(
+                    timeFormatter.format(d.getRevertedAt()),
+                    "🔄 Entrega Corregida",
+                    "Entrega revertida por " + (d.getRevertedBy() != null ? d.getRevertedBy() : "Docente") + ". El alumno regresó al board.",
+                    "REVERTED",
+                    d.getRevertedAt()
                 ));
             }
         });
@@ -163,6 +285,9 @@ public class DeliveryService {
                 d.getStatus().name(),
                 d.getTeacherConfirmedAt(),
                 d.getParentConfirmedAt(),
+                d.getParentRejectedAt(),
+                d.getRevertedAt(),
+                d.getRevertedBy(),
                 d.getLogDate()
         );
     }

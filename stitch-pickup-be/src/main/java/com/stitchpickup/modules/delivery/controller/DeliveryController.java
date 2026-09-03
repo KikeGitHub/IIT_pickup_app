@@ -19,9 +19,11 @@ import java.util.UUID;
  * DeliveryController — Endpoints de gestión de entregas.
  *
  * Rutas:
- *   GET  /api/v1/deliveries/today              → Entregas del día (TEACHER/ADMIN)
- *   POST /api/v1/deliveries/{alertId}/dispatch → Maestro confirma alumno en puerta (TEACHER/ADMIN)
- *   POST /api/v1/deliveries/{id}/parent-confirm→ Padre confirma recepción (PARENT)
+ *   GET    /api/v1/deliveries/today                    → Entregas del día (TEACHER/ADMIN)
+ *   POST   /api/v1/deliveries/{alertId}/dispatch       → Maestro confirma alumno en puerta (TEACHER/ADMIN)
+ *   POST   /api/v1/deliveries/{id}/parent-confirm      → Padre confirma recepción (PARENT)
+ *   POST   /api/v1/deliveries/{id}/parent-reject       → Padre rechaza entrega (PARENT) 🆕
+ *   POST   /api/v1/deliveries/{id}/revert              → Maestro/Admin revierte entrega (TEACHER/ADMIN) 🆕
  *
  * SOLID — S: Solo maneja HTTP. Lógica en DeliveryService.
  */
@@ -39,7 +41,7 @@ public class DeliveryController {
     @SecurityRequirement(name = "bearerAuth")
     @Operation(
         summary = "Obtener entregas del día",
-        description = "Devuelve el listado completo de entregas registradas hoy con su estado actual."
+        description = "Devuelve el listado de entregas del día (excluye las revertidas)."
     )
     public ResponseEntity<List<DeliveryLogResponse>> getTodayDeliveries() {
         return ResponseEntity.ok(deliveryService.getTodayDeliveries());
@@ -80,12 +82,49 @@ public class DeliveryController {
         return ResponseEntity.ok(deliveryService.confirmByParent(deliveryId, parentId));
     }
 
+    @PostMapping("/{deliveryId}/parent-reject")
+    @PreAuthorize("hasRole('PARENT')")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(
+        summary = "Padre rechaza la entrega (no ha recibido a su hijo)",
+        description = "El padre reporta que no ha recibido al alumno. "
+            + "El alumno regresa al board del monitor con estado URGENTE y badge de alerta. "
+            + "Emite WebSocket a /topic/delivery/rejected y /topic/deliveries."
+    )
+    public ResponseEntity<DeliveryLogResponse> parentReject(
+            @PathVariable UUID deliveryId,
+            HttpServletRequest request) {
+
+        String token = request.getHeader("Authorization").substring(7);
+        UUID parentId = UUID.fromString(tokenProvider.getUserIdFromToken(token));
+
+        return ResponseEntity.ok(deliveryService.parentReject(deliveryId, parentId));
+    }
+
+    @PostMapping("/{deliveryId}/revert")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(
+        summary = "Maestro/Admin revierte una entrega errónea",
+        description = "Deshace la entrega de un alumno. El alumno regresa al board activo en estado EN_FILA. "
+            + "Se emite WebSocket a /topic/delivery/reverted y se notifica al padre para cerrar el modal."
+    )
+    public ResponseEntity<DeliveryLogResponse> revertDelivery(
+            @PathVariable UUID deliveryId,
+            HttpServletRequest request) {
+
+        String token = request.getHeader("Authorization").substring(7);
+        String nombre = tokenProvider.getClaims(token).get("nombre", String.class);
+
+        return ResponseEntity.ok(deliveryService.revertDelivery(deliveryId, nombre));
+    }
+
     @GetMapping("/student/{studentId}/today-events")
     @PreAuthorize("hasAnyRole('PARENT', 'TEACHER', 'ADMIN')")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(
         summary = "Obtener historial del día para un alumno",
-        description = "Devuelve el historial cronológico de alertas enviadas y entregas del día para un alumno."
+        description = "Devuelve el historial cronológico de alertas, entregas, rechazos y reversiones del día."
     )
     public ResponseEntity<List<com.stitchpickup.modules.delivery.dto.ParentDayHistoryEventResponse>> getStudentTodayEvents(
             @PathVariable UUID studentId) {

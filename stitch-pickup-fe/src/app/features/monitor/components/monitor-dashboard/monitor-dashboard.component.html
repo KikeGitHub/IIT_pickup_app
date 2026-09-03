@@ -31,6 +31,8 @@
         <div class="desktop-history">
           <app-dispatch-confirmation
             [deliveries]="monitorService.deliveries()"
+            [revertingDeliveryId]="monitorService.revertingDeliveryId()"
+            (revert)="onRevertDelivery($event)"
           ></app-dispatch-confirmation>
         </div>
       </aside>

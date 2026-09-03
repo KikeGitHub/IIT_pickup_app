@@ -12,8 +12,10 @@ import org.springframework.stereotype.Component;
  *
  * Tópicos:
  *   /topic/school/alerts            → Broadcast de nueva alerta a monitores
- *   /topic/deliveries               → Broadcast de entregas a monitores y padres
- *   /topic/delivery/parent/{id}     → Notificación directa al padre
+ *   /topic/deliveries               → Broadcast de entregas (despacho, confirmación, rechazo, reversión)
+ *   /topic/delivery/reverted        → Broadcast específico cuando se revierte una entrega (alumno regresa al board)
+ *   /topic/delivery/parent/{id}     → Notificación directa al padre (despacho)
+ *   /topic/delivery/parent/{id}/reverted → Notificación directa al padre cuando su entrega es revertida
  *   /user/{parentId}/queue/delivery → Cola privada del padre
  *
  * SOLID — S: Solo emite mensajes. No contiene lógica de negocio.
@@ -47,6 +49,32 @@ public class NotificationPublisher {
         }
     }
 
+    /**
+     * Broadcast cuando el padre rechaza una entrega — el alumno debe volver al board
+     * con indicador de urgencia 🚨 en el monitor.
+     */
+    public void publishRejectedDeliveryAlert(DeliveryLogResponse delivery) {
+        try {
+            messagingTemplate.convertAndSend("/topic/delivery/rejected", delivery);
+            log.info("[WebSocket] 🚨 Parent rejected delivery → /topic/delivery/rejected: Alumno={}", delivery.studentName());
+        } catch (Exception e) {
+            log.error("[WebSocket] ❌ Failed to broadcast rejected delivery: {}", e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Broadcast cuando un docente/admin revierte una entrega — el alumno regresa al board activo.
+     */
+    public void publishRevertedDelivery(DeliveryLogResponse delivery) {
+        try {
+            messagingTemplate.convertAndSend("/topic/delivery/reverted", delivery);
+            log.info("[WebSocket] 🔄 Delivery reverted → /topic/delivery/reverted: Alumno={} by={}",
+                    delivery.studentName(), delivery.revertedBy());
+        } catch (Exception e) {
+            log.error("[WebSocket] ❌ Failed to broadcast reverted delivery: {}", e.getMessage(), e);
+        }
+    }
+
     /** Mensaje directo al padre notificando que su hijo ya está en puerta */
     public void notifyParentDeliveryReady(String parentId, DeliveryLogResponse delivery) {
         try {
@@ -58,6 +86,21 @@ public class NotificationPublisher {
                     parentId, delivery.studentName());
         } catch (Exception e) {
             log.error("[WebSocket] ❌ Failed to notify parent {}: {}", parentId, e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Notificación directa al padre cuando la entrega de su hijo es revertida por el docente.
+     * Cierra el modal de entrega en el celular del padre.
+     */
+    public void notifyParentDeliveryReverted(String parentId, DeliveryLogResponse delivery) {
+        try {
+            messagingTemplate.convertAndSend("/topic/delivery/parent/" + parentId + "/reverted", delivery);
+            messagingTemplate.convertAndSendToUser(parentId, "/queue/delivery-reverted", delivery);
+            log.info("[WebSocket] 🔄 Parent delivery reverted notification: ParentId={} Alumno={}",
+                    parentId, delivery.studentName());
+        } catch (Exception e) {
+            log.error("[WebSocket] ❌ Failed to notify parent {} of revert: {}", parentId, e.getMessage(), e);
         }
     }
 }

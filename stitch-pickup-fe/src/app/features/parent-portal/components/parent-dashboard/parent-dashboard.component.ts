@@ -60,6 +60,8 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
   // Bi-directional Delivery Confirmation State
   readonly pendingDelivery = signal<DeliveryDispatchedEvent | null>(null);
   readonly isConfirmingDelivery = signal<boolean>(false);
+  readonly isRejectingDelivery = signal<boolean>(false);
+  readonly showRejectConfirm = signal<boolean>(false);
 
   // Student Edit Modal State for Parent
   readonly showEditModal = signal<boolean>(false);
@@ -87,9 +89,21 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
 
       if (isMyChild && event.status === 'ENTREGADO_ESCUELA') {
         this.pendingDelivery.set(event);
+        this.showRejectConfirm.set(false);
         this.sound.playAlertSound();
         this.notification.info(`🚗 ${event.teacherName || 'El docente'} ha entregado a ${event.studentName} en la puerta.`);
 
+        this.loadHistoryForStudent(event.studentId);
+      }
+    });
+
+    // When docente/admin reverts the delivery → close pending modal automatically
+    this.ws.onDeliveryReverted().subscribe(event => {
+      const pending = this.pendingDelivery();
+      if (pending && pending.studentId === event.studentId) {
+        this.pendingDelivery.set(null);
+        this.showRejectConfirm.set(false);
+        this.notification.info(`ℹ️ La entrega de ${event.studentName} fue corregida por el docente.`);
         this.loadHistoryForStudent(event.studentId);
       }
     });
@@ -203,6 +217,37 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
 
   dismissDeliveryModal(): void {
     this.pendingDelivery.set(null);
+    this.showRejectConfirm.set(false);
+  }
+
+  openRejectConfirm(): void {
+    this.showRejectConfirm.set(true);
+  }
+
+  closeRejectConfirm(): void {
+    this.showRejectConfirm.set(false);
+  }
+
+  // ─── Parent Rejects Delivery (reports non-receipt) ───────────────────────
+  rejectDeliveryReceipt(): void {
+    const delivery = this.pendingDelivery();
+    if (!delivery) return;
+
+    this.isRejectingDelivery.set(true);
+
+    this.http.post(`${this.apiUrl}/deliveries/${delivery.id}/parent-reject`, {}).subscribe({
+      next: () => {
+        this.isRejectingDelivery.set(false);
+        this.pendingDelivery.set(null);
+        this.showRejectConfirm.set(false);
+        this.notification.warning(`⚠️ Reporte enviado. El docente será alertado de inmediato sobre ${delivery.studentName}.`);
+        this.loadHistoryForStudent(delivery.studentId);
+      },
+      error: () => {
+        this.isRejectingDelivery.set(false);
+        this.notification.error('Error al enviar el reporte. Intente nuevamente.');
+      }
+    });
   }
 
   onEditStudent(student: Student): void {

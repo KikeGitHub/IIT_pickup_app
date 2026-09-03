@@ -13,6 +13,12 @@ import java.util.UUID;
  * Entidad: Bitácora de Entrega
  *
  * Registra el ciclo de entrega diario por alumno.
+ *
+ * Estados del ciclo:
+ *   ENTREGADO_ESCUELA  → Maestro despacha al alumno en la puerta
+ *   RECIBIDO_PADRE     → Padre confirma que ya lo recibió
+ *   RECHAZADO_PADRE    → Padre reporta que NO recibió al alumno (error de entrega)
+ *   REVERTIDO_DOCENTE  → Maestro/Admin deshace la entrega (alumno regresa al board)
  */
 @Entity
 @Table(name = "delivery_logs")
@@ -52,11 +58,30 @@ public class DeliveryLog {
     @Column(name = "parent_confirmed_at")
     private Instant parentConfirmedAt;
 
+    /** Marca el momento en que el padre rechaza la entrega. */
+    @Column(name = "parent_rejected_at")
+    private Instant parentRejectedAt;
+
+    /** Marca el momento en que el maestro/admin revierte la entrega. */
+    @Column(name = "reverted_at")
+    private Instant revertedAt;
+
+    /** Nombre de quien realizó la reversión (para auditoría). */
+    @Column(name = "reverted_by", length = 150)
+    private String revertedBy;
+
     @Column(name = "log_date", nullable = false)
     @Builder.Default
     private LocalDate logDate = LocalDate.now();
 
     public enum DeliveryStatus {
-        ENTREGADO_ESCUELA, RECIBIDO_PADRE
+        /** Maestro confirmó que el alumno está en la puerta */
+        ENTREGADO_ESCUELA,
+        /** Padre confirmó que ya recibió a su hijo */
+        RECIBIDO_PADRE,
+        /** Padre reportó que NO recibió al alumno — error de entrega */
+        RECHAZADO_PADRE,
+        /** Maestro/Admin deshizo la entrega — alumno regresa al board activo */
+        REVERTIDO_DOCENTE
     }
 }

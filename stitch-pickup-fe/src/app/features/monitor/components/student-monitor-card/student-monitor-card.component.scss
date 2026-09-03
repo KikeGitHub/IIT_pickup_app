@@ -21,6 +21,24 @@
     animation: cardPulse 2s ease-in-out infinite;
     border-left-color: #ef4444;
   }
+
+  &--rejected {
+    animation: cardPulseRed 1s ease-in-out infinite;
+    border-left-color: #dc2626 !important;
+    box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.3);
+  }
+}
+
+.rejected-banner {
+  background: #dc2626;
+  color: white;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-align: center;
+  padding: 5px 10px;
+  border-radius: v.$radius-sm;
+  animation: cardPulseRed 1s ease-in-out infinite;
 }
 
 .card-status-badge {
@@ -219,4 +237,9 @@
   .parent-section .parent-name { color: rgba(255, 255, 255, 0.85); }
   .card-footer { border-top-color: rgba(255, 255, 255, 0.08); }
   .card-footer .time-ago { color: rgba(255, 255, 255, 0.4); }
+}
+
+@keyframes cardPulseRed {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.3); }
+  50%       { box-shadow: 0 0 0 5px rgba(220, 38, 38, 0.1); }
 }

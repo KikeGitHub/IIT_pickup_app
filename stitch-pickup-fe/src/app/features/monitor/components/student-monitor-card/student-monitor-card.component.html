@@ -2,12 +2,20 @@
   class="monitor-card"
   [class.monitor-card--urgent]="alert.status === 'URGENTE'"
   [class.monitor-card--updated]="isUpdated"
+  [class.monitor-card--rejected]="alert.isRejectedByParent"
   [style.border-left-color]="statusConfig.borderColor"
 >
   <!-- Status Badge -->
   <div class="card-status-badge" [style.background]="statusConfig.bgColor" [style.color]="statusConfig.color">
     {{ statusConfig.label }}
   </div>
+
+  <!-- Rejected by Parent Alert Banner -->
+  @if (alert.isRejectedByParent) {
+    <div class="rejected-banner">
+      🚨 PADRE REPORTA: NO HA RECIBIDO AL ALUMNO
+    </div>
+  }
 
   <!-- Student & Parent Info -->
   <div class="card-body">

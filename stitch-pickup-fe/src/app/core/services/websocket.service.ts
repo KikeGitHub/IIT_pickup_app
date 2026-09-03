@@ -26,9 +26,12 @@ export interface DeliveryDispatchedEvent {
   groupName: string;
   teacherName: string;
   pickupMethod?: string;
-  status: 'ENTREGADO_ESCUELA' | 'RECIBIDO_PADRE';
+  status: 'ENTREGADO_ESCUELA' | 'RECIBIDO_PADRE' | 'RECHAZADO_PADRE' | 'REVERTIDO_DOCENTE';
   teacherConfirmedAt?: string;
   parentConfirmedAt?: string;
+  parentRejectedAt?: string;
+  revertedAt?: string;
+  revertedBy?: string;
   logDate: string;
 }
 
@@ -43,6 +46,10 @@ export class WebSocketService implements OnDestroy {
   private readonly connected$ = new BehaviorSubject<boolean>(false);
   private readonly parentAlert$ = new Subject<ParentAlertEvent>();
   private readonly deliveryEvent$ = new Subject<DeliveryDispatchedEvent>();
+  /** Emite cuando una entrega es REVERTIDA por docente/admin → alumno vuelve al board */
+  private readonly deliveryReverted$ = new Subject<DeliveryDispatchedEvent>();
+  /** Emite cuando el padre rechaza una entrega → alerta urgente en monitor */
+  private readonly deliveryRejected$ = new Subject<DeliveryDispatchedEvent>();
 
   readonly isConnected$ = this.connected$.asObservable();
 
@@ -104,6 +111,16 @@ export class WebSocketService implements OnDestroy {
     return this.deliveryEvent$.asObservable().pipe(share());
   }
 
+  /** Monitor/Teacher/Admin: entrega revertida → alumno debe volver al board activo */
+  onDeliveryReverted(): Observable<DeliveryDispatchedEvent> {
+    return this.deliveryReverted$.asObservable().pipe(share());
+  }
+
+  /** Monitor/Teacher/Admin: padre rechazó entrega → marcar con badge 🚨 */
+  onDeliveryRejected(): Observable<DeliveryDispatchedEvent> {
+    return this.deliveryRejected$.asObservable().pipe(share());
+  }
+
   // ─── Private ────────────────────────────────────────────────────────────────
 
   private subscribeToTopics(): void {
@@ -139,6 +156,36 @@ export class WebSocketService implements OnDestroy {
     );
     this.subscriptions.set('school-deliveries', deliveriesSub);
 
+    // Delivery reverted: alumno regresa al board activo
+    const revertedSub = this.stompClient.subscribe(
+      '/topic/delivery/reverted',
+      (message: IMessage) => {
+        try {
+          const event = JSON.parse(message.body) as DeliveryDispatchedEvent;
+          console.info('[WebSocket] 🔄 Entrega Revertida:', event);
+          this.deliveryReverted$.next(event);
+        } catch (e) {
+          console.error('[STOMP] Failed to parse reverted delivery event', e);
+        }
+      }
+    );
+    this.subscriptions.set('delivery-reverted', revertedSub);
+
+    // Delivery rejected by parent: urgente en monitor
+    const rejectedSub = this.stompClient.subscribe(
+      '/topic/delivery/rejected',
+      (message: IMessage) => {
+        try {
+          const event = JSON.parse(message.body) as DeliveryDispatchedEvent;
+          console.info('[WebSocket] 🚨 Entrega Rechazada por Padre:', event);
+          this.deliveryRejected$.next(event);
+        } catch (e) {
+          console.error('[STOMP] Failed to parse rejected delivery event', e);
+        }
+      }
+    );
+    this.subscriptions.set('delivery-rejected', rejectedSub);
+
     // Parent direct topic & queue
     const userId = this.getUserIdFromToken();
     if (userId) {
@@ -167,6 +214,35 @@ export class WebSocketService implements OnDestroy {
         }
       );
       this.subscriptions.set('delivery-queue', userQueueSub);
+
+      // Padre: notificación de que SU entrega fue revertida
+      const parentRevertedSub = this.stompClient.subscribe(
+        `/topic/delivery/parent/${userId}/reverted`,
+        (message: IMessage) => {
+          try {
+            const event = JSON.parse(message.body) as DeliveryDispatchedEvent;
+            console.info('[WebSocket] 🔄 Mi entrega fue revertida por el docente:', event);
+            this.deliveryReverted$.next(event);
+          } catch (e) {
+            console.error('[STOMP] Failed to parse parent reverted event', e);
+          }
+        }
+      );
+      this.subscriptions.set('parent-delivery-reverted', parentRevertedSub);
+
+      // Padre: cola privada para reversiones
+      const parentRevertedQueueSub = this.stompClient.subscribe(
+        `/user/${userId}/queue/delivery-reverted`,
+        (message: IMessage) => {
+          try {
+            const event = JSON.parse(message.body) as DeliveryDispatchedEvent;
+            this.deliveryReverted$.next(event);
+          } catch (e) {
+            console.error('[STOMP] Failed to parse parent reverted queue event', e);
+          }
+        }
+      );
+      this.subscriptions.set('parent-delivery-reverted-queue', parentRevertedQueueSub);
     }
   }
 

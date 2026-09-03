@@ -290,6 +290,10 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
     this.monitorService.dispatch(alertId);
   }
 
+  onRevertDelivery(event: { deliveryId: string; studentName: string }): void {
+    this.monitorService.revertDelivery(event.deliveryId, event.studentName);
+  }
+
   logout(): void {
     this.ws.disconnect();
     this.authService.logout();

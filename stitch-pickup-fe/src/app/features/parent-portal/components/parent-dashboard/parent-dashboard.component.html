@@ -110,25 +110,62 @@
           <span>⏰ {{ d.teacherConfirmedAt | date:'shortTime' }}</span>
         </div>
 
-        <div class="delivery-actions">
-          <button
-            type="button"
-            class="btn-confirm-receipt"
-            [disabled]="isConfirmingDelivery()"
-            (click)="confirmDeliveryReceipt()"
-          >
-            <span *ngIf="!isConfirmingDelivery()">✅ Confirmar que Recibí a mi Hijo</span>
-            <span *ngIf="isConfirmingDelivery()">Confirmando...</span>
-          </button>
+        @if (!showRejectConfirm()) {
+          <!-- Acciones principales -->
+          <div class="delivery-actions">
+            <button
+              type="button"
+              class="btn-confirm-receipt"
+              [disabled]="isConfirmingDelivery()"
+              (click)="confirmDeliveryReceipt()"
+            >
+              <span *ngIf="!isConfirmingDelivery()">✅ Confirmar que Recibí a mi Hijo</span>
+              <span *ngIf="isConfirmingDelivery()">Confirmando...</span>
+            </button>
 
-          <button
-            type="button"
-            class="btn-dismiss-delivery"
-            (click)="dismissDeliveryModal()"
-          >
-            Cerrar aviso
-          </button>
-        </div>
+            <button
+              type="button"
+              class="btn-reject-delivery"
+              (click)="openRejectConfirm()"
+            >
+              ⚠️ No he recibido a mi hijo
+            </button>
+
+            <button
+              type="button"
+              class="btn-dismiss-delivery"
+              (click)="dismissDeliveryModal()"
+            >
+              Cerrar aviso
+            </button>
+          </div>
+        } @else {
+          <!-- Panel de confirmación de rechazo -->
+          <div class="reject-confirm-panel">
+            <p class="reject-confirm-title">⚠️ ¿Confirmar reporte?</p>
+            <p class="reject-confirm-desc">
+              Al reportarlo, el docente recibirá una alerta urgente para verificar la situación de
+              <strong>{{ d.studentName }}</strong>. Usa esta opción solo si realmente no has recibido al alumno.
+            </p>
+            <div class="reject-confirm-actions">
+              <button
+                type="button"
+                class="btn-confirm-reject"
+                [disabled]="isRejectingDelivery()"
+                (click)="rejectDeliveryReceipt()"
+              >
+                {{ isRejectingDelivery() ? 'Reportando...' : '🚨 Sí, reportar que no lo he recibido' }}
+              </button>
+              <button
+                type="button"
+                class="btn-cancel-reject"
+                (click)="closeRejectConfirm()"
+              >
+                Cancelar — Sí lo estoy recibiendo
+              </button>
+            </div>
+          </div>
+        }
       </div>
     </div>
   }
