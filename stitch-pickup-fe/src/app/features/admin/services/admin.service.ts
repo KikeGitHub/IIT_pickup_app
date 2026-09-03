@@ -251,6 +251,14 @@ export class AdminService {
     );
   }
 
+  changeTeacherPassword(id: string, newPassword: string): Observable<void> {
+    return this.http.patch<void>(`${this.apiUrl}/admin/teachers/${id}/password`, { newPassword });
+  }
+
+  changeParentPassword(id: string, newPassword: string): Observable<void> {
+    return this.http.patch<void>(`${this.apiUrl}/admin/parents/${id}/password`, { newPassword });
+  }
+
   // ─── Users Legacy Overview ────────────────────────────────────────────────
   loadUsers(): void {
     const mockUsers: AdminUser[] = [

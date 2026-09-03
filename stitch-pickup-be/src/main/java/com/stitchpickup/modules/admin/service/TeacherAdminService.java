@@ -128,6 +128,15 @@ public class TeacherAdminService {
         teacherRepository.deleteById(id);
     }
 
+    @Transactional
+    public void changePassword(UUID id, String newPassword) {
+        TeacherUser teacher = teacherRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Maestro no encontrado: " + id));
+        teacher.setPasswordHash(passwordEncoder.encode(newPassword));
+        teacher.setTempPassword(false);
+        teacherRepository.save(teacher);
+    }
+
     private TeacherResponse mapToResponse(TeacherUser teacher) {
         List<GroupResponse> groupResponses = teacher.getGroups().stream()
                 .map(g -> new GroupResponse(

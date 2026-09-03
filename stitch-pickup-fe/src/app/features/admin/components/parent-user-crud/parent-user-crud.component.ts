@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { AdminService, ParentUser, StudentDetail } from '../../services/admin.service';
+import { NotificationService } from '../../../../core/services/notification.service';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination.component';
 import { LoadingOverlayComponent } from '../../../../shared/components/loading-overlay/loading-overlay.component';
 import { TableSkeletonComponent } from '../../../../shared/components/table-skeleton/table-skeleton.component';
@@ -17,10 +18,20 @@ import { TableSkeletonComponent } from '../../../../shared/components/table-skel
 })
 export class ParentUserCrudComponent implements OnInit {
   readonly adminService = inject(AdminService);
+  private readonly notification = inject(NotificationService);
 
   readonly showModal = signal<boolean>(false);
   readonly isEditing = signal<boolean>(false);
   readonly editingParentId = signal<string | null>(null);
+
+  // Password Modal State
+  readonly showPasswordModal = signal<boolean>(false);
+  readonly selectedParentForPassword = signal<ParentUser | null>(null);
+  newPassword = '';
+  confirmPassword = '';
+  showNewPassword = false;
+  passwordError = '';
+  isSavingPassword = signal<boolean>(false);
 
   // Pagination State
   readonly currentPage = signal<number>(1);
@@ -175,5 +186,55 @@ export class ParentUserCrudComponent implements OnInit {
         error: (err) => alert(err.error?.message || 'No se pudo eliminar el padre de familia.')
       });
     }
+  }
+
+  // ─── Password Change Handlers ─────────────────────────────────────────────
+  openPasswordModal(parent: ParentUser): void {
+    this.selectedParentForPassword.set(parent);
+    this.newPassword = '';
+    this.confirmPassword = '';
+    this.showNewPassword = false;
+    this.passwordError = '';
+    this.isSavingPassword.set(false);
+    this.showPasswordModal.set(true);
+  }
+
+  closePasswordModal(): void {
+    this.showPasswordModal.set(false);
+    this.selectedParentForPassword.set(null);
+  }
+
+  toggleShowNewPassword(): void {
+    this.showNewPassword = !this.showNewPassword;
+  }
+
+  saveNewPassword(): void {
+    const parent = this.selectedParentForPassword();
+    if (!parent) return;
+
+    if (!this.newPassword || this.newPassword.trim().length < 6) {
+      this.passwordError = 'La contraseña debe contener al menos 6 caracteres.';
+      return;
+    }
+
+    if (this.newPassword !== this.confirmPassword) {
+      this.passwordError = 'Las contraseñas no coinciden.';
+      return;
+    }
+
+    this.isSavingPassword.set(true);
+    this.passwordError = '';
+
+    this.adminService.changeParentPassword(parent.id, this.newPassword.trim()).subscribe({
+      next: () => {
+        this.isSavingPassword.set(false);
+        this.closePasswordModal();
+        this.notification.success(`🔑 Contraseña actualizada exitosamente para ${parent.nombre}.`);
+      },
+      error: (err) => {
+        this.isSavingPassword.set(false);
+        this.passwordError = err.error?.message || 'Error al cambiar la contraseña.';
+      }
+    });
   }
 }

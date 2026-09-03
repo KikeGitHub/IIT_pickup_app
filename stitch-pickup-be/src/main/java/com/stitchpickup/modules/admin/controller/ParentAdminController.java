@@ -55,4 +55,13 @@ public class ParentAdminController {
         parentAdminService.deleteParent(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PatchMapping("/{id}/password")
+    @Operation(summary = "Cambiar contraseña de un padre de familia")
+    public ResponseEntity<Void> changePassword(
+            @PathVariable UUID id,
+            @Valid @RequestBody com.stitchpickup.modules.admin.dto.AdminPasswordChangeRequest request) {
+        parentAdminService.changePassword(id, request.newPassword());
+        return ResponseEntity.noContent().build();
+    }
 }

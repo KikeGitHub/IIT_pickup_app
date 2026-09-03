@@ -113,6 +113,15 @@ public class ParentAdminService {
         parentRepository.deleteById(id);
     }
 
+    @Transactional
+    public void changePassword(UUID id, String newPassword) {
+        ParentUser parent = parentRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Padre de familia no encontrado: " + id));
+        parent.setPasswordHash(passwordEncoder.encode(newPassword));
+        parent.setTempPassword(false);
+        parentRepository.save(parent);
+    }
+
     private ParentResponse mapToResponse(ParentUser parent) {
         List<StudentSummaryResponse> studentSummaries = parent.getStudents().stream()
                 .map(s -> new StudentSummaryResponse(

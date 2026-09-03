@@ -55,4 +55,13 @@ public class TeacherAdminController {
         teacherAdminService.deleteTeacher(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PatchMapping("/{id}/password")
+    @Operation(summary = "Cambiar contraseña de un maestro")
+    public ResponseEntity<Void> changePassword(
+            @PathVariable UUID id,
+            @Valid @RequestBody com.stitchpickup.modules.admin.dto.AdminPasswordChangeRequest request) {
+        teacherAdminService.changePassword(id, request.newPassword());
+        return ResponseEntity.noContent().build();
+    }
 }

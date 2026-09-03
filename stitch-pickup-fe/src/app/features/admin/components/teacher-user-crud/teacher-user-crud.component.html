@@ -89,6 +89,7 @@
                 </td>
                 <td>
                   <div class="action-btns">
+                    <button type="button" class="btn-action btn-action--key" (click)="openPasswordModal(t)" title="Cambiar Contraseña">🔑</button>
                     <button type="button" class="btn-action" (click)="openEditModal(t)" title="Editar">✏️</button>
                     <button type="button" class="btn-action btn-action--del" (click)="deleteTeacher(t)" title="Eliminar">🗑️</button>
                   </div>
@@ -222,6 +223,77 @@
           <button type="button" class="btn-secondary" (click)="closeModal()">Cancelar</button>
           <button type="button" class="btn-primary" (click)="saveTeacher()">
             {{ isEditing() ? 'Guardar Cambios' : 'Registrar Maestro' }}
+          </button>
+        </footer>
+      </div>
+    </div>
+  }
+
+  <!-- Modal: Cambiar Contraseña del Maestro -->
+  @if (showPasswordModal()) {
+    <div class="modal-backdrop" (click)="closePasswordModal()">
+      <div class="modal-card modal-card--sm" (click)="$event.stopPropagation()">
+        <header class="modal-header modal-header--key">
+          <div class="modal-title-wrap">
+            <span class="modal-icon-badge">🔑</span>
+            <div>
+              <h3>Cambiar Contraseña</h3>
+              <p class="modal-subtitle">Maestro: <strong>{{ selectedTeacherForPassword()?.nombre }}</strong></p>
+            </div>
+          </div>
+          <button type="button" class="btn-close" (click)="closePasswordModal()">&times;</button>
+        </header>
+
+        <div class="modal-body">
+          @if (passwordError) {
+            <div class="alert-error">{{ passwordError }}</div>
+          }
+
+          <div class="user-info-banner">
+            <span class="user-info-avatar">{{ selectedTeacherForPassword()?.nombre?.charAt(0) }}</span>
+            <div class="user-info-details">
+              <span class="user-info-name">{{ selectedTeacherForPassword()?.nombre }}</span>
+              <span class="user-info-email">{{ selectedTeacherForPassword()?.email }}</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="newTeacherPassword">Nueva Contraseña <span class="req">*</span></label>
+            <div class="input-password-wrapper">
+              <input
+                id="newTeacherPassword"
+                [type]="showNewPassword ? 'text' : 'password'"
+                [(ngModel)]="newPassword"
+                placeholder="Mínimo 6 caracteres"
+                class="form-control"
+              />
+              <button type="button" class="btn-toggle-pwd" (click)="toggleShowNewPassword()" tabindex="-1">
+                {{ showNewPassword ? '👁️' : '🔒' }}
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="confirmTeacherPassword">Confirmar Nueva Contraseña <span class="req">*</span></label>
+            <input
+              id="confirmTeacherPassword"
+              [type]="showNewPassword ? 'text' : 'password'"
+              [(ngModel)]="confirmPassword"
+              placeholder="Repite la contraseña"
+              class="form-control"
+            />
+          </div>
+        </div>
+
+        <footer class="modal-footer">
+          <button type="button" class="btn-secondary" (click)="closePasswordModal()">Cancelar</button>
+          <button
+            type="button"
+            class="btn-primary btn-primary--accent"
+            [disabled]="isSavingPassword()"
+            (click)="saveNewPassword()"
+          >
+            {{ isSavingPassword() ? 'Actualizando...' : 'Actualizar Contraseña' }}
           </button>
         </footer>
       </div>
