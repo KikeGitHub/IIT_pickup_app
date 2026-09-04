@@ -1,5 +1,5 @@
 services:
-  # ─── 1. Backend Spring Boot (Conectado a Neon PostgreSQL Serverless) ─────
+  # ─── 1. Backend Spring Boot (Conectado a Neon PostgreSQL) ──────────────────
   backend:
     build:
       context: ./stitch-pickup-be
@@ -8,17 +8,25 @@ services:
     restart: always
     environment:
       SPRING_PROFILES_ACTIVE: prod
-      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL:-jdbc:postgresql://ep-holy-band-awa2j4it-pooler.c-12.us-east-1.aws.neon.tech/stitch_pickup_db?sslmode=require}
-      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME:-neondb_owner}
-      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:-npg_OIhk9Zy2lczM}
+      # Configuración de Neon PostgreSQL
+      SPRING_DATASOURCE_URL: ${NEON_DATABASE_URL:-${SPRING_DATASOURCE_URL:-jdbc:postgresql://ep-holy-band-awa2j4it.c-12.us-east-1.aws.neon.tech/stitch_pickup_db?sslmode=require}}
+      SPRING_DATASOURCE_USERNAME: ${NEON_USER:-${SPRING_DATASOURCE_USERNAME:-neondb_owner}}
+      SPRING_DATASOURCE_PASSWORD: ${NEON_PASSWORD:-${SPRING_DATASOURCE_PASSWORD:-npg_OIhk9Zy2lczM}}
       JWT_SECRET: ${JWT_SECRET:-c3RpdGNoLXBpY2t1cC1qd3Qtc2VjcmV0LWtleS0yMDI2LXNlY3VyZS1oYXNoLWZvci1wcm9kdWN0aW9uLXN5c3RlbQ==}
-      JWT_EXPIRATION_HOURS: ${JWT_EXPIRATION_HOURS:-24}
-      SPRING_WEBSOCKET_ALLOWED_ORIGINS: ${WS_ALLOWED_ORIGINS:-https://pickup.institutoingles.edu.mx,http://localhost:4200}
-      JAVA_TOOL_OPTIONS: ${JAVA_OPTS:--Xmx1024m -Xms256m -XX:+UseG1GC}
+      JWT_EXPIRATION_HOURS: 24
+      SPRING_WEBSOCKET_ALLOWED_ORIGINS: "*"
+      # Cloudinary & Upload Config
+      CLOUDINARY_URL: ${CLOUDINARY_URL:-cloudinary://912463379929212:9CmlnIrFnEf4wbPISatNAAopJjU@lealtix-media}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-lealtix-media}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-912463379929212}
+      CLOUDINARY_SECRET: ${CLOUDINARY_SECRET:-9CmlnIrFnEf4wbPISatNAAopJjU}
+      UPLOAD_DIR: ${UPLOAD_DIR:-/tmp/uploads}
+    ports:
+      - "8080:8080"
     networks:
       - stitch-network
 
-  # ─── 2. Frontend Angular + Nginx (Único punto de entrada público) ─────────
+  # ─── 2. Frontend Angular + Nginx ─────────────────────────────────────────
   frontend:
     build:
       context: ./stitch-pickup-fe
@@ -28,10 +36,7 @@ services:
     depends_on:
       - backend
     ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - "3001:80"
     networks:
       - stitch-network
 
