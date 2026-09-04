@@ -41,14 +41,21 @@
 
 .toolbar-card {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
+  padding: v.$space-md;
   background: white;
-  padding: v.$space-md v.$space-lg;
   border-radius: v.$radius-lg;
   border: 1px solid v.$color-outline-variant;
   box-shadow: v.$shadow-sm;
   gap: v.$space-md;
+  flex-wrap: wrap;
+}
+
+.toolbar-left-group {
+  display: flex;
+  align-items: center;
+  gap: v.$space-sm;
   flex-wrap: wrap;
 }
 
@@ -60,7 +67,7 @@
   border: 1px solid v.$color-outline-variant;
   border-radius: v.$radius-full;
   padding: 6px 14px;
-  min-width: 280px;
+  min-width: 260px;
 
   .search-icon { font-size: 14px; opacity: 0.6; }
   .search-input {
@@ -69,6 +76,29 @@
     outline: none;
     font-size: 13px;
     width: 100%;
+  }
+}
+
+.filter-pills {
+  display: flex;
+  gap: v.$space-xs;
+
+  .pill-btn {
+    padding: 6px 14px;
+    background: v.$color-surface-container-low;
+    border: 1px solid v.$color-outline-variant;
+    border-radius: v.$radius-full;
+    font-size: 12px;
+    font-weight: v.$font-weight-semibold;
+    color: v.$color-on-surface-variant;
+    cursor: pointer;
+    transition: all 0.15s;
+
+    &--active {
+      background: v.$color-primary;
+      color: white;
+      border-color: v.$color-primary;
+    }
   }
 }
 
@@ -130,6 +160,35 @@
     color: v.$color-on-surface-variant;
     font-weight: v.$font-weight-semibold;
     border-bottom: 1px solid v.$color-outline-variant;
+
+    &.sortable {
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.15s, color 0.15s;
+
+      &:hover {
+        background: #e2e8f0;
+        color: #1d4ed8;
+      }
+
+      .th-content {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .sort-icon {
+        font-size: 11px;
+        opacity: 0.35;
+        transition: opacity 0.15s, color 0.15s;
+
+        &--active {
+          opacity: 1;
+          color: #2563eb;
+          font-weight: 800;
+        }
+      }
+    }
   }
 
   td {

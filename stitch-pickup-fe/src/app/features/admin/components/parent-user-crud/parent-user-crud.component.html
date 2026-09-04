@@ -14,16 +14,33 @@
 
   <!-- Filter & Search Toolbar -->
   <div class="toolbar-card">
-    <div class="search-box">
-      <span class="search-icon">🔍</span>
-      <input
-        type="text"
-        [(ngModel)]="searchQuery"
-        (ngModelChange)="onSearchChange()"
-        placeholder="Buscar por nombre, correo o alumno vinculado..."
-        class="search-input"
-      />
+    <div class="toolbar-left-group">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input
+          type="text"
+          [(ngModel)]="searchQuery"
+          (ngModelChange)="onSearchChange()"
+          placeholder="Buscar por nombre, correo, teléfono o alumno..."
+          class="search-input"
+        />
+      </div>
+
+      <!-- Filter by status -->
+      <div class="filter-pills">
+        <button type="button" class="pill-btn" [class.pill-btn--active]="statusFilter() === 'ALL'" (click)="setStatusFilter('ALL')">Todos ({{ adminService.parents().length }})</button>
+        <button type="button" class="pill-btn" [class.pill-btn--active]="statusFilter() === 'ACTIVE'" (click)="setStatusFilter('ACTIVE')">Activos</button>
+        <button type="button" class="pill-btn" [class.pill-btn--active]="statusFilter() === 'INACTIVE'" (click)="setStatusFilter('INACTIVE')">Inactivos</button>
+      </div>
+
+      <!-- Filter by students count -->
+      <div class="filter-pills">
+        <button type="button" class="pill-btn" [class.pill-btn--active]="hasStudentsFilter() === 'ALL'" (click)="setHasStudentsFilter('ALL')">Todos</button>
+        <button type="button" class="pill-btn" [class.pill-btn--active]="hasStudentsFilter() === 'WITH'" (click)="setHasStudentsFilter('WITH')">Con Alumnos</button>
+        <button type="button" class="pill-btn" [class.pill-btn--active]="hasStudentsFilter() === 'WITHOUT'" (click)="setHasStudentsFilter('WITHOUT')">Sin Alumnos</button>
+      </div>
     </div>
+
     <div class="count-tag">
       Total: {{ filteredParents.length }} cuentas
     </div>
@@ -44,11 +61,46 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th>Padre de Familia</th>
-              <th>Teléfono</th>
-              <th>Alumnos Vinculados</th>
-              <th>Estado</th>
-              <th>Último Acceso</th>
+              <th class="sortable" (click)="toggleSort('name')" title="Clic para ordenar por nombre">
+                <span class="th-content">
+                  Padre de Familia
+                  <span class="sort-icon" [class.sort-icon--active]="sortField() === 'name'">
+                    {{ sortField() === 'name' ? (sortDirection() === 'asc' ? '▲' : '▼') : '↕' }}
+                  </span>
+                </span>
+              </th>
+              <th class="sortable" (click)="toggleSort('phone')" title="Clic para ordenar por teléfono">
+                <span class="th-content">
+                  Teléfono
+                  <span class="sort-icon" [class.sort-icon--active]="sortField() === 'phone'">
+                    {{ sortField() === 'phone' ? (sortDirection() === 'asc' ? '▲' : '▼') : '↕' }}
+                  </span>
+                </span>
+              </th>
+              <th class="sortable" (click)="toggleSort('students')" title="Clic para ordenar por alumnos vinculados">
+                <span class="th-content">
+                  Alumnos Vinculados
+                  <span class="sort-icon" [class.sort-icon--active]="sortField() === 'students'">
+                    {{ sortField() === 'students' ? (sortDirection() === 'asc' ? '▲' : '▼') : '↕' }}
+                  </span>
+                </span>
+              </th>
+              <th class="sortable" (click)="toggleSort('status')" title="Clic para ordenar por estado">
+                <span class="th-content">
+                  Estado
+                  <span class="sort-icon" [class.sort-icon--active]="sortField() === 'status'">
+                    {{ sortField() === 'status' ? (sortDirection() === 'asc' ? '▲' : '▼') : '↕' }}
+                  </span>
+                </span>
+              </th>
+              <th class="sortable" (click)="toggleSort('lastLogin')" title="Clic para ordenar por último acceso">
+                <span class="th-content">
+                  Último Acceso
+                  <span class="sort-icon" [class.sort-icon--active]="sortField() === 'lastLogin'">
+                    {{ sortField() === 'lastLogin' ? (sortDirection() === 'asc' ? '▲' : '▼') : '↕' }}
+                  </span>
+                </span>
+              </th>
               <th>Acciones</th>
             </tr>
           </thead>

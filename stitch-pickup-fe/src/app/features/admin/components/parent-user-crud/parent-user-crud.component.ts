@@ -38,7 +38,32 @@ export class ParentUserCrudComponent implements OnInit {
   readonly pageSize = signal<number>(15);
   readonly pageSizeOptions = [15, 30, 100];
 
+  // Sorting State
+  readonly sortField = signal<'name' | 'email' | 'phone' | 'students' | 'status' | 'lastLogin'>('name');
+  readonly sortDirection = signal<'asc' | 'desc'>('asc');
+
   searchQuery = '';
+  statusFilter = signal<'ALL' | 'ACTIVE' | 'INACTIVE'>('ALL');
+  hasStudentsFilter = signal<'ALL' | 'WITH' | 'WITHOUT'>('ALL');
+
+  toggleSort(field: 'name' | 'email' | 'phone' | 'students' | 'status' | 'lastLogin'): void {
+    if (this.sortField() === field) {
+      this.sortDirection.set(this.sortDirection() === 'asc' ? 'desc' : 'asc');
+    } else {
+      this.sortField.set(field);
+      this.sortDirection.set('asc');
+    }
+  }
+
+  setStatusFilter(status: 'ALL' | 'ACTIVE' | 'INACTIVE'): void {
+    this.statusFilter.set(status);
+    this.currentPage.set(1);
+  }
+
+  setHasStudentsFilter(filter: 'ALL' | 'WITH' | 'WITHOUT'): void {
+    this.hasStudentsFilter.set(filter);
+    this.currentPage.set(1);
+  }
 
   // Form Model
   parentName = '';
@@ -57,16 +82,59 @@ export class ParentUserCrudComponent implements OnInit {
 
   get filteredParents(): ParentUser[] {
     let list = this.adminService.parents();
+
+    if (this.statusFilter() === 'ACTIVE') {
+      list = list.filter(p => p.active);
+    } else if (this.statusFilter() === 'INACTIVE') {
+      list = list.filter(p => !p.active);
+    }
+
+    if (this.hasStudentsFilter() === 'WITH') {
+      list = list.filter(p => p.students && p.students.length > 0);
+    } else if (this.hasStudentsFilter() === 'WITHOUT') {
+      list = list.filter(p => !p.students || p.students.length === 0);
+    }
+
     if (this.searchQuery.trim()) {
       const q = this.searchQuery.toLowerCase();
       list = list.filter(
         (p) =>
           p.nombre.toLowerCase().includes(q) ||
           p.email.toLowerCase().includes(q) ||
+          (p.phone && p.phone.toLowerCase().includes(q)) ||
           (p.students && p.students.some((s) => s.name.toLowerCase().includes(q)))
       );
     }
-    return list;
+
+    const field = this.sortField();
+    const dir = this.sortDirection();
+    return [...list].sort((a, b) => {
+      let valA = '';
+      let valB = '';
+      if (field === 'name') {
+        valA = a.nombre || '';
+        valB = b.nombre || '';
+      } else if (field === 'email') {
+        valA = a.email || '';
+        valB = b.email || '';
+      } else if (field === 'phone') {
+        valA = a.phone || '';
+        valB = b.phone || '';
+      } else if (field === 'students') {
+        const countA = a.students ? a.students.length : 0;
+        const countB = b.students ? b.students.length : 0;
+        return dir === 'asc' ? countA - countB : countB - countA;
+      } else if (field === 'status') {
+        const numA = a.active ? 1 : 0;
+        const numB = b.active ? 1 : 0;
+        return dir === 'asc' ? numB - numA : numA - numB;
+      } else if (field === 'lastLogin') {
+        valA = a.lastLogin || '';
+        valB = b.lastLogin || '';
+      }
+      const cmp = valA.localeCompare(valB, 'es', { sensitivity: 'base' });
+      return dir === 'asc' ? cmp : -cmp;
+    });
   }
 
   get pagedParents(): ParentUser[] {

@@ -31,9 +31,42 @@ export class StudentCrudComponent implements OnInit {
   readonly pageSize = signal<number>(15);
   readonly pageSizeOptions = [15, 30, 100];
 
+  // Sorting State
+  readonly sortField = signal<'name' | 'level' | 'grade' | 'group' | 'status'>('name');
+  readonly sortDirection = signal<'asc' | 'desc'>('asc');
+
   searchQuery = '';
   levelFilter: 'ALL' | 'KINDER' | 'PRIMARIA' | 'SECUNDARIA' = 'ALL';
+  selectedGradeFilter = 'ALL';
   selectedGroupId: string = 'ALL';
+
+  toggleSort(field: 'name' | 'level' | 'grade' | 'group' | 'status'): void {
+    if (this.sortField() === field) {
+      this.sortDirection.set(this.sortDirection() === 'asc' ? 'desc' : 'asc');
+    } else {
+      this.sortField.set(field);
+      this.sortDirection.set('asc');
+    }
+  }
+
+  get availableGrades(): string[] {
+    const students = this.adminService.students();
+    const relevant = this.levelFilter === 'ALL'
+      ? students
+      : students.filter(s => s.level === this.levelFilter);
+    const set = new Set<string>();
+    for (const s of relevant) {
+      if (s.grade && s.grade.trim()) {
+        set.add(s.grade.trim());
+      }
+    }
+    return Array.from(set).sort((a, b) => a.localeCompare(b, 'es', { numeric: true }));
+  }
+
+  setGradeFilter(grade: string): void {
+    this.selectedGradeFilter = grade;
+    this.currentPage.set(1);
+  }
 
   // Form Model
   studentName = '';
@@ -76,6 +109,9 @@ export class StudentCrudComponent implements OnInit {
     if (this.levelFilter !== 'ALL') {
       list = list.filter((s) => s.level === this.levelFilter);
     }
+    if (this.selectedGradeFilter !== 'ALL') {
+      list = list.filter((s) => s.grade === this.selectedGradeFilter);
+    }
     if (this.selectedGroupId !== 'ALL') {
       list = list.filter(
         (s) => s.groupId === this.selectedGroupId || (s.groupName && s.groupName === this.selectedGroupId)
@@ -87,10 +123,36 @@ export class StudentCrudComponent implements OnInit {
         (s) =>
           s.name.toLowerCase().includes(q) ||
           (s.groupName && s.groupName.toLowerCase().includes(q)) ||
+          (s.grade && s.grade.toLowerCase().includes(q)) ||
           (s.curp && s.curp.toLowerCase().includes(q))
       );
     }
-    return list;
+
+    const field = this.sortField();
+    const dir = this.sortDirection();
+    return [...list].sort((a, b) => {
+      let valA = '';
+      let valB = '';
+      if (field === 'name') {
+        valA = a.name || '';
+        valB = b.name || '';
+      } else if (field === 'level') {
+        valA = a.level || '';
+        valB = b.level || '';
+      } else if (field === 'grade') {
+        valA = a.grade || '';
+        valB = b.grade || '';
+      } else if (field === 'group') {
+        valA = a.groupName || '';
+        valB = b.groupName || '';
+      } else if (field === 'status') {
+        const numA = a.active ? 1 : 0;
+        const numB = b.active ? 1 : 0;
+        return dir === 'asc' ? numB - numA : numA - numB;
+      }
+      const cmp = valA.localeCompare(valB, 'es', { sensitivity: 'base', numeric: true });
+      return dir === 'asc' ? cmp : -cmp;
+    });
   }
 
   get pagedStudents(): StudentDetail[] {
@@ -104,6 +166,7 @@ export class StudentCrudComponent implements OnInit {
 
   setLevelFilter(level: 'ALL' | 'KINDER' | 'PRIMARIA' | 'SECUNDARIA'): void {
     this.levelFilter = level;
+    this.selectedGradeFilter = 'ALL';
     if (this.selectedGroupId !== 'ALL') {
       const existsInLevel = this.filterableGroups.some(g => g.id === this.selectedGroupId);
       if (!existsInLevel) {

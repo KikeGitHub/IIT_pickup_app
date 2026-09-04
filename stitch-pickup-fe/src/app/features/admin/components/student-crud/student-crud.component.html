@@ -26,19 +26,35 @@
         />
       </div>
 
-      <!-- Specific Grade & Group Filter -->
+      <!-- Specific Grade Filter Dropdown -->
+      <div class="group-select-filter" [class.group-select-filter--active]="selectedGradeFilter !== 'ALL'" *ngIf="availableGrades.length > 0">
+        <span class="filter-icon">📖</span>
+        <select
+          [ngModel]="selectedGradeFilter"
+          (ngModelChange)="setGradeFilter($event)"
+          class="group-filter-dropdown"
+          aria-label="Filtrar por grado"
+        >
+          <option value="ALL">Todos los grados ({{ availableGrades.length }})</option>
+          @for (gr of availableGrades; track gr) {
+            <option [value]="gr">Grado: {{ gr }}</option>
+          }
+        </select>
+      </div>
+
+      <!-- Specific Group Filter -->
       <div class="group-select-filter" [class.group-select-filter--active]="selectedGroupId !== 'ALL'">
         <span class="filter-icon">🏫</span>
         <select
           [(ngModel)]="selectedGroupId"
           (ngModelChange)="onGroupFilterChange($event)"
           class="group-filter-dropdown"
-          aria-label="Filtrar por grado y grupo"
+          aria-label="Filtrar por grupo"
         >
           <option value="ALL">Todos los grupos ({{ filterableGroups.length }})</option>
           @for (g of filterableGroups; track g.id) {
             <option [value]="g.id">
-              {{ g.name }}
+              {{ g.level }} · Grupo {{ g.name }}
             </option>
           }
         </select>
@@ -67,12 +83,40 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th>Alumno</th>
-              <th>Nivel & Grado</th>
-              <th>Grupo</th>
+              <th class="sortable" (click)="toggleSort('name')" title="Clic para ordenar por nombre de alumno">
+                <span class="th-content">
+                  Alumno
+                  <span class="sort-icon" [class.sort-icon--active]="sortField() === 'name'">
+                    {{ sortField() === 'name' ? (sortDirection() === 'asc' ? '▲' : '▼') : '↕' }}
+                  </span>
+                </span>
+              </th>
+              <th class="sortable" (click)="toggleSort('level')" title="Clic para ordenar por nivel y grado">
+                <span class="th-content">
+                  Nivel & Grado
+                  <span class="sort-icon" [class.sort-icon--active]="sortField() === 'level' || sortField() === 'grade'">
+                    {{ (sortField() === 'level' || sortField() === 'grade') ? (sortDirection() === 'asc' ? '▲' : '▼') : '↕' }}
+                  </span>
+                </span>
+              </th>
+              <th class="sortable" (click)="toggleSort('group')" title="Clic para ordenar por grupo">
+                <span class="th-content">
+                  Grupo
+                  <span class="sort-icon" [class.sort-icon--active]="sortField() === 'group'">
+                    {{ sortField() === 'group' ? (sortDirection() === 'asc' ? '▲' : '▼') : '↕' }}
+                  </span>
+                </span>
+              </th>
               <th>Maestro(s) Asignado(s)</th>
               <th>Tutores Autorizados (Pickup)</th>
-              <th>Estado</th>
+              <th class="sortable" (click)="toggleSort('status')" title="Clic para ordenar por estado">
+                <span class="th-content">
+                  Estado
+                  <span class="sort-icon" [class.sort-icon--active]="sortField() === 'status'">
+                    {{ sortField() === 'status' ? (sortDirection() === 'asc' ? '▲' : '▼') : '↕' }}
+                  </span>
+                </span>
+              </th>
               <th>Acciones</th>
             </tr>
           </thead>

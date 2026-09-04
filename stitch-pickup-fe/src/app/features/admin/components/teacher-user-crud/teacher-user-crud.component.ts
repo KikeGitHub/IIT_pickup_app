@@ -38,8 +38,39 @@ export class TeacherUserCrudComponent implements OnInit {
   readonly pageSize = signal<number>(15);
   readonly pageSizeOptions = [15, 30, 100];
 
+  // Sorting State
+  readonly sortField = signal<'name' | 'level' | 'role' | 'status' | 'groups'>('name');
+  readonly sortDirection = signal<'asc' | 'desc'>('asc');
+
   searchQuery = '';
   levelFilter: 'ALL' | 'KINDER' | 'PRIMARIA' | 'SECUNDARIA' = 'ALL';
+  roleFilter: 'ALL' | 'TEACHER' | 'ADMIN' | 'MONITOR' = 'ALL';
+  selectedGroupId = 'ALL';
+
+  toggleSort(field: 'name' | 'level' | 'role' | 'status' | 'groups'): void {
+    if (this.sortField() === field) {
+      this.sortDirection.set(this.sortDirection() === 'asc' ? 'desc' : 'asc');
+    } else {
+      this.sortField.set(field);
+      this.sortDirection.set('asc');
+    }
+  }
+
+  get filterableGroups(): SchoolGroup[] {
+    const all = this.adminService.groups();
+    if (this.levelFilter === 'ALL') return all;
+    return all.filter(g => g.level === this.levelFilter);
+  }
+
+  setRoleFilter(role: 'ALL' | 'TEACHER' | 'ADMIN' | 'MONITOR'): void {
+    this.roleFilter = role;
+    this.currentPage.set(1);
+  }
+
+  onGroupFilterChange(groupId: string): void {
+    this.selectedGroupId = groupId;
+    this.currentPage.set(1);
+  }
 
   // Form Model
   teacherName = '';
@@ -61,6 +92,14 @@ export class TeacherUserCrudComponent implements OnInit {
     if (this.levelFilter !== 'ALL') {
       list = list.filter((t) => t.level === this.levelFilter);
     }
+    if (this.roleFilter !== 'ALL') {
+      list = list.filter((t) => t.role === this.roleFilter);
+    }
+    if (this.selectedGroupId !== 'ALL') {
+      list = list.filter(
+        (t) => t.groups && t.groups.some(g => g.id === this.selectedGroupId || g.name === this.selectedGroupId)
+      );
+    }
     if (this.searchQuery.trim()) {
       const q = this.searchQuery.toLowerCase();
       list = list.filter(
@@ -69,7 +108,33 @@ export class TeacherUserCrudComponent implements OnInit {
           t.email.toLowerCase().includes(q)
       );
     }
-    return list;
+
+    const field = this.sortField();
+    const dir = this.sortDirection();
+    return [...list].sort((a, b) => {
+      let valA = '';
+      let valB = '';
+      if (field === 'name') {
+        valA = a.nombre || '';
+        valB = b.nombre || '';
+      } else if (field === 'level') {
+        valA = a.level || '';
+        valB = b.level || '';
+      } else if (field === 'role') {
+        valA = a.role || '';
+        valB = b.role || '';
+      } else if (field === 'groups') {
+        const countA = a.groups ? a.groups.length : 0;
+        const countB = b.groups ? b.groups.length : 0;
+        return dir === 'asc' ? countA - countB : countB - countA;
+      } else if (field === 'status') {
+        const numA = a.active ? 1 : 0;
+        const numB = b.active ? 1 : 0;
+        return dir === 'asc' ? numB - numA : numA - numB;
+      }
+      const cmp = valA.localeCompare(valB, 'es', { sensitivity: 'base' });
+      return dir === 'asc' ? cmp : -cmp;
+    });
   }
 
   get pagedTeachers(): TeacherUser[] {
@@ -83,6 +148,12 @@ export class TeacherUserCrudComponent implements OnInit {
 
   setLevelFilter(level: 'ALL' | 'KINDER' | 'PRIMARIA' | 'SECUNDARIA'): void {
     this.levelFilter = level;
+    if (this.selectedGroupId !== 'ALL') {
+      const existsInLevel = this.filterableGroups.some(g => g.id === this.selectedGroupId);
+      if (!existsInLevel) {
+        this.selectedGroupId = 'ALL';
+      }
+    }
     this.currentPage.set(1);
   }
 

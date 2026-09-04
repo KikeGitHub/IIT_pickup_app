@@ -195,6 +195,18 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
     this.studentSearchQuery = '';
   }
 
+  readonly rosterSortField = signal<'name' | 'grade' | 'curp' | 'tutors'>('name');
+  readonly rosterSortDirection = signal<'asc' | 'desc'>('asc');
+
+  toggleRosterSort(field: 'name' | 'grade' | 'curp' | 'tutors'): void {
+    if (this.rosterSortField() === field) {
+      this.rosterSortDirection.set(this.rosterSortDirection() === 'asc' ? 'desc' : 'asc');
+    } else {
+      this.rosterSortField.set(field);
+      this.rosterSortDirection.set('asc');
+    }
+  }
+
   get currentGroup(): TeacherGroup | undefined {
     const gid = this.selectedGroupId();
     return this.teacherService.myGroups().find(g => g.id === gid) || this.teacherService.myGroups()[0];
@@ -203,13 +215,38 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
   get filteredGroupStudents(): TeacherStudent[] {
     const grp = this.currentGroup;
     if (!grp || !grp.students) return [];
-    if (!this.studentSearchQuery.trim()) return grp.students;
-    const q = this.studentSearchQuery.toLowerCase();
-    return grp.students.filter(s =>
-      s.name.toLowerCase().includes(q) ||
-      (s.curp && s.curp.toLowerCase().includes(q)) ||
-      (s.grade && s.grade.toLowerCase().includes(q))
-    );
+    let list = grp.students;
+    if (this.studentSearchQuery.trim()) {
+      const q = this.studentSearchQuery.toLowerCase();
+      list = list.filter(s =>
+        s.name.toLowerCase().includes(q) ||
+        (s.curp && s.curp.toLowerCase().includes(q)) ||
+        (s.grade && s.grade.toLowerCase().includes(q))
+      );
+    }
+
+    const field = this.rosterSortField();
+    const dir = this.rosterSortDirection();
+    return [...list].sort((a, b) => {
+      let valA = '';
+      let valB = '';
+      if (field === 'name') {
+        valA = a.name || '';
+        valB = b.name || '';
+      } else if (field === 'grade') {
+        valA = a.grade || '';
+        valB = b.grade || '';
+      } else if (field === 'curp') {
+        valA = a.curp || '';
+        valB = b.curp || '';
+      } else if (field === 'tutors') {
+        const countA = a.familyMembers ? a.familyMembers.length : 0;
+        const countB = b.familyMembers ? b.familyMembers.length : 0;
+        return dir === 'asc' ? countA - countB : countB - countA;
+      }
+      const cmp = valA.localeCompare(valB, 'es', { sensitivity: 'base', numeric: true });
+      return dir === 'asc' ? cmp : -cmp;
+    });
   }
 
   openEditStudentModal(student: TeacherStudent): void {

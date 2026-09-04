@@ -177,6 +177,11 @@
         background: #0b0f19;
         border-color: rgba(255, 255, 255, 0.08);
         color: #94a3b8;
+
+        &.sortable:hover {
+          background: #1e293b;
+          color: #93c5fd;
+        }
       }
 
       td {
@@ -608,7 +613,61 @@
     color: v.$color-on-surface-variant;
     font-weight: v.$font-weight-semibold;
     border-bottom: 1px solid v.$color-outline-variant;
+
+    &.sortable {
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.15s, color 0.15s;
+
+      &:hover {
+        background: #e2e8f0;
+        color: #1d4ed8;
+      }
+
+      .th-content {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .sort-icon {
+        font-size: 11px;
+        opacity: 0.35;
+        transition: opacity 0.15s, color 0.15s;
+
+        &--active {
+          opacity: 1;
+          color: #2563eb;
+          font-weight: 800;
+        }
+      }
+    }
   }
+
+.table-loading-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  background: linear-gradient(90deg, #eff6ff 0%, #f8fafc 100%);
+  border-bottom: 1px solid #dbeafe;
+  color: #1e40af;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.loading-spinner-sm {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #bfdbfe;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
 
   td {
     padding: v.$space-sm v.$space-md;

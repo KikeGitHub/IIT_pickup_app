@@ -14,15 +14,51 @@
 
   <!-- Filter & Search Toolbar -->
   <div class="toolbar-card">
-    <div class="search-box">
-      <span class="search-icon">🔍</span>
-      <input
-        type="text"
-        [(ngModel)]="searchQuery"
-        (ngModelChange)="onSearchChange()"
-        placeholder="Buscar por nombre o correo..."
-        class="search-input"
-      />
+    <div class="toolbar-left-group">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input
+          type="text"
+          [(ngModel)]="searchQuery"
+          (ngModelChange)="onSearchChange()"
+          placeholder="Buscar por nombre o correo..."
+          class="search-input"
+        />
+      </div>
+
+      <!-- Specific Group Filter -->
+      <div class="group-select-filter" [class.group-select-filter--active]="selectedGroupId !== 'ALL'" *ngIf="filterableGroups.length > 0">
+        <span class="filter-icon">🏫</span>
+        <select
+          [(ngModel)]="selectedGroupId"
+          (ngModelChange)="onGroupFilterChange($event)"
+          class="group-filter-dropdown"
+          aria-label="Filtrar por grupo asignado"
+        >
+          <option value="ALL">Todos los grupos ({{ filterableGroups.length }})</option>
+          @for (g of filterableGroups; track g.id) {
+            <option [value]="g.id">
+              {{ g.level }} · Grupo {{ g.name }}
+            </option>
+          }
+        </select>
+      </div>
+
+      <!-- Role Filter Dropdown -->
+      <div class="group-select-filter" [class.group-select-filter--active]="roleFilter !== 'ALL'">
+        <span class="filter-icon">🛡️</span>
+        <select
+          [ngModel]="roleFilter"
+          (ngModelChange)="setRoleFilter($event)"
+          class="group-filter-dropdown"
+          aria-label="Filtrar por rol"
+        >
+          <option value="ALL">Todos los roles</option>
+          <option value="TEACHER">Docentes (TEACHER)</option>
+          <option value="MONITOR">Monitores de Puerta (MONITOR)</option>
+          <option value="ADMIN">Administradores (ADMIN)</option>
+        </select>
+      </div>
     </div>
 
     <div class="filter-pills">
@@ -47,11 +83,46 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th>Maestro</th>
-              <th>Nivel</th>
-              <th>Grupos Asignados</th>
-              <th>Rol</th>
-              <th>Estado</th>
+              <th class="sortable" (click)="toggleSort('name')" title="Clic para ordenar por nombre">
+                <span class="th-content">
+                  Maestro
+                  <span class="sort-icon" [class.sort-icon--active]="sortField() === 'name'">
+                    {{ sortField() === 'name' ? (sortDirection() === 'asc' ? '▲' : '▼') : '↕' }}
+                  </span>
+                </span>
+              </th>
+              <th class="sortable" (click)="toggleSort('level')" title="Clic para ordenar por nivel">
+                <span class="th-content">
+                  Nivel
+                  <span class="sort-icon" [class.sort-icon--active]="sortField() === 'level'">
+                    {{ sortField() === 'level' ? (sortDirection() === 'asc' ? '▲' : '▼') : '↕' }}
+                  </span>
+                </span>
+              </th>
+              <th class="sortable" (click)="toggleSort('groups')" title="Clic para ordenar por número de grupos">
+                <span class="th-content">
+                  Grupos Asignados
+                  <span class="sort-icon" [class.sort-icon--active]="sortField() === 'groups'">
+                    {{ sortField() === 'groups' ? (sortDirection() === 'asc' ? '▲' : '▼') : '↕' }}
+                  </span>
+                </span>
+              </th>
+              <th class="sortable" (click)="toggleSort('role')" title="Clic para ordenar por rol">
+                <span class="th-content">
+                  Rol
+                  <span class="sort-icon" [class.sort-icon--active]="sortField() === 'role'">
+                    {{ sortField() === 'role' ? (sortDirection() === 'asc' ? '▲' : '▼') : '↕' }}
+                  </span>
+                </span>
+              </th>
+              <th class="sortable" (click)="toggleSort('status')" title="Clic para ordenar por estado">
+                <span class="th-content">
+                  Estado
+                  <span class="sort-icon" [class.sort-icon--active]="sortField() === 'status'">
+                    {{ sortField() === 'status' ? (sortDirection() === 'asc' ? '▲' : '▼') : '↕' }}
+                  </span>
+                </span>
+              </th>
               <th>Acciones</th>
             </tr>
           </thead>

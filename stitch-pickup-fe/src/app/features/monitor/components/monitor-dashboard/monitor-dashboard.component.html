@@ -199,6 +199,10 @@
 
           <!-- Loading Skeleton State -->
           @if (teacherService.isLoading()) {
+            <div class="table-loading-header">
+              <div class="loading-spinner-sm"></div>
+              <span>Cargando lista de alumnos asignados...</span>
+            </div>
             <app-table-skeleton [rows]="6" [cols]="3"></app-table-skeleton>
           } @else {
             <!-- Desktop / Tablet Table View (>= 768px) -->
@@ -206,10 +210,31 @@
               <table class="data-table">
                 <thead>
                   <tr>
-                    <th>Alumno</th>
-                    <th>Nivel & Grado</th>
+                    <th class="sortable" (click)="toggleRosterSort('name')" title="Clic para ordenar por nombre de alumno">
+                      <span class="th-content">
+                        Alumno
+                        <span class="sort-icon" [class.sort-icon--active]="rosterSortField() === 'name'">
+                          {{ rosterSortField() === 'name' ? (rosterSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}
+                        </span>
+                      </span>
+                    </th>
+                    <th class="sortable" (click)="toggleRosterSort('grade')" title="Clic para ordenar por grado">
+                      <span class="th-content">
+                        Nivel & Grado
+                        <span class="sort-icon" [class.sort-icon--active]="rosterSortField() === 'grade'">
+                          {{ rosterSortField() === 'grade' ? (rosterSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}
+                        </span>
+                      </span>
+                    </th>
                     <th>Grupo</th>
-                    <th>Tutores Autorizados (Pickup)</th>
+                    <th class="sortable" (click)="toggleRosterSort('tutors')" title="Clic para ordenar por número de tutores">
+                      <span class="th-content">
+                        Tutores Autorizados (Pickup)
+                        <span class="sort-icon" [class.sort-icon--active]="rosterSortField() === 'tutors'">
+                          {{ rosterSortField() === 'tutors' ? (rosterSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}
+                        </span>
+                      </span>
+                    </th>
                     <th>Acciones</th>
                   </tr>
                 </thead>
