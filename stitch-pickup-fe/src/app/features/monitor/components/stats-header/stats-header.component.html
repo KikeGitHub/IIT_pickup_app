@@ -77,19 +77,8 @@
     </div>
   </div>
 
-  <!-- Connection status + Theme Toggle + Sound Toggle + logout -->
+  <!-- Connection status + Theme Toggle + logout -->
   <div class="header-right">
-    <!-- Sound Toggle & Test Button -->
-    <button
-      type="button"
-      class="btn-sound-toggle"
-      [class.btn-sound-toggle--muted]="!soundService.soundEnabled()"
-      (click)="soundService.testSound()"
-      title="Toca para probar o activar el sonido en tu celular"
-    >
-      <span class="sound-icon">🔔</span>
-      <span class="sound-text">Sonido</span>
-    </button>
 
     <!-- Theme Switcher Button -->
     <button
