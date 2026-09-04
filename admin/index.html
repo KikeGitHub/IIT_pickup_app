@@ -1519,123 +1519,171 @@
                 return;
             }
 
+            // Agrupar alumnos por Tutor + Nivel escolar
+            const parentLevelGroups = {};
             filtered.forEach(student => {
-                const card = document.createElement('div');
-
-                let borderClass = 'border-outline-variant/30';
-                let badgeClass = 'bg-surface-dim text-on-surface';
-                let badgeText = 'SIN REPORTE';
-                let buttonHTML = `<button class="w-full bg-surface-container text-on-surface-variant py-2 rounded-lg font-button-text text-xs cursor-not-allowed flex items-center justify-center" disabled>ESPERANDO</button>`;
-                let pulseClass = '';
-                let timerIcon = 'hourglass_empty';
-
-                const isUrgent = student.status === 'URGENTE' || urgentAlerts[student.id];
-
-                if (isUrgent) {
-                    borderClass = 'border-red-700/60';
-                    badgeClass = 'bg-red-700 text-white';
-                    badgeText = '¡URGENTE!';
-                    buttonHTML = `
-                        <button onclick="confirmPickup('${student.id}')" class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg font-button-text text-xs transition-all shadow-sm flex items-center justify-center gap-1">
-                            CONFIRMAR ENTREGA
-                            <span class="material-symbols-outlined text-sm">check_circle</span>
-                        </button>`;
-                    pulseClass = 'animate-pulse shadow-2xl ring-4 ring-red-200';
-                    timerIcon = 'warning';
-                } else if (student.status === 'EN_FILA') {
-                    borderClass = 'border-orange-600/60';
-                    badgeClass = 'bg-orange-600 text-white';
-                    badgeText = '¡YA EN FILA!';
-                    buttonHTML = `
-                        <button onclick="confirmPickup('${student.id}')" class="w-full bg-primary text-on-primary py-2 rounded-lg font-button-text text-xs hover:bg-on-primary-fixed-variant transition-all flex items-center justify-center gap-1 shadow-sm">
-                            CONFIRMAR
-                            <span class="material-symbols-outlined text-sm">check_circle</span>
-                        </button>
-                    `;
-                    pulseClass = 'ring-2 ring-orange-200 shadow-lg';
-                    timerIcon = 'notifications_active';
-                } else if (student.status === '5_MIN') {
-                    borderClass = 'border-orange-500/30';
-                    badgeClass = 'bg-orange-500 text-white';
-                    badgeText = 'A 5 MIN';
-                    buttonHTML = `<button class="w-full bg-surface-container text-on-surface-variant py-2 rounded-lg font-button-text text-xs cursor-not-allowed flex items-center justify-center" disabled>EN DISTANCIA</button>`;
-                    timerIcon = 'timer_3';
-                } else if (student.status === '10_MIN') {
-                    borderClass = 'border-yellow-500/30';
-                    badgeClass = 'bg-yellow-500 text-on-tertiary-fixed';
-                    badgeText = 'A 10 MIN';
-                    buttonHTML = `<button class="w-full bg-surface-container text-on-surface-variant py-2 rounded-lg font-button-text text-xs cursor-not-allowed flex items-center justify-center" disabled>EN DISTANCIA</button>`;
-                    timerIcon = 'timer_10';
-                }
-
-                card.className = `bg-white border ${borderClass} rounded-xl p-3 shadow-sm relative overflow-hidden ${pulseClass} flex flex-col transition-all hover:shadow-md hover:translate-y-[-2px]`;
-                card.id = `card-${student.id}`;
-
-                let methodBadgeHTML = '';
-                if (student.pickupMethod === 'WALK') {
-                    methodBadgeHTML = `
-                        <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-blue-50 border border-blue-200 text-blue-700 rounded text-[9px] font-bold">
-                            <span class="material-symbols-outlined text-[10px]">directions_walk</span> A PIE
-                        </span>`;
-                } else {
-                    methodBadgeHTML = `
-                        <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded text-[9px] font-bold">
-                            <span class="material-symbols-outlined text-[10px]">directions_car</span> AUTO
-                        </span>`;
-                }
-
-                // Buscar hermanos activos (que compartan el mismo padre)
-                const siblings = students.filter(s => s.id !== student.id && s.parent === student.parent);
-                let siblingBadgeHTML = '';
-                if (siblings.length > 0) {
-                    const siblingNames = siblings.map(s => s.name.split(' ')[0]);
-                    siblingBadgeHTML = `
-                        <div class="mt-1 bg-indigo-50 border border-indigo-200 text-indigo-700 px-2 py-0.5 rounded text-[9px] font-bold flex items-center gap-1 w-fit">
-                            <span class="material-symbols-outlined text-[10px]" style="font-variation-settings: 'FILL' 1;">group</span>
-                            Hermano de: ${siblingNames.join(', ')}
-                        </div>
-                    `;
-                }
-
-                card.innerHTML = `
-                    <div class="flex justify-between items-center mb-2">
-                        <div class="relative">
-                            <img alt="${student.name}" class="w-12 h-12 rounded-full object-cover border-2 ${student.status === 'EN_FILA' ? 'border-secondary/20' : 'border-outline-variant/20'}" src="${student.avatar}"/>
-                            ${student.status === 'EN_FILA' || isUrgent ? `
-                            <div class="absolute -bottom-1 -right-1 bg-secondary text-white rounded-full p-0.5 border border-white">
-                                <span class="material-symbols-outlined text-[10px] block">${timerIcon}</span>
-                            </div>` : ''}
-                        </div>
-                        <div class="flex flex-col items-end gap-1">
-                            <span class="${badgeClass} px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider">${badgeText}</span>
-                            ${methodBadgeHTML}
-                        </div>
-                    </div>
-                    <div class="mb-2 flex-1">
-                        <h3 class="font-bold text-sm text-primary truncate">${student.name}</h3>
-                        <p class="text-on-surface-variant text-[10px] font-bold uppercase">${student.grade} · ${student.group || ''}</p>
-                        ${siblingBadgeHTML}
-                    </div>
-                    
-                    <!-- Tarjeta del Padre/Madre -->
-                    <div class="bg-surface-container-low p-2 rounded-lg mb-2 border border-outline-variant/10 cursor-pointer hover:bg-surface-container transition-all" onclick="showFamilyPopup('${student.id}')" title="Ver familiares autorizados">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-2 min-w-0">
-                                <span class="material-symbols-outlined text-primary text-sm">person</span>
-                                <p class="text-[10px] text-on-surface truncate font-medium">${student.parent}</p>
-                            </div>
-                            <span class="material-symbols-outlined text-outline text-xs">group</span>
-                        </div>
-                    </div>
-                    
-                    ${student.lastUpdate ? `
-                    <div class="text-[10px] text-outline mb-2 italic">
-                        Reportado a las ${student.lastUpdate}
-                    </div>` : ''}
-                    ${buttonHTML}
-                `;
-                grid.appendChild(card);
+                const key = `${student.parent}_${student.level}`;
+                if (!parentLevelGroups[key]) parentLevelGroups[key] = [];
+                parentLevelGroups[key].push(student);
             });
+
+            const renderedGroups = new Set();
+
+            filtered.forEach(student => {
+                const key = `${student.parent}_${student.level}`;
+                if (renderedGroups.has(key)) return; // Ya procesado este grupo familiar
+                renderedGroups.add(key);
+
+                const groupStudents = parentLevelGroups[key];
+
+                if (groupStudents.length > 1) {
+                    // Contenedor visual de Hermanos del Mismo Nivel
+                    const groupWrapper = document.createElement('div');
+                    groupWrapper.className = 'col-span-1 md:col-span-2 border-2 border-indigo-200 bg-indigo-50/10 p-4 rounded-2xl flex flex-col gap-3 border-dashed shadow-sm';
+                    
+                    groupWrapper.innerHTML = `
+                        <div class="flex items-center justify-between border-b border-indigo-100/60 pb-2">
+                            <span class="text-xs font-bold text-indigo-700 uppercase tracking-widest flex items-center gap-1.5">
+                                <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">group</span>
+                                Hermanos en Nivel ${student.level} (Familia de: ${student.parent})
+                            </span>
+                            <span class="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[10px] font-bold rounded-full">
+                                ${groupStudents.length} Alumnos
+                            </span>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="siblings-container-${student.id}">
+                        </div>
+                    `;
+                    grid.appendChild(groupWrapper);
+
+                    const subGrid = groupWrapper.querySelector(`#siblings-container-${student.id}`);
+                    groupStudents.forEach(s => {
+                        subGrid.appendChild(createStudentCardElement(s));
+                    });
+                } else {
+                    // Tarjeta individual estándar
+                    grid.appendChild(createStudentCardElement(student));
+                }
+            });
+        }
+
+        // Helper para crear el elemento HTML de la tarjeta de un estudiante
+        function createStudentCardElement(student) {
+            const card = document.createElement('div');
+
+            let borderClass = 'border-outline-variant/30';
+            let badgeClass = 'bg-surface-dim text-on-surface';
+            let badgeText = 'SIN REPORTE';
+            let buttonHTML = `<button class="w-full bg-surface-container text-on-surface-variant py-2 rounded-lg font-button-text text-xs cursor-not-allowed flex items-center justify-center" disabled>ESPERANDO</button>`;
+            let pulseClass = '';
+            let timerIcon = 'hourglass_empty';
+
+            const isUrgent = student.status === 'URGENTE' || urgentAlerts[student.id];
+
+            if (isUrgent) {
+                borderClass = 'border-red-700/60';
+                badgeClass = 'bg-red-700 text-white';
+                badgeText = '¡URGENTE!';
+                buttonHTML = `
+                    <button onclick="confirmPickup('${student.id}')" class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg font-button-text text-xs transition-all shadow-sm flex items-center justify-center gap-1">
+                        CONFIRMAR ENTREGA
+                        <span class="material-symbols-outlined text-sm">check_circle</span>
+                    </button>`;
+                pulseClass = 'animate-pulse shadow-2xl ring-4 ring-red-200';
+                timerIcon = 'warning';
+            } else if (student.status === 'EN_FILA') {
+                borderClass = 'border-orange-600/60';
+                badgeClass = 'bg-orange-600 text-white';
+                badgeText = '¡YA EN FILA!';
+                buttonHTML = `
+                    <button onclick="confirmPickup('${student.id}')" class="w-full bg-primary text-on-primary py-2 rounded-lg font-button-text text-xs hover:bg-on-primary-fixed-variant transition-all flex items-center justify-center gap-1 shadow-sm">
+                        CONFIRMAR
+                        <span class="material-symbols-outlined text-sm">check_circle</span>
+                    </button>
+                `;
+                pulseClass = 'ring-2 ring-orange-200 shadow-lg';
+                timerIcon = 'notifications_active';
+            } else if (student.status === '5_MIN') {
+                borderClass = 'border-orange-500/30';
+                badgeClass = 'bg-orange-500 text-white';
+                badgeText = 'A 5 MIN';
+                buttonHTML = `<button class="w-full bg-surface-container text-on-surface-variant py-2 rounded-lg font-button-text text-xs cursor-not-allowed flex items-center justify-center" disabled>EN DISTANCIA</button>`;
+                timerIcon = 'timer_3';
+            } else if (student.status === '10_MIN') {
+                borderClass = 'border-yellow-500/30';
+                badgeClass = 'bg-yellow-500 text-on-tertiary-fixed';
+                badgeText = 'A 10 MIN';
+                buttonHTML = `<button class="w-full bg-surface-container text-on-surface-variant py-2 rounded-lg font-button-text text-xs cursor-not-allowed flex items-center justify-center" disabled>EN DISTANCIA</button>`;
+                timerIcon = 'timer_10';
+            }
+
+            card.className = `bg-white border ${borderClass} rounded-xl p-3 shadow-sm relative overflow-hidden ${pulseClass} flex flex-col transition-all hover:shadow-md hover:translate-y-[-2px]`;
+            card.id = `card-${student.id}`;
+
+            let methodBadgeHTML = '';
+            if (student.pickupMethod === 'WALK') {
+                methodBadgeHTML = `
+                    <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-blue-50 border border-blue-200 text-blue-700 rounded text-[9px] font-bold">
+                        <span class="material-symbols-outlined text-[10px]">directions_walk</span> A PIE
+                    </span>`;
+            } else {
+                methodBadgeHTML = `
+                    <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded text-[9px] font-bold">
+                        <span class="material-symbols-outlined text-[10px]">directions_car</span> AUTO
+                    </span>`;
+            }
+
+            // Buscar hermanos activos (que compartan el mismo padre)
+            const siblings = students.filter(s => s.id !== student.id && s.parent === student.parent);
+            let siblingBadgeHTML = '';
+            if (siblings.length > 0) {
+                const siblingNames = siblings.map(s => s.name.split(' ')[0]);
+                siblingBadgeHTML = `
+                    <div class="mt-1 bg-indigo-50 border border-indigo-200 text-indigo-700 px-2 py-0.5 rounded text-[9px] font-bold flex items-center gap-1 w-fit">
+                        <span class="material-symbols-outlined text-[10px]" style="font-variation-settings: 'FILL' 1;">group</span>
+                        Hermano de: ${siblingNames.join(', ')}
+                    </div>
+                `;
+            }
+
+            card.innerHTML = `
+                <div class="flex justify-between items-center mb-2">
+                    <div class="relative">
+                        <img alt="${student.name}" class="w-12 h-12 rounded-full object-cover border-2 ${student.status === 'EN_FILA' ? 'border-secondary/20' : 'border-outline-variant/20'}" src="${student.avatar}"/>
+                        ${student.status === 'EN_FILA' || isUrgent ? `
+                        <div class="absolute -bottom-1 -right-1 bg-secondary text-white rounded-full p-0.5 border border-white">
+                            <span class="material-symbols-outlined text-[10px] block">${timerIcon}</span>
+                        </div>` : ''}
+                    </div>
+                    <div class="flex flex-col items-end gap-1">
+                        <span class="${badgeClass} px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider">${badgeText}</span>
+                        ${methodBadgeHTML}
+                    </div>
+                </div>
+                <div class="mb-2 flex-1">
+                    <h3 class="font-bold text-sm text-primary truncate">${student.name}</h3>
+                    <p class="text-on-surface-variant text-[10px] font-bold uppercase">${student.grade} · ${student.group || ''}</p>
+                    ${siblingBadgeHTML}
+                </div>
+                
+                <!-- Tarjeta del Padre/Madre -->
+                <div class="bg-surface-container-low p-2 rounded-lg mb-2 border border-outline-variant/10 cursor-pointer hover:bg-surface-container transition-all" onclick="showFamilyPopup('${student.id}')" title="Ver familiares autorizados">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <span class="material-symbols-outlined text-primary text-sm">person</span>
+                            <p class="text-[10px] text-on-surface truncate font-medium">${student.parent}</p>
+                        </div>
+                        <span class="material-symbols-outlined text-outline text-xs">group</span>
+                    </div>
+                </div>
+                
+                ${student.lastUpdate ? `
+                <div class="text-[10px] text-outline mb-2 italic">
+                    Reportado a las ${student.lastUpdate}
+                </div>` : ''}
+                ${buttonHTML}
+            `;
+            return card;
         }
 
         // Mostrar un Popover / Modal rápido con los Familiares Autorizados
@@ -3242,7 +3290,7 @@
                     const prevStatus = student.status;
 
                     let finalStatus = incomingStatus;
-                    if (incomingStatus === 'EN_FILA' && prevStatus === 'EN_FILA') {
+                    if (incomingStatus === 'EN_FILA' && (prevStatus === 'EN_FILA' || prevStatus === 'URGENTE')) {
                         finalStatus = 'URGENTE';
                     }
 
@@ -3269,6 +3317,31 @@
                     renderGroups();
                     renderStudents();
                     updateStatsCount();
+                }
+            } else if (data.type === 'ADMIN_CONFIRM') {
+                const student = students.find(s => s.id === data.studentId);
+                if (student) {
+                    student.status = 'CONFIRMADO';
+                    saveConfirmedToStorage(data.studentId);
+                    
+                    const cardEl = document.getElementById(`card-${data.studentId}`);
+                    if (cardEl) {
+                        cardEl.style.transform = 'scale(0.8) translateY(20px)';
+                        cardEl.style.opacity = '0';
+                        cardEl.style.transition = 'all 0.4s ease';
+                        setTimeout(() => {
+                            renderStudents();
+                            addToDispatchedList(student, data.time || 'Entregado');
+                            updateStatsCount();
+                            renderGroups();
+                        }, 400);
+                    } else {
+                        renderStudents();
+                        addToDispatchedList(student, data.time || 'Entregado');
+                        updateStatsCount();
+                        renderGroups();
+                    }
+                    showToast('Alumno Entregado', `${student.name} fue entregado por el maestro.`, student.avatar);
                 }
             } else if (data.type === 'DATABASE_UPDATED') {
                 // Alguien más actualizó los datos, recargar localmente

@@ -299,6 +299,11 @@
                 </div>
             </div>
             <div class="flex items-center gap-2">
+                <button onclick="resetAllDeliveriesForTest()" title="Reiniciar entrega para repetir prueba"
+                    class="flex items-center gap-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-2.5 py-1 rounded-full text-[11px] font-bold shadow-sm transition-all active:scale-95">
+                    <span class="material-symbols-outlined text-[15px]">restart_alt</span>
+                    <span>Reiniciar Demo</span>
+                </button>
                 <button id="header-notif-btn"
                     class="relative p-2 rounded-full text-on-surface-variant hover:bg-surface-container transition-colors">
                     <span class="material-symbols-outlined text-[22px]">notifications</span>
@@ -790,10 +795,10 @@ function renderStudentsDashboard() {
                         Esperando aviso de recogida...
                     </p>
                 </div>
-                ${isConfirmed ? `
+                ${(st || isConfirmed) ? `
                     <button onclick="resetStudentDeliveryForTest('${student.id}')" class="w-full py-2 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 text-xs font-bold rounded-xl shadow-sm transition-all active:scale-95 flex items-center justify-center gap-1.5">
                         <span class="material-symbols-outlined text-sm">restart_alt</span>
-                        Nueva Entrega (Reiniciar Prueba)
+                        Reiniciar Prueba (${student.name.split(' ')[0]})
                     </button>
                 ` : ''}
             </div>
@@ -825,7 +830,7 @@ function handleStudentAction(studentId, statusCode, btnId) {
         return;
     }
 
-    if (statusCode === 'EN_FILA' && reportedStates[studentId] === 'EN_FILA') {
+    if (statusCode === 'EN_FILA' && (reportedStates[studentId] === 'EN_FILA' || reportedStates[studentId] === 'URGENTE')) {
         statusCode = 'URGENTE';
     }
 
@@ -1006,6 +1011,34 @@ function resetStudentDeliveryForTest(studentId) {
     renderStudentsDashboard();
 }
 
+function resetAllDeliveriesForTest() {
+    try {
+        const key = getTodayKey();
+        localStorage.removeItem(key);
+    } catch(e) {}
+
+    myStudents.forEach(student => {
+        reportedStates[student.id] = null;
+    });
+
+    const storedStudents = getStoredStudents();
+    storedStudents.forEach(s => {
+        if (myStudents.some(ms => ms.id === s.id)) {
+            s.status = 'SIN_REPORTE';
+            s.pickupMethod = 'CAR';
+            s.lastUpdate = '';
+        }
+    });
+    saveStoredStudents(storedStudents);
+
+    channel.postMessage({ type: 'DATABASE_UPDATED' });
+    if (typeof closeDeliveryConfirmModal === 'function') {
+        closeDeliveryConfirmModal();
+    }
+    showMobileToast('Prueba reiniciada. Puedes volver a probar las entregas ✓', 'success');
+    renderStudentsDashboard();
+}
+
 function capitalize(str) {
     if (!str) return '';
     return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
@@ -1097,8 +1130,21 @@ function setPickupMode(mode) {
     }
 }
 
-// Modal de confirmación de entrega
+// Modal de confirmación de entrega (Sistema de cola para múltiples hermanos)
+const confirmQueue = [];
+
 function openDeliveryConfirmModal(studentId, studentName) {
+    // Si ya se está mostrando un modal para este estudiante o ya está en la cola, omitir duplicado
+    if (activeConfirmStudentId === studentId || confirmQueue.some(item => item.id === studentId)) {
+        return;
+    }
+
+    if (activeConfirmStudentId !== null) {
+        // Ya hay un modal activo, encolar este reporte de entrega
+        confirmQueue.push({ id: studentId, name: studentName });
+        return;
+    }
+
     activeConfirmStudentId = studentId;
     const titleEl = document.getElementById('delivery-modal-title');
     const descEl = document.getElementById('delivery-modal-desc');
@@ -1114,13 +1160,23 @@ function closeDeliveryConfirmModal() {
     const modalEl = document.getElementById('delivery-confirm-modal');
     if (modalEl) modalEl.classList.add('hidden');
     activeConfirmStudentId = null;
+    
+    // Procesar el siguiente en la cola tras una breve pausa para la animación
+    setTimeout(() => {
+        if (confirmQueue.length > 0) {
+            const next = confirmQueue.shift();
+            openDeliveryConfirmModal(next.id, next.name);
+        }
+    }, 400);
 }
 
 function confirmParentReceipt() {
     if (!activeConfirmStudentId) return;
     
+    const targetStudentId = activeConfirmStudentId;
+    
     // 1. Guardar en la bitácora de la DB local
-    const result = DeliveryLogService.logParentConfirm(activeConfirmStudentId);
+    const result = DeliveryLogService.logParentConfirm(targetStudentId);
     
     // 2. Notificar por canal de Broadcast a Maestros y Admin
     const now = new Date();
@@ -1128,12 +1184,12 @@ function confirmParentReceipt() {
     
     channel.postMessage({
         type: 'PARENT_RECEIVE_CONFIRM',
-        studentId: activeConfirmStudentId,
+        studentId: targetStudentId,
         time: timeStr,
         parentName: currentUser.nombre
     });
     
-    // 3. Cerrar y avisar al usuario
+    // 3. Cerrar y avisar al usuario (la función close se encargará de desencolar el siguiente)
     closeDeliveryConfirmModal();
     showMobileToast('¡Recepción registrada y respaldada! Gracias.', 'success');
 }
@@ -1152,9 +1208,15 @@ function confirmParentReceipt() {
                 El maestro reporta que ya te entregó a tu hijo. ¿Confirmas que ya lo tienes contigo?
             </p>
         </div>
-        <button onclick="confirmParentReceipt()" class="w-full bg-primary text-white font-bold rounded-xl py-3.5 text-sm hover:bg-blue-700 active:scale-95 transition-all shadow-md">
-            SÍ, YA LO RECIBÍ
-        </button>
+        <div class="flex flex-col gap-2 w-full">
+            <button onclick="confirmParentReceipt()" class="w-full bg-primary text-white font-bold rounded-xl py-3.5 text-sm hover:bg-blue-700 active:scale-95 transition-all shadow-md">
+                SÍ, YA LO RECIBÍ
+            </button>
+            <button onclick="resetAllDeliveriesForTest()" class="w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold rounded-xl py-2 text-xs active:scale-95 transition-all flex items-center justify-center gap-1">
+                <span class="material-symbols-outlined text-sm">restart_alt</span>
+                REINICIAR PRUEBA DEMO
+            </button>
+        </div>
     </div>
 </div>
 

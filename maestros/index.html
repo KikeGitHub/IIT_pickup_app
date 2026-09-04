@@ -620,8 +620,8 @@ document.addEventListener('DOMContentLoaded', () => {
 function tBootApp(session) {
     tCurrentUser = session;
     tAllStudents = getStoredStudents();
-    // Filter students belonging to teacher's groups
-    tMyStudents = tAllStudents.filter(s => (session.groups || []).includes(s.group));
+    // Filter students belonging to teacher's groups and level
+    tMyStudents = tAllStudents.filter(s => s.level === session.level && (session.groups || []).includes(s.group));
 
     document.getElementById('login-screen').classList.add('hidden');
     const app = document.getElementById('t-app-screen');
@@ -1015,8 +1015,12 @@ function tRenderRightPanelDispatched() {
     const logs = DeliveryLogService.getLogs();
     const todayStr = new Date().toISOString().slice(0, 10);
     
-    // Filtrar los de hoy y que correspondan a mis grupos
-    const todayLogs = logs.filter(l => l.date === todayStr && (tCurrentUser.groups || []).includes(l.group));
+    // Filtrar los de hoy y que correspondan a mis grupos y nivel escolar
+    const todayLogs = logs.filter(l => 
+        l.date === todayStr && 
+        (tCurrentUser.groups || []).includes(l.group) &&
+        tAllStudents.some(s => s.id === l.studentId && s.level === tCurrentUser.level)
+    );
     
     if (todayLogs.length === 0) {
         list.innerHTML = `
@@ -1202,7 +1206,7 @@ tChannel.onmessage = (event) => {
         if (!student) return;
         const prev = student.status;
         let finalStatus = (data.status || '').trim().toUpperCase();
-        if (finalStatus === 'EN_FILA' && prev === 'EN_FILA') finalStatus = 'URGENTE';
+        if (finalStatus === 'EN_FILA' && (prev === 'EN_FILA' || prev === 'URGENTE')) finalStatus = 'URGENTE';
         student.status = finalStatus;
         student.pickupMethod = data.pickupMethod || 'CAR';
         student.lastUpdate = data.time;
@@ -1230,7 +1234,7 @@ tChannel.onmessage = (event) => {
         }
     } else if (data.type === 'DATABASE_UPDATED') {
         tAllStudents = getStoredStudents();
-        tMyStudents = tAllStudents.filter(s => (tCurrentUser?.groups || []).includes(s.group));
+        tMyStudents = tAllStudents.filter(s => s.level === tCurrentUser.level && (tCurrentUser?.groups || []).includes(s.group));
         if (tCurrentModule === 'MONITOR') { 
             tRenderStudents(); 
             tRenderRightPanelDispatched();
@@ -1246,8 +1250,12 @@ function tRenderKpiDispatchList() {
     const logs = DeliveryLogService.getLogs();
     const todayStr = new Date().toISOString().slice(0, 10);
     
-    // Filtrar los de hoy y que correspondan a mis grupos
-    const todayLogs = logs.filter(l => l.date === todayStr && (tCurrentUser.groups || []).includes(l.group));
+    // Filtrar los de hoy y que correspondan a mis grupos y nivel escolar
+    const todayLogs = logs.filter(l => 
+        l.date === todayStr && 
+        (tCurrentUser.groups || []).includes(l.group) &&
+        tAllStudents.some(s => s.id === l.studentId && s.level === tCurrentUser.level)
+    );
     
     if (todayLogs.length === 0) {
         list.innerHTML = `<p class="text-xs text-outline italic text-center py-4">Sin entregas confirmadas hoy en mis grupos.</p>`;

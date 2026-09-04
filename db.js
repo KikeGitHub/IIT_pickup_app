@@ -35,6 +35,20 @@ const DEFAULT_STUDENTS = [
         ]
     },
     { 
+        id: 'lucas_estrada', 
+        name: 'LUCAS ESTRADA', 
+        level: 'KINDER', 
+        grade: '1º KÍNDER', 
+        group: '1º B', 
+        birthday: '2020-09-14',
+        avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBSjH25FZv4tA8v_m--vMmYkOqzv9p6io65EZTIEZrxiyNX3BDt2dSWMsMbd2HVhGCo63q2SvOnNAeFQbT2Iuf-b9Ew-EajvSkp2KKpTNBmuodJc29xy0fR5pE6FG520lj_imxRdTMUxymznW7_zJCpVFVpguvETQ88Nu7gah5fEhdJoOQM0eg35ZnzJKijgWfxXOazxyEyma5c-jJJrWfd_S6-1Pb7SvkmbKMWBSXKAuBtQ_6EHG8QhnnoudOjTRBGMV1evoK_WHI', 
+        parent: 'Sofía de Estrada',
+        family: [
+            { name: 'Sofía de Estrada', relationship: 'Madre', phone: '7221234567', photo: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150', authorized: true },
+            { name: 'Ricardo Estrada', relationship: 'Padre', phone: '7229876543', photo: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=150', authorized: true }
+        ]
+    },
+    { 
         id: 'sofia_hernandez', 
         name: 'SOFÍA HERNÁNDEZ', 
         level: 'KINDER', 
@@ -407,7 +421,25 @@ function getStoredStudents() {
         return DEFAULT_STUDENTS;
     }
     try {
-        return JSON.parse(list);
+        let parsed = JSON.parse(list);
+        if (!parsed.some(s => s.id === 'lucas_estrada')) {
+            parsed.push({ 
+                id: 'lucas_estrada', 
+                name: 'LUCAS ESTRADA', 
+                level: 'KINDER', 
+                grade: '1º KÍNDER', 
+                group: '1º B', 
+                birthday: '2020-09-14',
+                avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBSjH25FZv4tA8v_m--vMmYkOqzv9p6io65EZTIEZrxiyNX3BDt2dSWMsMbd2HVhGCo63q2SvOnNAeFQbT2Iuf-b9Ew-EajvSkp2KKpTNBmuodJc29xy0fR5pE6FG520lj_imxRdTMUxymznW7_zJCpVFVpguvETQ88Nu7gah5fEhdJoOQM0eg35ZnzJKijgWfxXOazxyEyma5c-jJJrWfd_S6-1Pb7SvkmbKMWBSXKAuBtQ_6EHG8QhnnoudOjTRBGMV1evoK_WHI', 
+                parent: 'Sofía de Estrada',
+                family: [
+                    { name: 'Sofía de Estrada', relationship: 'Madre', phone: '7221234567', photo: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150', authorized: true },
+                    { name: 'Ricardo Estrada', relationship: 'Padre', phone: '7229876543', photo: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=150', authorized: true }
+                ]
+            });
+            localStorage.setItem('stitch_students', JSON.stringify(parsed));
+        }
+        return parsed;
     } catch (e) {
         return DEFAULT_STUDENTS;
     }
@@ -451,7 +483,7 @@ const DEFAULT_PARENT_USERS = [
         email: 'sofia.estrada@demo.com',
         // DEMO ONLY – en producción: BCrypt hash via Spring Security
         password: 'Demo2024',
-        studentIds: ['mateo_estrada', 'isabella_torres'],
+        studentIds: ['mateo_estrada', 'isabella_torres', 'lucas_estrada'],
         active: true,
         tempPassword: false,
         createdAt: '2026-01-10',
@@ -619,7 +651,13 @@ const AuthService = {
     getCurrentUser() {
         try {
             const raw = localStorage.getItem('stitch_auth_session');
-            return raw ? JSON.parse(raw) : null;
+            if (!raw) return null;
+            const session = JSON.parse(raw);
+            if (session && session.email === 'sofia.estrada@demo.com' && session.studentIds && !session.studentIds.includes('lucas_estrada')) {
+                session.studentIds.push('lucas_estrada');
+                localStorage.setItem('stitch_auth_session', JSON.stringify(session));
+            }
+            return session;
         } catch (e) {
             return null;
         }
