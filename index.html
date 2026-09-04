@@ -1,17 +1,14 @@
 <!DOCTYPE html>
-
 <html class="h-full" lang="es">
 
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport" />
-    <title>Logística de Salida - Instituto Inglés de Toluca</title>
+    <title>Student Pickup – Instituto Inglés de Toluca</title>
+    <meta name="description" content="Plataforma de notificación de recogida de alumnos del Instituto Inglés de Toluca. Avisa a la escuela cuando estés en camino." />
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700&amp;display=swap"
-        rel="stylesheet" />
-    <link
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
-        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
     <script src="db.js"></script>
     <script id="tailwind-config">
         tailwind.config = {
@@ -32,7 +29,7 @@
                         "surface-container-high": "#f1f5f9",
                         "surface-container": "#e2e8f0",
                         "on-error-container": "#991b1b",
-                        "secondary": "#ef4444", // Cheerful primary-school red/coral
+                        "secondary": "#ef4444",
                         "surface-tint": "#3b82f6",
                         "primary-fixed-dim": "#bfdbfe",
                         "surface-dim": "#cbd5e1",
@@ -59,8 +56,8 @@
                         "on-surface": "#0f172a",
                         "inverse-surface": "#1e293b",
                         "on-background": "#0f172a",
-                        "primary-container": "#dbeafe", // Friendly light blue
-                        "primary": "#1e40af", // Vibrant academic blue
+                        "primary-container": "#dbeafe",
+                        "primary": "#1e40af",
                         "on-secondary-fixed": "#7f1d1d",
                         "surface-bright": "#ffffff",
                         "surface-container-lowest": "#ffffff",
@@ -110,441 +107,1118 @@
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
-
         body {
             font-family: 'Hanken Grotesk', sans-serif;
             -webkit-tap-highlight-color: transparent;
         }
-
         .active-press {
             transform: scale(0.96);
             filter: brightness(0.9);
         }
-
-        /* Custom scroll settings - enabled vertical scrolling */
-        html,
-        body {
+        html, body {
             overflow-y: auto;
             height: auto;
-        }
-    </style>
-    <style>
-        body {
             min-height: 100dvh;
+        }
+        /* Login gradient */
+        #login-screen {
+            background: linear-gradient(145deg, #1e3a8a 0%, #1e40af 45%, #1d4ed8 100%);
+        }
+        /* Input focus ring */
+        .iit-input:focus {
+            outline: none;
+            border-color: #1e40af;
+            box-shadow: 0 0 0 3px rgba(30,64,175,0.15);
+        }
+        /* Slide transition */
+        .slide-up {
+            animation: slideUp 0.35s cubic-bezier(0.16,1,0.3,1) forwards;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to   { transform: translateY(0); opacity: 1; }
+        }
+        /* Shake for wrong password */
+        .shake {
+            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+        }
+        @keyframes shake {
+            10%,90% { transform: translateX(-2px); }
+            20%,80% { transform: translateX(4px); }
+            30%,50%,70% { transform: translateX(-6px); }
+            40%,60% { transform: translateX(6px); }
+        }
+        /* Bottom panel slide */
+        #profile-panel {
+            transition: transform 0.35s cubic-bezier(0.16,1,0.3,1);
+        }
+        /* Temp password warning pulse */
+        .temp-warn { animation: warnPulse 2s infinite; }
+        @keyframes warnPulse {
+            0%,100% { box-shadow: 0 0 0 0 rgba(251,191,36,0.4); }
+            50% { box-shadow: 0 0 0 8px rgba(251,191,36,0); }
         }
     </style>
 </head>
 
 <body class="bg-background text-on-background flex flex-col">
-    <!-- TopAppBar -->
-    <header
-        class="fixed top-0 w-full bg-surface-container flex items-center justify-between px-container-margin-mobile h-16 w-full z-50 transition-colors duration-200">
-        <div class="flex items-center gap-3">
-            <div
-                class="w-11 h-11 rounded-full bg-white flex items-center justify-center border border-outline-variant/60 overflow-hidden shadow-sm">
-                <img alt="IIT Logo" class="w-full h-full object-cover" src="logo_IIT.jpg" />
+
+    <!-- ═══════════════════════════════════════════
+         PANTALLA LOGIN
+    ═══════════════════════════════════════════ -->
+    <div id="login-screen" class="fixed inset-0 z-[200] flex flex-col items-center justify-between px-6 py-10">
+        <!-- Logo & Brand -->
+        <div class="flex flex-col items-center gap-4 mt-8 slide-up">
+            <div class="w-20 h-20 rounded-2xl bg-white/15 backdrop-blur-sm border border-white/30 flex items-center justify-center shadow-xl overflow-hidden">
+                <img src="logo_IIT.jpg" class="w-full h-full object-cover" alt="IIT Logo" />
             </div>
-            <h1 class="font-headline-sm text-headline-sm font-bold text-primary">Student Pickup - Instituto Ingles de
-                Toluca</h1>
+            <div class="text-center">
+                <h1 class="text-white font-bold text-2xl leading-tight">Student Pickup</h1>
+                <p class="text-white/70 text-sm mt-1">Instituto Inglés de Toluca</p>
+            </div>
         </div>
-        <div class="flex items-center gap-4">
-            <button
-                class="material-symbols-outlined text-on-surface-variant hover:bg-surface-variant/20 p-2 rounded-full transition-colors">notifications</button>
-        </div>
-    </header>
-    <!-- Main Content Canvas -->
-    <main class="flex-1 mt-16 pb-20 px-container-margin-mobile flex flex-col justify-between py-stack-md">
-        <!-- Welcome Section -->
-        <section class="space-y-stack-sm">
-            <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-stack-md shadow-sm">
-                <div class="flex justify-between items-center mb-3">
-                    <div>
-                        <p class="text-on-surface-variant font-label-md text-label-md uppercase tracking-wider">
-                            Bienvenido,</p>
-                        <h2 class="text-headline-sm font-headline-sm text-primary">Padre de Familia</h2>
-                    </div>
+
+        <!-- Login Card -->
+        <div class="w-full max-w-sm slide-up" style="animation-delay:0.1s">
+            <div class="bg-white rounded-2xl shadow-2xl p-6 flex flex-col gap-5" id="login-card">
+                <div>
+                    <h2 class="font-bold text-primary text-lg">Acceso para Padres</h2>
+                    <p class="text-on-surface-variant text-xs mt-0.5">Ingresa con tus credenciales escolares</p>
+                </div>
+
+                <!-- Email -->
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-xs font-bold text-outline uppercase tracking-wide">Correo Electrónico</label>
                     <div class="relative">
-                        <select id="student-selector"
-                            class="bg-surface-container-low border border-outline-variant rounded-lg px-3 py-1.5 font-label-md text-label-md text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer shadow-sm"
-                            onchange="changeStudent(this.value)">
-                        </select>
+                        <span class="material-symbols-outlined absolute left-3 top-3 text-outline text-[18px]">mail</span>
+                        <input id="login-email" type="email" autocomplete="email" placeholder="correo@ejemplo.com"
+                            class="iit-input w-full border border-outline-variant rounded-xl pl-10 pr-4 py-3 text-sm text-primary bg-surface-container-low transition-all"
+                            onkeydown="if(event.key==='Enter') document.getElementById('login-password').focus()" />
                     </div>
                 </div>
-                <div class="flex items-center gap-3 bg-surface-container-low p-3 rounded-lg border-l-4 border-secondary transition-all"
-                    id="student-card-info">
-                    <img id="student-avatar"
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuAt26n3kin1y74Y4yE0a2wZNRwM8iJ3k9HiSRTvU_HAhWFnLvRQ9ucyfFgm-o8BEWIXFGWkWovyg7vigZzYQphdXriMr3-0zyukU9iWb5odtlrfxLMSxQRWbuAedMLZ5e5CQI1DERl8RYpZyUqEm3ASxo-mPxf0pK3fWPFVjameMS7BMjpfLEn1SvYzjF_39vIkGlrlAsjyXi_89_botb8AdYn66ZbCd-97lUclnr3Ms9ovxKj43SmWUGDXABgKhFlMyVJO2ci7cO0"
-                        class="w-10 h-10 rounded-full object-cover border border-outline-variant shadow-sm"
-                        alt="Student avatar">
-                    <div>
-                        <p class="font-button-text text-button-text text-on-surface" id="student-name">Danna Irina</p>
-                        <p class="text-on-surface-variant font-label-md text-label-md" id="student-grade">1º Secundaria
-                        </p>
+
+                <!-- Password -->
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-xs font-bold text-outline uppercase tracking-wide">Contraseña</label>
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-3 top-3 text-outline text-[18px]">lock</span>
+                        <input id="login-password" type="password" autocomplete="current-password" placeholder="••••••••"
+                            class="iit-input w-full border border-outline-variant rounded-xl pl-10 pr-10 py-3 text-sm text-primary bg-surface-container-low transition-all"
+                            onkeydown="if(event.key==='Enter') doLogin()" />
+                        <button onclick="togglePasswordVisibility('login-password', 'eye-toggle')" class="absolute right-3 top-3 text-outline" type="button" id="eye-toggle">
+                            <span class="material-symbols-outlined text-[18px]">visibility</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Error -->
+                <div id="login-error" class="hidden bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-xs font-medium flex items-center gap-2">
+                    <span class="material-symbols-outlined text-sm flex-shrink-0">error</span>
+                    <span id="login-error-text">Credenciales incorrectas.</span>
+                </div>
+
+                <!-- Button -->
+                <button id="login-btn" onclick="doLogin()"
+                    class="w-full bg-primary text-white font-bold rounded-xl py-3.5 text-sm flex items-center justify-center gap-2 shadow-lg hover:bg-blue-700 active:scale-95 transition-all">
+                    <span class="material-symbols-outlined text-[18px]">login</span>
+                    ENTRAR
+                </button>
+
+                <!-- Demo hint -->
+                <div class="bg-surface-container-low rounded-xl p-3 border border-outline-variant/30">
+                    <p class="text-[10px] font-bold text-outline uppercase tracking-wide mb-1.5">Cuentas de Demo</p>
+                    <div class="flex flex-col gap-1">
+                        <p class="text-[11px] text-on-surface-variant font-mono">sofia.estrada@demo.com</p>
+                        <p class="text-[11px] text-on-surface-variant font-mono">pedro.hernandez@demo.com</p>
+                        <p class="text-[11px] text-on-surface-variant font-mono">maria.duran@demo.com</p>
+                        <p class="text-[11px] text-primary font-bold mt-1">Password: <span class="font-mono">Demo2024</span></p>
                     </div>
                 </div>
             </div>
-        </section>
-        <!-- Action Panel (Bento-style layout for mobile efficiency) -->
-        <section class="flex-1 flex flex-col justify-center gap-stack-md">
-            <button
-                class="w-full h-20 bg-primary text-white font-button-text text-button-text rounded-xl flex items-center justify-between px-6 shadow-md transition-all active:scale-95 active:brightness-90"
-                id="btn-10" onclick="handleAction('ESTOY A 10 MINUTOS', 'btn-10')">
-                <span class="flex flex-col items-start">
-                    <span class="text-primary-fixed-dim text-xs uppercase opacity-80">Distancia Media</span>
-                    <span>ESTOY A 10 MINUTOS</span>
-                </span>
-                <span class="material-symbols-outlined text-3xl">timer_10</span>
-            </button>
-            <button
-                class="w-full h-20 bg-primary text-white font-button-text text-button-text rounded-xl flex items-center justify-between px-6 shadow-md transition-all active:scale-95 active:brightness-90"
-                id="btn-5" onclick="handleAction('ESTOY A 5 MINUTOS', 'btn-5')">
-                <span class="flex flex-col items-start">
-                    <span class="text-primary-fixed-dim text-xs uppercase opacity-80">Próxima Llegada</span>
-                    <span>ESTOY A 5 MINUTOS</span>
-                </span>
-                <span class="material-symbols-outlined text-3xl">timer_3</span>
-            </button>
-            <button
-                class="w-full h-28 bg-secondary text-white font-button-text text-button-text rounded-xl flex items-center justify-between px-6 shadow-lg border-2 border-white/20 transition-all active:scale-95 active:brightness-90"
-                id="btn-now" onclick="handleAction('YA ESTOY EN FILA / LLEGUE', 'btn-now')">
-                <span class="flex flex-col items-start">
-                    <span class="text-white/80 text-xs uppercase font-bold tracking-widest">Acción Inmediata</span>
-                    <span class="text-xl">YA ESTOY EN FILA / LLEGUE</span>
-                </span>
-                <span class="material-symbols-outlined text-5xl"
-                    style="font-variation-settings: 'FILL' 1;">directions_car</span>
-            </button>
-        </section>
-        <!-- Status Confirmation -->
-        <section class="mt-auto">
-            <div class="bg-surface-container-high rounded-lg p-4 flex items-center gap-3 border border-outline-variant opacity-80 transition-all duration-500"
-                id="status-card">
-                <span class="material-symbols-outlined text-on-surface-variant">history</span>
-                <p class="text-on-surface-variant font-label-md text-label-md italic" id="status-text">
-                    Esperando actualización de estado...
-                </p>
+        </div>
+
+        <!-- Footer -->
+        <p class="text-white/50 text-[11px] text-center slide-up" style="animation-delay:0.2s">
+            © 2026 Instituto Inglés de Toluca · Versión Demo
+        </p>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         MODAL: CAMBIO DE CONTRASEÑA TEMPORAL
+    ═══════════════════════════════════════════ -->
+    <div id="change-password-modal" class="fixed inset-0 z-[300] flex items-center justify-center px-4 hidden">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick=""></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm flex flex-col gap-4 slide-up temp-warn border-2 border-yellow-400">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600 flex-shrink-0">
+                    <span class="material-symbols-outlined">key</span>
+                </div>
+                <div>
+                    <h3 class="font-bold text-primary text-sm">Cambio de Contraseña Requerido</h3>
+                    <p class="text-[11px] text-on-surface-variant mt-0.5">Tu contraseña es temporal. Cámbiala para continuar.</p>
+                </div>
             </div>
-        </section>
-    </main>
-    <!-- Footer -->
-    <footer
-        class="w-full py-stack-md mb-20 flex flex-col items-center justify-center text-center px-container-margin-mobile bg-surface-container-low">
-        <p class="font-button-text text-button-text italic text-secondary mb-1">Excelencia académica con visión
-            internacional</p>
-        <p class="text-on-surface-variant font-label-md text-label-md">© 2024 Educational Institution</p>
-    </footer>
-    <!-- BottomNavBar -->
-    <nav
-        class="fixed bottom-0 left-0 w-full bg-surface dark:bg-surface-dim flex justify-around items-center py-2 px-4 pb-safe shadow-md z-50">
-        <a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 transition-transform active:scale-90"
-            href="#">
-            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">directions_car</span>
-            <span class="font-label-md text-label-md">Pickup</span>
-        </a>
-        <a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-transform active:scale-90"
-            href="#">
-            <span class="material-symbols-outlined">calendar_month</span>
-            <span class="font-label-md text-label-md">Schedule</span>
-        </a>
-        <a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-transform active:scale-90"
-            href="#">
-            <span class="material-symbols-outlined">person</span>
-            <span class="font-label-md text-label-md">Profile</span>
-        </a>
-    </nav>
-    <script>
-        let studentData = {};
-        let currentStudentId = 'danna_irina';
-        
-        function loadStudents() {
-            const list = getStoredStudents();
-            studentData = {};
-            list.forEach(s => {
-                studentData[s.id] = s;
-            });
-        }
-        
-        loadStudents();
+            <div class="flex flex-col gap-3">
+                <div class="flex flex-col gap-1">
+                    <label class="text-[10px] font-bold text-outline uppercase">Contraseña Actual (Temporal)</label>
+                    <input id="cp-old" type="password" placeholder="••••••" class="iit-input border border-outline-variant rounded-lg p-2.5 text-xs bg-surface-container-low" />
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-[10px] font-bold text-outline uppercase">Nueva Contraseña (mín. 6 car.)</label>
+                    <input id="cp-new" type="password" placeholder="••••••" class="iit-input border border-outline-variant rounded-lg p-2.5 text-xs bg-surface-container-low" />
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-[10px] font-bold text-outline uppercase">Confirmar Nueva Contraseña</label>
+                    <input id="cp-confirm" type="password" placeholder="••••••" class="iit-input border border-outline-variant rounded-lg p-2.5 text-xs bg-surface-container-low" onkeydown="if(event.key==='Enter') doChangePassword()" />
+                </div>
+                <div id="cp-error" class="hidden text-xs text-red-600 font-medium flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm">error</span>
+                    <span id="cp-error-text"></span>
+                </div>
+                <button onclick="doChangePassword()" class="w-full bg-primary text-white font-bold rounded-xl py-3 text-sm hover:bg-blue-700 active:scale-95 transition-all">
+                    GUARDAR NUEVA CONTRASEÑA
+                </button>
+            </div>
+        </div>
+    </div>
 
-        function populateSelector() {
-            const selector = document.getElementById('student-selector');
-            const savedValue = selector.value || currentStudentId;
-            selector.innerHTML = '';
-            
-            const list = Object.values(studentData);
-            
-            const levels = {
-                'KINDER': 'Kínder',
-                'PRIMARIA': 'Primaria',
-                'SECUNDARIA': 'Secundaria'
-            };
-            
-            Object.keys(levels).forEach(lvlKey => {
-                const groupEl = document.createElement('optgroup');
-                groupEl.label = levels[lvlKey];
-                groupEl.className = 'font-bold text-outline';
-                
-                const levelStudents = list.filter(s => s.level === lvlKey);
-                levelStudents.forEach(student => {
-                    const opt = document.createElement('option');
-                    opt.value = student.id;
-                    opt.innerText = student.name.charAt(0) + student.name.slice(1).toLowerCase() + ` (${student.grade} ${student.group || ''})`;
-                    if (student.id === savedValue) {
-                        opt.selected = true;
-                        currentStudentId = student.id;
-                    }
-                    groupEl.appendChild(opt);
-                });
-                
-                if (levelStudents.length > 0) {
-                    selector.appendChild(groupEl);
-                }
-            });
-        }
+    <!-- ═══════════════════════════════════════════
+         PANTALLA PRINCIPAL (AUTHENTICATED)
+    ═══════════════════════════════════════════ -->
+    <div id="app-screen" class="hidden flex flex-col min-h-dvh">
 
-        const channel = new BroadcastChannel('stitch_pickup_channel');
-        
-        // Rastrear los estados reportados en esta sesión por alumno
-        const reportedStates = {};
+        <!-- TopAppBar -->
+        <header class="fixed top-0 w-full bg-white border-b border-outline-variant/40 flex items-center justify-between px-4 h-16 z-50 shadow-sm">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-full bg-white flex items-center justify-center border border-outline-variant/60 overflow-hidden shadow-sm">
+                    <img alt="IIT Logo" class="w-full h-full object-cover" src="logo_IIT.jpg" />
+                </div>
+                <div>
+                    <p class="font-bold text-primary text-sm leading-tight">Student Pickup</p>
+                    <p class="text-[10px] text-on-surface-variant leading-none" id="header-parent-name">–</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="resetAllDeliveriesForTest()" title="Reiniciar entrega para repetir prueba"
+                    class="flex items-center gap-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-2.5 py-1 rounded-full text-[11px] font-bold shadow-sm transition-all active:scale-95">
+                    <span class="material-symbols-outlined text-[15px]">restart_alt</span>
+                    <span>Reiniciar Demo</span>
+                </button>
+                <button id="header-notif-btn"
+                    class="relative p-2 rounded-full text-on-surface-variant hover:bg-surface-container transition-colors">
+                    <span class="material-symbols-outlined text-[22px]">notifications</span>
+                    <span id="notif-badge" class="hidden absolute -top-0.5 -right-0.5 w-4 h-4 bg-secondary rounded-full text-white text-[8px] font-bold flex items-center justify-center">!</span>
+                </button>
+                <button onclick="openProfilePanel()" class="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-full border border-outline-variant/40 hover:bg-surface-container transition-colors">
+                    <img id="header-avatar" src="" class="w-7 h-7 rounded-full object-cover border border-outline-variant/30" alt="avatar" />
+                    <span class="material-symbols-outlined text-outline text-[16px]">expand_more</span>
+                </button>
+            </div>
+        </header>
 
-        // Persistencia diaria de confirmaciones
-        function getTodayKey() {
-            return 'confirmed_' + new Date().toISOString().slice(0, 10);
-        }
+        <!-- Main -->
+        <main class="flex-1 mt-16 pb-24 px-4 flex flex-col gap-4 py-4">
 
-        function loadConfirmedFromStorage() {
-            try {
-                const arr = JSON.parse(localStorage.getItem(getTodayKey()) || '[]');
-                return new Set(arr);
-            } catch (e) {
-                return new Set();
-            }
-        }
+            <!-- Temp Password Banner -->
+            <div id="temp-pw-banner" class="hidden bg-yellow-50 border border-yellow-300 rounded-xl p-3 flex items-center gap-3 cursor-pointer temp-warn" onclick="openChangePasswordModal()">
+                <span class="material-symbols-outlined text-yellow-600 flex-shrink-0">warning</span>
+                <div class="flex-1 min-w-0">
+                    <p class="text-xs font-bold text-yellow-800">Contraseña temporal activa</p>
+                    <p class="text-[10px] text-yellow-700">Toca aquí para establecer tu contraseña personal.</p>
+                </div>
+                <span class="material-symbols-outlined text-yellow-600 text-sm flex-shrink-0">chevron_right</span>
+            </div>
 
-        function saveConfirmedToStorage(studentId) {
-            try {
-                const key = getTodayKey();
-                const arr = JSON.parse(localStorage.getItem(key) || '[]');
-                if (!arr.includes(studentId)) {
-                    arr.push(studentId);
-                    localStorage.setItem(key, JSON.stringify(arr));
-                }
-            } catch (e) { }
-        }
+            <!-- Contenedor dinámico de Hijos -->
+            <div id="students-dashboard-container" class="flex flex-col gap-6"></div>
 
-        function changeStudent(id) {
-            currentStudentId = id;
-            const student = studentData[id];
-            
-            // Animación suave de transición de datos
-            const infoCard = document.getElementById('student-card-info');
-            infoCard.style.opacity = 0;
-            infoCard.style.transform = 'translateY(5px)';
-            
-            setTimeout(() => {
-                document.getElementById('student-name').innerText = student.name.charAt(0) + student.name.slice(1).toLowerCase();
-                document.getElementById('student-grade').innerText = student.grade.charAt(0) + student.grade.slice(1).toLowerCase();
-                document.getElementById('student-avatar').src = student.avatar;
-                
-                infoCard.style.opacity = 1;
-                infoCard.style.transform = 'translateY(0)';
-            }, 200);
+            <!-- Status Card -->
+            <section>
+                <div class="bg-surface-container-high rounded-2xl p-4 flex items-center gap-3 border border-outline-variant/30 transition-all duration-500" id="status-card">
+                    <span class="material-symbols-outlined text-on-surface-variant flex-shrink-0">history</span>
+                    <p class="text-on-surface-variant font-medium text-sm italic flex-1" id="status-text">
+                        Esperando actualización de estado...
+                    </p>
+                </div>
+            </section>
 
-            // Cargar estado reportado previo de este alumno
-            const currentStatus = reportedStates[currentStudentId];
-            if (currentStatus === 'CONFIRMADO') {
-                showConfirmationState("reciente");
-            } else if (currentStatus === 'URGENTE') {
-                const statusCard = document.getElementById('status-card');
-                const statusTextEl = document.getElementById('status-text');
-                statusCard.className = "bg-red-500 border-red-600 rounded-lg p-4 flex items-center justify-between border-2 transition-all duration-500 animate-pulse text-white shadow-lg";
-                statusTextEl.className = "text-white font-bold not-italic font-label-md text-label-md flex items-center gap-2";
-                statusTextEl.innerHTML = `
-                    <span class="material-symbols-outlined text-white animate-bounce">warning</span>
-                    <span>¡Alerta de demora enviada! Reportado urgente.</span>
-                `;
-            } else if (currentStatus === '10_MIN' || currentStatus === '5_MIN' || currentStatus === 'EN_FILA') {
-                const statusCard = document.getElementById('status-card');
-                const statusTextEl = document.getElementById('status-text');
-                let text = currentStatus === '10_MIN' ? 'ESTOY A 10 MINUTOS' : (currentStatus === '5_MIN' ? 'ESTOY A 5 MINUTOS' : 'YA ESTOY EN FILA / LLEGUE');
-                statusCard.className = "bg-primary-container border-primary rounded-lg p-4 flex items-center justify-between border transition-all duration-500 shadow-sm";
-                statusTextEl.className = "text-on-primary-container font-bold not-italic font-label-md text-label-md";
-                statusTextEl.innerText = `Último aviso enviado: ${text}`;
+            <!-- Historial del día -->
+            <section id="history-section" class="hidden flex flex-col gap-2">
+                <p class="text-[10px] font-bold text-outline uppercase tracking-widest px-1">Historial de Hoy</p>
+                <div id="history-list" class="flex flex-col gap-2"></div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="pb-24 pt-2 flex flex-col items-center text-center px-4 bg-surface-container-low border-t border-outline-variant/30">
+            <p class="font-bold italic text-secondary text-xs mb-0.5">Excelencia académica con visión internacional</p>
+            <p class="text-on-surface-variant text-[10px]">© 2026 Instituto Inglés de Toluca</p>
+        </footer>
+
+        <!-- BottomNavBar -->
+        <nav class="fixed bottom-0 left-0 w-full bg-white border-t border-outline-variant/30 flex justify-around items-center py-2 px-4 pb-safe shadow-lg z-50">
+            <a class="flex flex-col items-center justify-center bg-primary/10 text-primary rounded-xl px-4 py-1.5 transition-transform active:scale-90" href="#" id="nav-pickup">
+                <span class="material-symbols-outlined text-[22px]" style="font-variation-settings: 'FILL' 1;">directions_car</span>
+                <span class="text-[10px] font-bold mt-0.5">Pickup</span>
+            </a>
+            <a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high rounded-xl px-4 py-1.5 transition-transform active:scale-90" href="#" onclick="openProfilePanel(); return false;">
+                <span class="material-symbols-outlined text-[22px]">person</span>
+                <span class="text-[10px] font-medium mt-0.5">Perfil</span>
+            </a>
+        </nav>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         PANEL DE PERFIL (Bottom Sheet)
+    ═══════════════════════════════════════════ -->
+    <div id="profile-panel-overlay" class="fixed inset-0 bg-black/50 z-[150] hidden" onclick="closeProfilePanel()"></div>
+    <div id="profile-panel" class="fixed bottom-0 left-0 right-0 z-[160] translate-y-full bg-white rounded-t-3xl shadow-2xl border-t border-outline-variant/20 pb-safe">
+        <!-- Handle -->
+        <div class="flex justify-center pt-3 pb-1">
+            <div class="w-10 h-1 bg-outline-variant rounded-full"></div>
+        </div>
+        <div class="px-6 pb-6 flex flex-col gap-4">
+            <!-- User Info -->
+            <div class="flex items-center gap-4 py-2">
+                <img id="profile-avatar" src="" class="w-14 h-14 rounded-full object-cover border-2 border-primary/20 shadow" alt="avatar" />
+                <div class="flex-1 min-w-0">
+                    <p class="font-bold text-primary text-base truncate" id="profile-name">–</p>
+                    <p class="text-on-surface-variant text-xs truncate" id="profile-email">–</p>
+                    <div id="profile-students-chips" class="flex flex-wrap gap-1 mt-1"></div>
+                </div>
+            </div>
+            <div class="border-t border-outline-variant/20"></div>
+            <!-- Actions -->
+            <button onclick="openChangePasswordModal(); closeProfilePanel();" class="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-surface-container transition-colors text-left">
+                <div class="w-9 h-9 rounded-full bg-blue-50 flex items-center justify-center text-primary flex-shrink-0">
+                    <span class="material-symbols-outlined text-[18px]">key</span>
+                </div>
+                <div>
+                    <p class="font-bold text-sm text-on-surface">Cambiar Contraseña</p>
+                    <p class="text-[10px] text-on-surface-variant">Actualiza tus credenciales de acceso</p>
+                </div>
+                <span class="material-symbols-outlined text-outline ml-auto">chevron_right</span>
+            </button>
+            <button onclick="doLogout()" class="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-red-50 transition-colors text-left border border-red-100">
+                <div class="w-9 h-9 rounded-full bg-red-50 flex items-center justify-center text-secondary flex-shrink-0">
+                    <span class="material-symbols-outlined text-[18px]">logout</span>
+                </div>
+                <div>
+                    <p class="font-bold text-sm text-secondary">Cerrar Sesión</p>
+                    <p class="text-[10px] text-on-surface-variant">Salir de tu cuenta</p>
+                </div>
+            </button>
+            <p class="text-[10px] text-center text-outline">Student Pickup v2.0 · IIT Demo</p>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         MODAL: CAMBIAR CONTRASEÑA (from profile)
+    ═══════════════════════════════════════════ -->
+    <div id="change-pw-overlay" class="fixed inset-0 z-[250] flex items-end justify-center hidden">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeChangePasswordModal()"></div>
+        <div class="relative bg-white rounded-t-3xl shadow-2xl w-full max-w-lg px-6 pt-4 pb-8 slide-up">
+            <div class="flex justify-between items-center mb-5">
+                <div>
+                    <h3 class="font-bold text-primary text-base">Cambiar Contraseña</h3>
+                    <p class="text-[11px] text-on-surface-variant">Mínimo 6 caracteres</p>
+                </div>
+                <button onclick="closeChangePasswordModal()" class="p-2 rounded-full hover:bg-surface-container text-outline">
+                    <span class="material-symbols-outlined text-[18px]">close</span>
+                </button>
+            </div>
+            <div class="flex flex-col gap-3">
+                <div class="flex flex-col gap-1">
+                    <label class="text-[10px] font-bold text-outline uppercase">Contraseña Actual</label>
+                    <input id="cpw-old" type="password" placeholder="••••••" class="iit-input border border-outline-variant rounded-xl p-3 text-sm bg-surface-container-low" />
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-[10px] font-bold text-outline uppercase">Nueva Contraseña</label>
+                    <input id="cpw-new" type="password" placeholder="••••••" class="iit-input border border-outline-variant rounded-xl p-3 text-sm bg-surface-container-low" />
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-[10px] font-bold text-outline uppercase">Confirmar Nueva Contraseña</label>
+                    <input id="cpw-confirm" type="password" placeholder="••••••" class="iit-input border border-outline-variant rounded-xl p-3 text-sm bg-surface-container-low"
+                        onkeydown="if(event.key==='Enter') doChangePasswordFromProfile()" />
+                </div>
+                <div id="cpw-error" class="hidden bg-red-50 border border-red-200 text-red-700 rounded-xl px-3 py-2 text-xs font-medium flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-sm">error</span>
+                    <span id="cpw-error-text"></span>
+                </div>
+                <button onclick="doChangePasswordFromProfile()" class="w-full bg-primary text-white font-bold rounded-xl py-3.5 text-sm hover:bg-blue-700 active:scale-95 transition-all mt-1">
+                    GUARDAR CONTRASEÑA
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="mobile-toast" class="fixed top-20 left-4 right-4 z-[400] hidden">
+        <div id="mobile-toast-inner" class="bg-gray-900 text-white rounded-xl px-4 py-3 flex items-center gap-3 shadow-xl">
+            <span class="material-symbols-outlined text-[18px] flex-shrink-0" id="mobile-toast-icon">check_circle</span>
+            <span class="text-sm font-medium flex-1" id="mobile-toast-text">–</span>
+        </div>
+    </div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════
+let currentUser = null;         // AuthService session
+let allStudents = [];           // From db.js
+let myStudents = [];            // Only this parent's students
+let currentStudentId = null;
+let selectedPickupMode = 'CAR';  // 'CAR' o 'WALK'
+let activeConfirmStudentId = null; // Alumno esperando que el padre confirme recibido
+const reportedStates = {};      // studentId → status code
+const channel = new BroadcastChannel('stitch_pickup_channel');
+const dayHistory = [];          // { studentId, studentName, status, time }
+
+// ═══════════════════════════════════════════════════════
+//  BOOT
+// ═══════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+    const session = AuthService.getCurrentUser();
+    if (session) {
+        bootApp(session);
+    }
+    // Login remains visible if no session
+});
+
+function bootApp(session) {
+    currentUser = session;
+    allStudents = getStoredStudents();
+
+    // Filter only this parent's students
+    myStudents = allStudents.filter(s => session.studentIds.includes(s.id));
+
+    if (myStudents.length === 0) {
+        myStudents = allStudents;
+    }
+
+    // Hide login, show app
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('app-screen').classList.remove('hidden');
+    document.getElementById('app-screen').classList.add('flex');
+
+    // Header
+    document.getElementById('header-parent-name').innerText = session.nombre;
+    document.getElementById('header-avatar').src = session.avatar || '';
+
+    // Temp password warning
+    if (session.tempPassword) {
+        document.getElementById('temp-pw-banner').classList.remove('hidden');
+    }
+
+    // Load daily confirmations
+    const confirmed = loadConfirmedFromStorage();
+    confirmed.forEach(id => reportedStates[id] = 'CONFIRMADO');
+
+    // Inicializar modalidad por defecto para cada estudiante
+    myStudents.forEach(student => {
+        selectedPickupModes[student.id] = 'CAR';
+    });
+
+    renderStudentsDashboard();
+}
+
+// ═══════════════════════════════════════════════════════
+//  LOGIN
+// ═══════════════════════════════════════════════════════
+function doLogin() {
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    const btn = document.getElementById('login-btn');
+    const errorEl = document.getElementById('login-error');
+    const errorText = document.getElementById('login-error-text');
+
+    if (!email || !password) {
+        showLoginError('Por favor ingresa tu email y contraseña.');
+        return;
+    }
+
+    // Loading state
+    btn.disabled = true;
+    btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-[18px]">progress_activity</span> Verificando...';
+
+    setTimeout(() => {
+        const result = AuthService.login(email, password);
+        btn.disabled = false;
+        btn.innerHTML = '<span class="material-symbols-outlined text-[18px]">login</span> ENTRAR';
+
+        if (result.success) {
+            errorEl.classList.add('hidden');
+            if (result.user.tempPassword) {
+                // Show temp password change modal BEFORE booting app
+                bootApp(result.user);
+                openTempPasswordModal();
             } else {
-                resetStatusCard();
+                bootApp(result.user);
             }
+        } else {
+            showLoginError(result.error);
+            shakeCard();
         }
+    }, 600); // Simulates network latency
+}
 
-        // Al cargar la página, marcar confirmaciones del día y bloquear botones si aplica
-        document.addEventListener('DOMContentLoaded', () => {
-            populateSelector();
-            changeStudent(currentStudentId);
-            const confirmed = loadConfirmedFromStorage();
-            confirmed.forEach(id => reportedStates[id] = 'CONFIRMADO');
-            if (confirmed.has(currentStudentId)) {
-                disableActionButtons(true);
-                showConfirmationState('confirmado');
-            }
-        });
+function showLoginError(msg) {
+    const el = document.getElementById('login-error');
+    document.getElementById('login-error-text').innerText = msg;
+    el.classList.remove('hidden');
+}
 
-        function handleAction(statusText, btnId) {
-            // Bloquear acciones si ya confirmado para el día
-            if (reportedStates[currentStudentId] === 'CONFIRMADO') {
-                showConfirmationState('confirmado');
-                return;
-            }
-            const now = new Date();
-            const hours = now.getHours().toString().padStart(2, '0');
-            const minutes = now.getMinutes().toString().padStart(2, '0');
-            const timeStr = `${hours}:${minutes}`;
+function shakeCard() {
+    const card = document.getElementById('login-card');
+    card.classList.add('shake');
+    setTimeout(() => card.classList.remove('shake'), 500);
+}
 
-            let statusCode = '';
-            if (btnId === 'btn-10') statusCode = '10_MIN';
-            else if (btnId === 'btn-5') statusCode = '5_MIN';
-            else if (btnId === 'btn-now') {
-                // Si el alumno ya está en fila, pasa a URGENTE
-                const lastStatus = reportedStates[currentStudentId];
-                if (lastStatus === 'EN_FILA' || lastStatus === 'URGENTE') {
-                    statusCode = 'URGENTE';
-                    statusText = 'ALERTA DE DEMORA / ¡URGENTE!';
-                } else {
-                    statusCode = 'EN_FILA';
-                }
-            }
+function togglePasswordVisibility(inputId, btnId) {
+    const input = document.getElementById(inputId);
+    const icon = document.querySelector(`#${btnId} .material-symbols-outlined`);
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.innerText = 'visibility_off';
+    } else {
+        input.type = 'password';
+        icon.innerText = 'visibility';
+    }
+}
 
-            reportedStates[currentStudentId] = statusCode;
-            const student = studentData[currentStudentId];
+// ═══════════════════════════════════════════════════════
+//  LOGOUT
+// ═══════════════════════════════════════════════════════
+function doLogout() {
+    AuthService.logout();
+    currentUser = null;
+    myStudents = [];
+    reportedStates;
 
-            // Emitir evento al administrador
-            channel.postMessage({
-                type: 'PARENT_UPDATE',
-                studentId: currentStudentId,
-                studentName: student.name,
-                grade: student.grade,
-                level: student.level,
-                group: student.group,
-                parentName: student.parent,
-                avatar: student.avatar,
-                status: statusCode,
-                time: timeStr
-            });
+    // Reset app state
+    document.getElementById('app-screen').classList.add('hidden');
+    document.getElementById('app-screen').classList.remove('flex');
+    document.getElementById('login-screen').classList.remove('hidden');
+    document.getElementById('login-email').value = '';
+    document.getElementById('login-password').value = '';
+    document.getElementById('login-error').classList.add('hidden');
+    document.getElementById('temp-pw-banner').classList.add('hidden');
+    closeProfilePanel();
+}
 
-            // Actualizar interfaz del Padre
-            const statusCard = document.getElementById('status-card');
-            const statusTextEl = document.getElementById('status-text');
-            
-            // Eliminar botón de reinicio previo si existe
-            const prevResetBtn = document.getElementById('reset-simulation-btn');
-            if (prevResetBtn) prevResetBtn.remove();
+// ═══════════════════════════════════════════════════════
+//  CHANGE PASSWORD
+// ═══════════════════════════════════════════════════════
+function openTempPasswordModal() {
+    document.getElementById('change-password-modal').classList.remove('hidden');
+}
 
-            if (statusCode === 'URGENTE') {
-                statusCard.className = "bg-red-500 border-red-600 rounded-lg p-4 flex items-center justify-between border-2 transition-all duration-500 animate-pulse text-white shadow-lg";
-                statusTextEl.className = "text-white font-bold not-italic font-label-md text-label-md flex items-center gap-2";
-                statusTextEl.innerHTML = `
-                    <span class="material-symbols-outlined text-white animate-bounce">warning</span>
-                    <span>¡Alerta de demora enviada! Reportado urgente a las ${timeStr}.</span>
-                `;
-            } else {
-                statusCard.className = "bg-primary-container border-primary rounded-lg p-4 flex items-center justify-between border transition-all duration-500 shadow-sm";
-                statusTextEl.className = "text-on-primary-container font-bold not-italic font-label-md text-label-md";
-                statusTextEl.innerText = `Último aviso enviado: ${statusText} a las ${timeStr}`;
-            }
+function openChangePasswordModal() {
+    document.getElementById('change-pw-overlay').classList.remove('hidden');
+    document.getElementById('cpw-old').value = '';
+    document.getElementById('cpw-new').value = '';
+    document.getElementById('cpw-confirm').value = '';
+    document.getElementById('cpw-error').classList.add('hidden');
+}
 
-            // Efecto visual en el botón presionado
-            const btn = document.getElementById(btnId);
-            btn.classList.add('ring-4', 'ring-primary/30');
-            setTimeout(() => btn.classList.remove('ring-4', 'ring-primary/30'), 400);
+function closeChangePasswordModal() {
+    document.getElementById('change-pw-overlay').classList.add('hidden');
+}
 
-            if (navigator.vibrate) {
-                navigator.vibrate(statusCode === 'URGENTE' ? [100, 50, 100] : 50);
-            }
-        }
+function doChangePassword() {
+    // From temp-password modal
+    const old = document.getElementById('cp-old').value;
+    const nw = document.getElementById('cp-new').value;
+    const cf = document.getElementById('cp-confirm').value;
+    _processPasswordChange(old, nw, cf, 'cp-error', 'cp-error-text', () => {
+        document.getElementById('change-password-modal').classList.add('hidden');
+        document.getElementById('temp-pw-banner').classList.add('hidden');
+        showMobileToast('Contraseña actualizada ✓', 'success');
+    });
+}
 
-        // Escuchar confirmación del administrador
-        channel.onmessage = (event) => {
-            const data = event.data;
-            if (data.type === 'ADMIN_CONFIRM') {
-                reportedStates[data.studentId] = 'CONFIRMADO';
-                // Persistir confirmación para el día
-                saveConfirmedToStorage(data.studentId);
-                if (data.studentId === currentStudentId) {
-                    showConfirmationState(data.time);
-                }
-            } else if (data.type === 'DATABASE_UPDATED') {
-                loadStudents();
-                populateSelector();
-                if (!studentData[currentStudentId]) {
-                    const keys = Object.keys(studentData);
-                    if (keys.length > 0) {
-                        changeStudent(keys[0]);
-                    }
-                } else {
-                    changeStudent(currentStudentId);
-                }
-            }
+function doChangePasswordFromProfile() {
+    // From profile panel
+    const old = document.getElementById('cpw-old').value;
+    const nw = document.getElementById('cpw-new').value;
+    const cf = document.getElementById('cpw-confirm').value;
+    _processPasswordChange(old, nw, cf, 'cpw-error', 'cpw-error-text', () => {
+        closeChangePasswordModal();
+        document.getElementById('temp-pw-banner').classList.add('hidden');
+        showMobileToast('Contraseña actualizada ✓', 'success');
+    });
+}
+
+function _processPasswordChange(old, nw, confirm, errId, errTextId, onSuccess) {
+    if (!old || !nw || !confirm) {
+        showCpError(errId, errTextId, 'Todos los campos son obligatorios.');
+        return;
+    }
+    if (nw !== confirm) {
+        showCpError(errId, errTextId, 'Las contraseñas no coinciden.');
+        return;
+    }
+    const result = AuthService.changePassword(currentUser.userId, old, nw);
+    if (result.success) {
+        currentUser.tempPassword = false;
+        onSuccess();
+    } else {
+        showCpError(errId, errTextId, result.error);
+    }
+}
+
+function showCpError(errId, errTextId, msg) {
+    document.getElementById(errTextId).innerText = msg;
+    document.getElementById(errId).classList.remove('hidden');
+}
+
+// ═══════════════════════════════════════════════════════
+//  PROFILE PANEL
+// ═══════════════════════════════════════════════════════
+function openProfilePanel() {
+    if (!currentUser) return;
+    // Populate
+    document.getElementById('profile-name').innerText = currentUser.nombre;
+    document.getElementById('profile-email').innerText = currentUser.email;
+    document.getElementById('profile-avatar').src = currentUser.avatar || '';
+
+    const chips = document.getElementById('profile-students-chips');
+    chips.innerHTML = '';
+    myStudents.forEach(s => {
+        const chip = document.createElement('span');
+        chip.className = 'px-2 py-0.5 bg-blue-50 border border-blue-200 text-primary rounded-full text-[9px] font-bold uppercase';
+        chip.innerText = s.name.split(' ')[0];
+        chips.appendChild(chip);
+    });
+
+    document.getElementById('profile-panel-overlay').classList.remove('hidden');
+    const panel = document.getElementById('profile-panel');
+    panel.classList.remove('translate-y-full');
+}
+
+function closeProfilePanel() {
+    document.getElementById('profile-panel-overlay').classList.add('hidden');
+    document.getElementById('profile-panel').classList.add('translate-y-full');
+}
+
+// ═══════════════════════════════════════════════════════
+//  DASHBOARD MULTI-HIJOS (NUEVO)
+// ═══════════════════════════════════════════════════════
+const selectedPickupModes = {}; // studentId -> 'CAR' | 'WALK'
+
+function renderStudentsDashboard() {
+    const container = document.getElementById('students-dashboard-container');
+    if (!container) return;
+    container.innerHTML = '';
+
+    myStudents.forEach(student => {
+        const isConfirmed = reportedStates[student.id] === 'CONFIRMADO';
+        const st = reportedStates[student.id];
+
+        // Definir badges de estado y botones
+        let method = selectedPickupModes[student.id] || 'CAR';
+        let carActive = method === 'CAR';
+        
+        const card = document.createElement('div');
+        card.className = 'bg-white rounded-3xl border border-outline-variant/30 shadow-md p-5 flex flex-col gap-4';
+        card.id = `dashboard-card-${student.id}`;
+        
+        card.innerHTML = `
+            <!-- Ficha del Alumno -->
+            <div class="flex items-center gap-3 bg-gradient-to-r from-blue-50/50 to-indigo-50/50 p-3 rounded-2xl border-l-4 border-primary shadow-sm">
+                <img src="${student.avatar}" class="w-12 h-12 rounded-full object-cover border-2 border-primary/20 shadow" alt="" />
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2">
+                        <p class="font-bold text-sm text-primary truncate uppercase">${student.name}</p>
+                        ${myStudents.length > 1 ? `
+                            <span class="px-2 py-0.5 bg-indigo-100 text-indigo-800 text-[8px] font-bold rounded-full uppercase tracking-wider">Hermano(a)</span>
+                        ` : ''}
+                    </div>
+                    <p class="text-on-surface-variant text-xs font-semibold uppercase">${student.grade} · ${student.group || ''}</p>
+                </div>
+                <div id="student-status-chip-${student.id}" class="hidden px-2.5 py-1 rounded-full text-[9px] font-bold uppercase"></div>
+            </div>
+
+            <!-- Modalidad de Recogida -->
+            <div class="flex flex-col gap-1.5" id="mode-selector-container-${student.id}">
+                <span class="text-[9px] font-bold text-outline uppercase tracking-widest px-1">Modalidad de Recogida</span>
+                <div class="grid grid-cols-2 gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
+                    <button id="mode-car-${student.id}" onclick="setStudentPickupMode('${student.id}', 'CAR')" type="button"
+                        class="flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all ${carActive ? 'bg-white text-primary shadow-sm' : 'text-on-surface-variant hover:bg-slate-200/50'}">
+                        <span class="material-symbols-outlined text-[15px]">directions_car</span>
+                        En Carrusel (Auto)
+                    </button>
+                    <button id="mode-walk-${student.id}" onclick="setStudentPickupMode('${student.id}', 'WALK')" type="button"
+                        class="flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all ${!carActive ? 'bg-white text-primary shadow-sm' : 'text-on-surface-variant hover:bg-slate-200/50'}">
+                        <span class="material-symbols-outlined text-[15px]">directions_walk</span>
+                        En Puerta (A pie)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Acciones -->
+            <div class="flex flex-col gap-2" id="action-buttons-container-${student.id}">
+                <p class="text-[9px] font-bold text-outline uppercase tracking-widest px-1">Avisar a la escuela</p>
+                <div class="grid grid-cols-2 gap-2">
+                    <button class="h-14 bg-primary text-white font-bold rounded-xl flex items-center justify-between px-4 shadow-sm transition-all active:scale-95 disabled:opacity-40 disabled:pointer-events-none"
+                        id="btn-10-${student.id}" onclick="handleStudentAction('${student.id}', '10_MIN', 'btn-10-${student.id}')" ${isConfirmed ? 'disabled':''}>
+                        <span class="flex flex-col items-start leading-none gap-0.5">
+                            <span class="text-blue-200 text-[8px] uppercase font-bold tracking-wider">Distancia</span>
+                            <span class="text-[11px] font-bold">Estoy a 10 min</span>
+                        </span>
+                        <span class="material-symbols-outlined text-lg">timer_10</span>
+                    </button>
+                    <button class="h-14 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold rounded-xl flex items-center justify-between px-4 shadow-sm transition-all active:scale-95 disabled:opacity-40 disabled:pointer-events-none"
+                        id="btn-5-${student.id}" onclick="handleStudentAction('${student.id}', '5_MIN', 'btn-5-${student.id}')" ${isConfirmed ? 'disabled':''}>
+                        <span class="flex flex-col items-start leading-none gap-0.5">
+                            <span class="text-orange-100 text-[8px] uppercase font-bold tracking-wider">Cercano</span>
+                            <span class="text-[11px] font-bold">Estoy a 5 min</span>
+                        </span>
+                        <span class="material-symbols-outlined text-lg">timer_3</span>
+                    </button>
+                </div>
+                <button class="w-full h-16 bg-gradient-to-r from-secondary to-red-600 text-white font-bold rounded-xl flex items-center justify-between px-5 shadow border border-white/10 transition-all active:scale-95 disabled:opacity-40 disabled:pointer-events-none"
+                    id="btn-now-${student.id}" onclick="handleStudentAction('${student.id}', 'EN_FILA', 'btn-now-${student.id}')" ${isConfirmed ? 'disabled':''}>
+                    <span class="flex flex-col items-start leading-none gap-1">
+                        <span class="text-red-100 text-[8px] uppercase font-bold tracking-wider font-mono">Fila / Llegada</span>
+                        <span class="text-xs font-bold">Ya estoy en fila / Llegué</span>
+                    </span>
+                    <span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">directions_car</span>
+                </button>
+            </div>
+
+            <!-- Status Card & Reset Button -->
+            <div class="flex flex-col gap-2">
+                <div class="bg-surface-container-high rounded-xl p-3 flex items-center gap-2 border border-outline-variant/30 transition-all duration-500" id="status-card-${student.id}">
+                    <span class="material-symbols-outlined text-on-surface-variant flex-shrink-0 text-lg">history</span>
+                    <p class="text-on-surface-variant font-medium text-xs italic flex-1" id="status-text-${student.id}">
+                        Esperando aviso de recogida...
+                    </p>
+                </div>
+                ${(st || isConfirmed) ? `
+                    <button onclick="resetStudentDeliveryForTest('${student.id}')" class="w-full py-2 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 text-xs font-bold rounded-xl shadow-sm transition-all active:scale-95 flex items-center justify-center gap-1.5">
+                        <span class="material-symbols-outlined text-sm">restart_alt</span>
+                        Reiniciar Prueba (${student.name.split(' ')[0]})
+                    </button>
+                ` : ''}
+            </div>
+        `;
+        container.appendChild(card);
+        restoreStudentStatusCard(student.id);
+        disableStudentActionButtons(student.id, isConfirmed);
+    });
+}
+
+function setStudentPickupMode(studentId, mode) {
+    selectedPickupModes[studentId] = mode;
+    const carBtn = document.getElementById(`mode-car-${studentId}`);
+    const walkBtn = document.getElementById(`mode-walk-${studentId}`);
+    if (!carBtn || !walkBtn) return;
+
+    if (mode === 'CAR') {
+        carBtn.className = 'flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all bg-white text-primary shadow-sm';
+        walkBtn.className = 'flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all text-on-surface-variant hover:bg-slate-200/50';
+    } else {
+        carBtn.className = 'flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all text-on-surface-variant hover:bg-slate-200/50';
+        walkBtn.className = 'flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all bg-white text-primary shadow-sm';
+    }
+}
+
+function handleStudentAction(studentId, statusCode, btnId) {
+    if (reportedStates[studentId] === 'CONFIRMADO') {
+        showMobileToast('Este alumno ya fue entregado hoy.', 'info');
+        return;
+    }
+
+    if (statusCode === 'EN_FILA' && (reportedStates[studentId] === 'EN_FILA' || reportedStates[studentId] === 'URGENTE')) {
+        statusCode = 'URGENTE';
+    }
+
+    const now = new Date();
+    const timeStr = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+    const student = myStudents.find(s => s.id === studentId);
+    if (!student) return;
+
+    reportedStates[studentId] = statusCode;
+
+    // Enviar Broadcast a Admin y Maestros
+    channel.postMessage({
+        type: 'PARENT_UPDATE',
+        studentId: studentId,
+        studentName: student.name,
+        grade: student.grade,
+        level: student.level,
+        group: student.group,
+        parentName: currentUser.nombre,
+        avatar: student.avatar,
+        status: statusCode,
+        pickupMethod: selectedPickupModes[studentId] || 'CAR',
+        time: timeStr
+    });
+
+    // Registrar en Historial de hoy
+    dayHistory.unshift({ studentId, studentName: student.name, status: statusCode, time: timeStr });
+    renderHistory();
+
+    // Vibar el celular si aplica
+    if (navigator.vibrate) navigator.vibrate(statusCode === 'URGENTE' ? [100,50,100] : 60);
+
+    // Animación del botón
+    const btn = document.getElementById(btnId);
+    if (btn) {
+        btn.classList.add('ring-4', 'ring-white/40');
+        setTimeout(() => btn.classList.remove('ring-4', 'ring-white/40'), 400);
+    }
+
+    // Recargar vista para este estudiante en particular
+    renderStudentStatusChip(studentId, statusCode);
+    updateStudentStatusCard(studentId, statusCode, timeStr);
+}
+
+function renderStudentStatusChip(studentId, st) {
+    const chip = document.getElementById(`student-status-chip-${studentId}`);
+    if (!chip) return;
+    if (st && st !== 'CONFIRMADO') {
+        chip.classList.remove('hidden');
+        const labels = { '10_MIN': '10 min', '5_MIN': '5 min', 'EN_FILA': 'En fila', 'URGENTE': '¡Urgente!' };
+        const colors = { '10_MIN': 'bg-yellow-100 text-yellow-800', '5_MIN': 'bg-orange-100 text-orange-800', 'EN_FILA': 'bg-blue-100 text-blue-800', 'URGENTE': 'bg-red-100 text-red-800' };
+        chip.className = `px-2 py-0.5 rounded-full text-[9px] font-bold ${colors[st] || 'bg-surface-dim text-on-surface'}`;
+        chip.innerText = labels[st] || st;
+    } else {
+        chip.classList.add('hidden');
+    }
+}
+
+function updateStudentStatusCard(studentId, statusCode, timeStr) {
+    const card = document.getElementById(`status-card-${studentId}`);
+    const text = document.getElementById(`status-text-${studentId}`);
+    if (!card || !text) return;
+
+    const labels = {
+        '10_MIN': 'Estoy a 10 minutos',
+        '5_MIN': 'Estoy a 5 minutos',
+        'EN_FILA': 'Ya estoy en fila / Llegué',
+        'URGENTE': '¡ALERTA DE DEMORA! Reportado urgente'
+    };
+
+    if (statusCode === 'URGENTE') {
+        card.className = 'bg-red-500 rounded-2xl p-4 flex items-center gap-3 border-2 border-red-600 transition-all duration-500 animate-pulse text-white shadow-lg';
+        text.className = 'text-white font-bold text-sm flex-1 not-italic';
+        text.innerHTML = `<span class="flex items-center gap-2"><span class="material-symbols-outlined">warning</span> ¡Alerta enviada a las ${timeStr}!</span>`;
+    } else {
+        const colorMap = {
+            '10_MIN': 'bg-yellow-50 border-yellow-400 text-yellow-800',
+            '5_MIN': 'bg-orange-50 border-orange-400 text-orange-800',
+            'EN_FILA': 'bg-blue-50 border-blue-500 text-blue-800'
         };
+        card.className = `${colorMap[statusCode] || 'bg-surface-container-high border-outline-variant text-on-surface'} rounded-2xl p-4 flex items-center gap-3 border transition-all duration-500 shadow-sm`;
+        text.className = 'font-bold text-sm flex-1 not-italic';
+        text.innerText = `✓ Aviso enviado: "${labels[statusCode]}" a las ${timeStr}`;
+    }
+}
 
-        function showConfirmationState(timeStr) {
-            const statusCard = document.getElementById('status-card');
-            const statusTextEl = document.getElementById('status-text');
-            
-            statusCard.className = "bg-green-100 border-green-500 rounded-lg p-4 flex items-center justify-between border transition-all duration-500";
-            statusTextEl.className = "text-green-800 font-bold not-italic font-label-md text-label-md flex items-center gap-2";
-            statusTextEl.innerHTML = `
-                <span class="material-symbols-outlined text-green-600 animate-bounce">check_circle</span>
-                <span>¡Entrega confirmada a las ${timeStr}! Alumno despachado.</span>
-            `;
+function restoreStudentStatusCard(studentId) {
+    const st = reportedStates[studentId];
+    const card = document.getElementById(`status-card-${studentId}`);
+    const text = document.getElementById(`status-text-${studentId}`);
+    if (!card || !text) return;
 
-            // Crear botón para simular una nueva salida
-            let resetBtn = document.getElementById('reset-simulation-btn');
-            if (!resetBtn) {
-                resetBtn = document.createElement('button');
-                resetBtn.id = 'reset-simulation-btn';
-                resetBtn.className = 'ml-auto text-xs bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-3 rounded transition-all active:scale-95';
-                resetBtn.innerText = 'Nueva Salida';
-                resetBtn.onclick = (e) => {
-                    e.stopPropagation();
-                    resetStatusCard();
-                };
-                statusCard.appendChild(resetBtn);
-            }
-            // Deshabilitar botones de acción para este alumno
-            disableActionButtons(true);
+    if (!st || st === null) {
+        card.className = 'bg-surface-container-high rounded-xl p-3 flex items-center gap-2 border border-outline-variant/30 transition-all duration-500';
+        text.className = 'text-on-surface-variant font-medium text-xs italic flex-1';
+        text.innerText = 'Esperando aviso de recogida...';
+    } else if (st === 'CONFIRMADO') {
+        showStudentConfirmedState(studentId);
+    } else {
+        updateStudentStatusCard(studentId, st, '–');
+    }
+}
+
+function showStudentConfirmedState(studentId, timeStr = '') {
+    const card = document.getElementById(`status-card-${studentId}`);
+    const text = document.getElementById(`status-text-${studentId}`);
+    if (!card || !text) return;
+    card.className = 'bg-green-50 border-green-500 rounded-2xl p-4 flex items-center gap-3 border-2 transition-all duration-500 shadow-sm';
+    text.className = 'text-green-800 font-bold text-xs flex-1 not-italic';
+    text.innerHTML = `<span class="flex items-center gap-2"><span class="material-symbols-outlined text-green-600">check_circle</span> ¡Entrega confirmada${timeStr ? ' a las ' + timeStr : ''}! Alumno despachado.</span>`;
+    disableStudentActionButtons(studentId, true);
+}
+
+// ═══════════════════════════════════════════════════════
+//  HISTORY
+// ═══════════════════════════════════════════════════════
+function renderHistory() {
+    const section = document.getElementById('history-section');
+    const list = document.getElementById('history-list');
+    if (dayHistory.length === 0) { section.classList.add('hidden'); return; }
+    section.classList.remove('hidden');
+    list.innerHTML = '';
+    const icons = { '10_MIN': 'timer_10', '5_MIN': 'timer_3', 'EN_FILA': 'directions_car', 'URGENTE': 'warning', 'CONFIRMADO': 'check_circle' };
+    const colors = { '10_MIN': 'text-yellow-600', '5_MIN': 'text-orange-600', 'EN_FILA': 'text-blue-600', 'URGENTE': 'text-red-600', 'CONFIRMADO': 'text-green-600' };
+    const labels = { '10_MIN': 'A 10 minutos', '5_MIN': 'A 5 minutos', 'EN_FILA': 'En fila / Llegó', 'URGENTE': '¡URGENTE!', 'CONFIRMADO': 'Entregado' };
+    dayHistory.slice(0, 5).forEach(h => {
+        const el = document.createElement('div');
+        el.className = 'bg-white rounded-xl border border-outline-variant/30 p-3 flex items-center gap-3 shadow-sm';
+        el.innerHTML = `
+            <span class="material-symbols-outlined ${colors[h.status] || 'text-outline'} flex-shrink-0">${icons[h.status] || 'circle'}</span>
+            <div class="flex-1 min-w-0">
+                <p class="font-bold text-xs text-on-surface truncate">${capitalize(h.studentName.split(' ').slice(0,2).join(' '))}</p>
+                <p class="text-[10px] text-on-surface-variant">${labels[h.status] || h.status}</p>
+            </div>
+            <span class="text-[10px] text-outline font-mono">${h.time}</span>
+        `;
+        list.appendChild(el);
+    });
+}
+
+// ═══════════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════════
+function disableStudentActionButtons(studentId, disabled) {
+    [`btn-10-${studentId}`, `btn-5-${studentId}`, `btn-now-${studentId}`].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.disabled = disabled;
+    });
+}
+
+function resetStudentDeliveryForTest(studentId) {
+    // 1. Eliminar el estado de confirmado de hoy del localStorage del padre
+    try {
+        const key = getTodayKey();
+        let arr = JSON.parse(localStorage.getItem(key) || '[]');
+        arr = arr.filter(id => id !== studentId);
+        localStorage.setItem(key, JSON.stringify(arr));
+    } catch(e) {}
+
+    // 2. Limpiar del estado local del padre
+    reportedStates[studentId] = null;
+
+    // 3. Actualizar la base de datos local para que el alumno vuelva a estar en 'SIN_REPORTE'
+    const storedStudents = getStoredStudents();
+    const studentIdx = storedStudents.findIndex(s => s.id === studentId);
+    if (studentIdx !== -1) {
+        storedStudents[studentIdx].status = 'SIN_REPORTE';
+        storedStudents[studentIdx].pickupMethod = 'CAR';
+        storedStudents[studentIdx].lastUpdate = '';
+        saveStoredStudents(storedStudents);
+    }
+
+    // 4. Notificar a todas las pestañas por Broadcast
+    channel.postMessage({ type: 'DATABASE_UPDATED' });
+
+    // 5. Mostrar aviso y recargar localmente el dashboard del padre
+    showMobileToast('Estado restablecido para una nueva entrega ✓', 'success');
+    renderStudentsDashboard();
+}
+
+function resetAllDeliveriesForTest() {
+    try {
+        const key = getTodayKey();
+        localStorage.removeItem(key);
+    } catch(e) {}
+
+    myStudents.forEach(student => {
+        reportedStates[student.id] = null;
+    });
+
+    const storedStudents = getStoredStudents();
+    storedStudents.forEach(s => {
+        if (myStudents.some(ms => ms.id === s.id)) {
+            s.status = 'SIN_REPORTE';
+            s.pickupMethod = 'CAR';
+            s.lastUpdate = '';
         }
+    });
+    saveStoredStudents(storedStudents);
 
-        function resetStatusCard() {
-            const statusCard = document.getElementById('status-card');
-            const statusTextEl = document.getElementById('status-text');
-            
-            const resetBtn = document.getElementById('reset-simulation-btn');
-            if (resetBtn) resetBtn.remove();
+    channel.postMessage({ type: 'DATABASE_UPDATED' });
+    if (typeof closeDeliveryConfirmModal === 'function') {
+        closeDeliveryConfirmModal();
+    }
+    showMobileToast('Prueba reiniciada. Puedes volver a probar las entregas ✓', 'success');
+    renderStudentsDashboard();
+}
 
-            // Permitir nuevos reportes
-            reportedStates[currentStudentId] = null;
+function capitalize(str) {
+    if (!str) return '';
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+}
 
-            // Rehabilitar botones de acción
-            disableActionButtons(false);
+function showMobileToast(msg, type = 'info') {
+    const toast = document.getElementById('mobile-toast');
+    const inner = document.getElementById('mobile-toast-inner');
+    const icon = document.getElementById('mobile-toast-icon');
+    const text = document.getElementById('mobile-toast-text');
 
-            statusCard.className = "bg-surface-container-high rounded-lg p-4 flex items-center gap-3 border border-outline-variant opacity-80 transition-all duration-500";
-            statusTextEl.className = "text-on-surface-variant font-label-md text-label-md italic";
-            statusTextEl.innerText = "Esperando actualización de estado...";
-        }
+    text.innerText = msg;
+    const configs = {
+        success: ['check_circle', 'bg-green-700'],
+        error: ['error', 'bg-red-700'],
+        info: ['info', 'bg-gray-900']
+    };
+    const [ic, bg] = configs[type] || configs.info;
+    icon.innerText = ic;
+    inner.className = `${bg} text-white rounded-xl px-4 py-3 flex items-center gap-3 shadow-xl`;
+    toast.classList.remove('hidden');
+    setTimeout(() => toast.classList.add('hidden'), 3000);
+}
 
-        function disableActionButtons(disabled) {
-            const btns = ['btn-10','btn-5','btn-now'];
-            btns.forEach(id=>{
-                const el = document.getElementById(id);
-                if (!el) return;
-                if (disabled) {
-                    el.setAttribute('disabled','true');
-                    el.classList.add('opacity-50','cursor-not-allowed');
-                } else {
-                    el.removeAttribute('disabled');
-                    el.classList.remove('opacity-50','cursor-not-allowed');
+// Daily persistence
+function getTodayKey() { return 'confirmed_' + new Date().toISOString().slice(0, 10); }
+function loadConfirmedFromStorage() {
+    try { return new Set(JSON.parse(localStorage.getItem(getTodayKey()) || '[]')); } catch(e) { return new Set(); }
+}
+function saveConfirmedToStorage(studentId) {
+    try {
+        const key = getTodayKey();
+        const arr = JSON.parse(localStorage.getItem(key) || '[]');
+        if (!arr.includes(studentId)) { arr.push(studentId); localStorage.setItem(key, JSON.stringify(arr)); }
+    } catch(e) {}
+}
+
+// ═══════════════════════════════════════════════════════
+//  BROADCAST CHANNEL  (listen for admin confirmations)
+// ═══════════════════════════════════════════════════════
+channel.onmessage = (event) => {
+    const data = event.data;
+    if (data.type === 'ADMIN_CONFIRM') {
+        reportedStates[data.studentId] = 'CONFIRMADO';
+        saveConfirmedToStorage(data.studentId);
+        
+        // Buscar info del estudiante
+        const stud = myStudents.find(s => s.id === data.studentId) || { name: 'Alumno' };
+        
+        dayHistory.unshift({ studentId: data.studentId, studentName: stud.name, status: 'CONFIRMADO', time: data.time });
+        renderHistory();
+        
+        // Cambiar estado del estudiante en la pantalla
+        showStudentConfirmedState(data.studentId, data.time);
+        showMobileToast(`¡Entrega confirmada para ${stud.name}!`, 'success');
+        if (navigator.vibrate) navigator.vibrate([200,100,200]);
+        
+        // Lanzar Modal de Confirmación para el Padre
+        openDeliveryConfirmModal(data.studentId, stud.name);
+        
+        document.getElementById('notif-badge').classList.remove('hidden');
+    } else if (data.type === 'DATABASE_UPDATED') {
+        allStudents = getStoredStudents();
+        if (currentUser) {
+            myStudents = allStudents.filter(s => currentUser.studentIds.includes(s.id));
+            if (myStudents.length === 0) myStudents = allStudents;
+            myStudents.forEach(student => {
+                if (!selectedPickupModes[student.id]) {
+                    selectedPickupModes[student.id] = 'CAR';
                 }
             });
+            renderStudentsDashboard();
         }
-    </script>
-</body>
+    }
+};
 
+// Toggle de modalidad
+function setPickupMode(mode) {
+    selectedPickupMode = mode;
+    const carBtn = document.getElementById('mode-car');
+    const walkBtn = document.getElementById('mode-walk');
+    if (!carBtn || !walkBtn) return;
+    if (mode === 'CAR') {
+        carBtn.className = 'flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all bg-white text-primary shadow-sm';
+        walkBtn.className = 'flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all text-on-surface-variant hover:bg-slate-200/50';
+    } else {
+        carBtn.className = 'flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all text-on-surface-variant hover:bg-slate-200/50';
+        walkBtn.className = 'flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all bg-white text-primary shadow-sm';
+    }
+}
+
+// Modal de confirmación de entrega (Sistema de cola para múltiples hermanos)
+const confirmQueue = [];
+
+function openDeliveryConfirmModal(studentId, studentName) {
+    // Si ya se está mostrando un modal para este estudiante o ya está en la cola, omitir duplicado
+    if (activeConfirmStudentId === studentId || confirmQueue.some(item => item.id === studentId)) {
+        return;
+    }
+
+    if (activeConfirmStudentId !== null) {
+        // Ya hay un modal activo, encolar este reporte de entrega
+        confirmQueue.push({ id: studentId, name: studentName });
+        return;
+    }
+
+    activeConfirmStudentId = studentId;
+    const titleEl = document.getElementById('delivery-modal-title');
+    const descEl = document.getElementById('delivery-modal-desc');
+    const modalEl = document.getElementById('delivery-confirm-modal');
+    if (titleEl && descEl && modalEl) {
+        titleEl.innerText = `¡${studentName} Entregado!`;
+        descEl.innerText = `El maestro ha confirmado la entrega de ${studentName}. ¿Confirmas que ya lo tienes contigo?`;
+        modalEl.classList.remove('hidden');
+    }
+}
+
+function closeDeliveryConfirmModal() {
+    const modalEl = document.getElementById('delivery-confirm-modal');
+    if (modalEl) modalEl.classList.add('hidden');
+    activeConfirmStudentId = null;
+    
+    // Procesar el siguiente en la cola tras una breve pausa para la animación
+    setTimeout(() => {
+        if (confirmQueue.length > 0) {
+            const next = confirmQueue.shift();
+            openDeliveryConfirmModal(next.id, next.name);
+        }
+    }, 400);
+}
+
+function confirmParentReceipt() {
+    if (!activeConfirmStudentId) return;
+    
+    const targetStudentId = activeConfirmStudentId;
+    
+    // 1. Guardar en la bitácora de la DB local
+    const result = DeliveryLogService.logParentConfirm(targetStudentId);
+    
+    // 2. Notificar por canal de Broadcast a Maestros y Admin
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false });
+    
+    channel.postMessage({
+        type: 'PARENT_RECEIVE_CONFIRM',
+        studentId: targetStudentId,
+        time: timeStr,
+        parentName: currentUser.nombre
+    });
+    
+    // 3. Cerrar y avisar al usuario (la función close se encargará de desencolar el siguiente)
+    closeDeliveryConfirmModal();
+    showMobileToast('¡Recepción registrada y respaldada! Gracias.', 'success');
+}
+</script>
+
+<!-- MODAL DE CONFIRMACIÓN DE ENTREGA -->
+<div id="delivery-confirm-modal" class="fixed inset-0 z-[350] flex items-center justify-center px-6 hidden">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeDeliveryConfirmModal()"></div>
+    <div class="relative bg-white rounded-3xl shadow-2xl p-6 w-full max-w-sm flex flex-col items-center gap-4 text-center border border-green-200">
+        <div class="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center text-green-600 shadow-inner animate-bounce">
+            <span class="material-symbols-outlined text-4xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+        </div>
+        <div>
+            <h3 class="font-bold text-primary text-lg" id="delivery-modal-title">¡Alumno Entregado!</h3>
+            <p class="text-on-surface-variant text-xs mt-1" id="delivery-modal-desc">
+                El maestro reporta que ya te entregó a tu hijo. ¿Confirmas que ya lo tienes contigo?
+            </p>
+        </div>
+        <div class="flex flex-col gap-2 w-full">
+            <button onclick="confirmParentReceipt()" class="w-full bg-primary text-white font-bold rounded-xl py-3.5 text-sm hover:bg-blue-700 active:scale-95 transition-all shadow-md">
+                SÍ, YA LO RECIBÍ
+            </button>
+            <button onclick="resetAllDeliveriesForTest()" class="w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold rounded-xl py-2 text-xs active:scale-95 transition-all flex items-center justify-center gap-1">
+                <span class="material-symbols-outlined text-sm">restart_alt</span>
+                REINICIAR PRUEBA DEMO
+            </button>
+        </div>
+    </div>
+</div>
+
+</body>
 </html>

@@ -1,0 +1,1463 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Portal Maestros – Instituto Inglés de Toluca</title>
+    <meta name="description" content="Portal de maestros para el seguimiento de entrega de alumnos del Instituto Inglés de Toluca." />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <script src="../db.js"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "outline": "#64748b",
+                        "background": "#f0fdf4",
+                        "primary": "#166534",
+                        "on-primary": "#ffffff",
+                        "primary-container": "#dcfce7",
+                        "on-primary-container": "#14532d",
+                        "secondary": "#dc2626",
+                        "on-secondary": "#ffffff",
+                        "secondary-container": "#fee2e2",
+                        "surface": "#ffffff",
+                        "surface-dim": "#d1fae5",
+                        "surface-container-low": "#f0fdf4",
+                        "surface-container": "#dcfce7",
+                        "surface-container-high": "#bbf7d0",
+                        "surface-container-highest": "#86efac",
+                        "on-surface": "#052e16",
+                        "on-surface-variant": "#374151",
+                        "outline-variant": "#d1d5db",
+                        "error": "#dc2626",
+                        "inverse-surface": "#052e16"
+                    },
+                    "fontFamily": {
+                        "sans": ["Hanken Grotesk", "sans-serif"]
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { font-family: 'Hanken Grotesk', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Login */
+        #login-screen {
+            background: linear-gradient(145deg, #052e16 0%, #14532d 45%, #166534 100%);
+        }
+        .iit-input:focus {
+            outline: none;
+            border-color: #166534;
+            box-shadow: 0 0 0 3px rgba(22,101,52,0.15);
+        }
+        /* Animations */
+        .slide-up { animation: slideUp 0.35s cubic-bezier(0.16,1,0.3,1) forwards; }
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to   { transform: translateY(0); opacity: 1; }
+        }
+        .shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shake {
+            10%,90% { transform: translateX(-2px); }
+            20%,80% { transform: translateX(4px); }
+            30%,50%,70% { transform: translateX(-6px); }
+            40%,60% { transform: translateX(6px); }
+        }
+        .temp-warn { animation: warnPulse 2s infinite; }
+        @keyframes warnPulse {
+            0%,100% { box-shadow: 0 0 0 0 rgba(251,191,36,0.4); }
+            50% { box-shadow: 0 0 0 8px rgba(251,191,36,0); }
+        }
+        .pulse-green { animation: pulseGreen 2s infinite; }
+        @keyframes pulseGreen {
+            0%,100% { box-shadow: 0 0 0 0 rgba(22,101,52,0.3); }
+            50% { box-shadow: 0 0 0 8px rgba(22,101,52,0); }
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #bbf7d0; border-radius: 10px; }
+        html, body { height: 100%; overflow: hidden; }
+    </style>
+</head>
+
+<body class="bg-background text-on-surface h-screen flex flex-col overflow-hidden">
+
+    <!-- ═══════════════════════════════════════════
+         PANTALLA LOGIN
+    ═══════════════════════════════════════════ -->
+    <div id="login-screen" class="fixed inset-0 z-[200] flex flex-col items-center justify-between px-6 py-10">
+
+        <!-- Logo & Brand -->
+        <div class="flex flex-col items-center gap-4 mt-8 slide-up">
+            <div class="w-20 h-20 rounded-2xl bg-white/15 backdrop-blur-sm border border-white/30 flex items-center justify-center shadow-xl overflow-hidden">
+                <img src="../logo_IIT.jpg" class="w-full h-full object-cover" alt="IIT Logo" />
+            </div>
+            <div class="text-center">
+                <h1 class="text-white font-bold text-2xl leading-tight">Portal Maestros</h1>
+                <p class="text-white/70 text-sm mt-1">Instituto Inglés de Toluca</p>
+            </div>
+        </div>
+
+        <!-- Login Card -->
+        <div class="w-full max-w-sm slide-up" style="animation-delay:0.1s">
+            <div class="bg-white rounded-2xl shadow-2xl p-6 flex flex-col gap-5" id="login-card">
+                <div>
+                    <h2 class="font-bold text-primary text-lg">Acceso para Maestros</h2>
+                    <p class="text-on-surface-variant text-xs mt-0.5">Ingresa con tus credenciales institucionales</p>
+                </div>
+
+                <!-- Email -->
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-xs font-bold text-outline uppercase tracking-wide">Correo Electrónico</label>
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-3 top-3 text-outline text-[18px]">mail</span>
+                        <input id="t-login-email" type="email" autocomplete="email" placeholder="correo@iit.edu.mx"
+                            class="iit-input w-full border border-outline-variant rounded-xl pl-10 pr-4 py-3 text-sm text-primary bg-surface-container-low transition-all"
+                            onkeydown="if(event.key==='Enter') document.getElementById('t-login-password').focus()" />
+                    </div>
+                </div>
+
+                <!-- Password -->
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-xs font-bold text-outline uppercase tracking-wide">Contraseña</label>
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-3 top-3 text-outline text-[18px]">lock</span>
+                        <input id="t-login-password" type="password" autocomplete="current-password" placeholder="••••••••"
+                            class="iit-input w-full border border-outline-variant rounded-xl pl-10 pr-10 py-3 text-sm text-primary bg-surface-container-low transition-all"
+                            onkeydown="if(event.key==='Enter') doTeacherLogin()" />
+                        <button onclick="toggleTPasswordVis()" class="absolute right-3 top-3 text-outline" type="button" id="t-eye-toggle">
+                            <span class="material-symbols-outlined text-[18px]">visibility</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Error -->
+                <div id="t-login-error" class="hidden bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-xs font-medium flex items-center gap-2">
+                    <span class="material-symbols-outlined text-sm flex-shrink-0">error</span>
+                    <span id="t-login-error-text">Credenciales incorrectas.</span>
+                </div>
+
+                <!-- Button -->
+                <button id="t-login-btn" onclick="doTeacherLogin()"
+                    class="w-full bg-primary text-white font-bold rounded-xl py-3.5 text-sm flex items-center justify-center gap-2 shadow-lg hover:bg-green-800 active:scale-95 transition-all">
+                    <span class="material-symbols-outlined text-[18px]">login</span>
+                    ENTRAR
+                </button>
+
+                <!-- Demo hint -->
+                <details class="group">
+                    <summary class="cursor-pointer list-none">
+                        <div class="flex items-center justify-between bg-surface-container-low rounded-xl p-3 border border-outline-variant/30 hover:bg-surface-container transition-colors">
+                            <span class="text-[10px] font-bold text-outline uppercase tracking-wide">Cuentas de Demo</span>
+                            <span class="material-symbols-outlined text-outline text-sm group-open:rotate-180 transition-transform">expand_more</span>
+                        </div>
+                    </summary>
+                    <div class="bg-surface-container-low rounded-xl p-3 border border-outline-variant/30 border-t-0 rounded-t-none flex flex-col gap-1.5 mt-0">
+                        <div class="text-[11px] font-mono text-on-surface-variant border-b border-outline-variant/20 pb-1.5">ana.reyes@demo.com · <strong>Kínder</strong></div>
+                        <div class="text-[11px] font-mono text-on-surface-variant border-b border-outline-variant/20 pb-1.5">carlos.mendoza@demo.com · <strong>Primaria</strong></div>
+                        <div class="text-[11px] font-mono text-on-surface-variant border-b border-outline-variant/20 pb-1.5">sofia.vargas@demo.com · <strong>Secundaria</strong></div>
+                        <div class="text-[11px] font-mono text-on-surface-variant">jorge.lopez@demo.com · <strong>Primaria Alta</strong></div>
+                        <p class="text-[11px] text-primary font-bold mt-1">Password: <span class="font-mono">Demo2024</span></p>
+                    </div>
+                </details>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <p class="text-white/50 text-[11px] text-center slide-up" style="animation-delay:0.2s">
+            © 2026 Instituto Inglés de Toluca · Portal Maestros Demo
+        </p>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         MODAL: CAMBIO DE CONTRASEÑA TEMPORAL
+    ═══════════════════════════════════════════ -->
+    <div id="t-change-password-modal" class="fixed inset-0 z-[300] flex items-center justify-center px-4 hidden">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm flex flex-col gap-4 slide-up temp-warn border-2 border-yellow-400">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600 flex-shrink-0">
+                    <span class="material-symbols-outlined">key</span>
+                </div>
+                <div>
+                    <h3 class="font-bold text-primary text-sm">Cambio de Contraseña Requerido</h3>
+                    <p class="text-[11px] text-on-surface-variant mt-0.5">Tu contraseña es temporal. Cámbiala para continuar.</p>
+                </div>
+            </div>
+            <div class="flex flex-col gap-3">
+                <div class="flex flex-col gap-1">
+                    <label class="text-[10px] font-bold text-outline uppercase">Contraseña Actual (Temporal)</label>
+                    <input id="tcp-old" type="password" placeholder="••••••" class="iit-input border border-outline-variant rounded-lg p-2.5 text-xs bg-surface-container-low" />
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-[10px] font-bold text-outline uppercase">Nueva Contraseña (mín. 6 car.)</label>
+                    <input id="tcp-new" type="password" placeholder="••••••" class="iit-input border border-outline-variant rounded-lg p-2.5 text-xs bg-surface-container-low" />
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-[10px] font-bold text-outline uppercase">Confirmar Nueva Contraseña</label>
+                    <input id="tcp-confirm" type="password" placeholder="••••••" class="iit-input border border-outline-variant rounded-lg p-2.5 text-xs bg-surface-container-low" onkeydown="if(event.key==='Enter') doTeacherChangePwTemp()" />
+                </div>
+                <div id="tcp-error" class="hidden text-xs text-red-600 font-medium flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm">error</span>
+                    <span id="tcp-error-text"></span>
+                </div>
+                <button onclick="doTeacherChangePwTemp()" class="w-full bg-primary text-white font-bold rounded-xl py-3 text-sm hover:bg-green-800 active:scale-95 transition-all">
+                    GUARDAR NUEVA CONTRASEÑA
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         APP SCREEN (Authenticated)
+    ═══════════════════════════════════════════ -->
+    <div id="t-app-screen" class="hidden flex-1 flex overflow-hidden h-full">
+
+        <!-- SideBar -->
+        <aside class="bg-gradient-to-b from-[#052e16] to-[#14532d] flex flex-col h-full w-64 flex-shrink-0 shadow-2xl">
+            <!-- Logo & User -->
+            <div class="p-5 border-b border-white/10">
+                <div class="flex items-center gap-3 mb-4">
+                    <img src="../logo_IIT.jpg" class="w-10 h-10 rounded-full object-cover border-2 border-white/30" alt="IIT" />
+                    <div>
+                        <p class="text-white font-bold text-sm leading-tight">Student Pickup</p>
+                        <p class="text-green-300/70 text-[10px] uppercase tracking-wider">Portal Maestros</p>
+                    </div>
+                </div>
+                <!-- Teacher Profile -->
+                <div class="flex items-center gap-3 bg-white/10 rounded-xl p-3">
+                    <img id="t-sidebar-avatar" src="" class="w-10 h-10 rounded-full object-cover border-2 border-white/30 flex-shrink-0" alt="avatar" />
+                    <div class="min-w-0">
+                        <p class="text-white font-bold text-sm truncate" id="t-sidebar-name">–</p>
+                        <p class="text-green-300 text-[10px] truncate" id="t-sidebar-level">–</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="flex flex-col gap-1 p-4 flex-1">
+                <p class="text-green-400/60 text-[9px] font-bold uppercase tracking-widest px-2 mb-1">Módulos</p>
+                <button id="t-mod-monitor" onclick="tSwitchModule('MONITOR')"
+                    class="flex items-center gap-3 px-4 py-2.5 bg-white/20 text-white font-bold rounded-lg transition-all w-full text-left">
+                    <span class="material-symbols-outlined text-lg">monitor</span>
+                    <span class="text-sm">Monitor de Alumnos</span>
+                </button>
+                <button id="t-mod-kpis" onclick="tSwitchModule('KPIS')"
+                    class="flex items-center gap-3 px-4 py-2.5 text-green-200 hover:bg-white/10 rounded-lg transition-all w-full text-left">
+                    <span class="material-symbols-outlined text-lg">analytics</span>
+                    <span class="text-sm">Dashboard KPIs</span>
+                </button>
+                <button id="t-mod-profile" onclick="tSwitchModule('PROFILE')"
+                    class="flex items-center gap-3 px-4 py-2.5 text-green-200 hover:bg-white/10 rounded-lg transition-all w-full text-left">
+                    <span class="material-symbols-outlined text-lg">person</span>
+                    <span class="text-sm">Mi Perfil</span>
+                </button>
+
+                <!-- Groups Info -->
+                <div class="mt-4 border-t border-white/10 pt-4">
+                    <p class="text-green-400/60 text-[9px] font-bold uppercase tracking-widest px-2 mb-2">Mis Grupos</p>
+                    <div id="t-sidebar-groups" class="flex flex-col gap-1">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </nav>
+
+            <!-- Logout -->
+            <div class="p-4 border-t border-white/10">
+                <button onclick="doTeacherLogout()"
+                    class="flex items-center gap-3 px-4 py-2.5 text-red-300 hover:bg-red-900/30 rounded-lg w-full text-left transition-colors">
+                    <span class="material-symbols-outlined text-lg">logout</span>
+                    <span class="text-sm font-bold">Cerrar Sesión</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- TopBar -->
+            <header class="bg-white border-b border-outline-variant/30 flex items-center justify-between px-6 py-3 shadow-sm flex-shrink-0">
+                <div class="flex items-center gap-3">
+                    <div>
+                        <p class="font-bold text-primary text-sm leading-tight" id="t-header-title">Monitor de Alumnos</p>
+                        <p class="text-on-surface-variant text-xs" id="t-header-subtitle">Mis grupos asignados</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div id="t-stats-bar" class="flex items-center gap-2">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-red-50 border border-red-200 rounded-full text-xs font-bold text-red-700">
+                            <span class="w-2 h-2 rounded-full bg-red-500 pulse-green"></span>
+                            En Fila: <span id="t-stat-fila">0</span>
+                        </span>
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-orange-50 border border-orange-200 rounded-full text-xs font-bold text-orange-700">
+                            <span class="w-2 h-2 rounded-full bg-orange-500"></span>
+                            5 min: <span id="t-stat-5">0</span>
+                        </span>
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-yellow-50 border border-yellow-200 rounded-full text-xs font-bold text-yellow-700">
+                            <span class="w-2 h-2 rounded-full bg-yellow-500"></span>
+                            10 min: <span id="t-stat-10">0</span>
+                        </span>
+                    </div>
+                    <div id="t-clock" class="font-bold text-primary text-lg tabular-nums">00:00</div>
+                </div>
+            </header>
+
+            <!-- Views -->
+            <main class="flex-1 overflow-y-auto bg-gradient-to-br from-slate-50 via-green-50/30 to-slate-100 p-6">
+
+                <!-- ── VISTA 1: MONITOR ── -->
+                <div id="t-view-monitor" class="flex flex-col gap-5">
+                    <!-- Temp PW Banner -->
+                    <div id="t-temp-pw-banner" class="hidden bg-yellow-50 border border-yellow-300 rounded-xl p-3 flex items-center gap-3 cursor-pointer temp-warn" onclick="openTeacherChangePwModal()">
+                        <span class="material-symbols-outlined text-yellow-600 flex-shrink-0">warning</span>
+                        <div class="flex-1">
+                            <p class="text-xs font-bold text-yellow-800">Contraseña temporal activa</p>
+                            <p class="text-[10px] text-yellow-700">Haz clic aquí para establecer tu contraseña personal.</p>
+                        </div>
+                        <span class="material-symbols-outlined text-yellow-600 text-sm">chevron_right</span>
+                    </div>
+
+                    <!-- Group Filter Chips -->
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="text-[10px] font-bold text-outline uppercase tracking-widest">Filtrar grupo:</span>
+                        <button id="t-grp-all" onclick="tSetGroupFilter('ALL')"
+                            class="px-3 py-1 bg-primary text-white font-bold text-xs rounded-full transition-all">
+                            Todos mis grupos
+                        </button>
+                        <div id="t-group-chips" class="flex gap-2 flex-wrap">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Student Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4" id="t-student-grid">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- ── VISTA 2: DASHBOARD KPIs ── -->
+                <div id="t-view-kpis" class="flex flex-col gap-6 hidden">
+                    <div>
+                        <h1 class="font-bold text-primary text-2xl">Dashboard de Rendimiento</h1>
+                        <p class="text-on-surface-variant text-sm">Métricas de entrega de mis grupos</p>
+                    </div>
+
+                    <!-- KPI Cards -->
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="bg-white p-4 rounded-xl border border-outline-variant/30 shadow-sm flex items-center justify-between hover:shadow-md transition-all">
+                            <div>
+                                <p class="text-xs font-bold text-outline uppercase tracking-wider">Pendientes Hoy</p>
+                                <h3 class="text-2xl font-bold text-primary mt-1" id="t-kpi-pending">0</h3>
+                                <span class="text-[10px] text-on-surface-variant font-bold">Alumnos en espera</span>
+                            </div>
+                            <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                                <span class="material-symbols-outlined text-2xl">hourglass_empty</span>
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl border border-outline-variant/30 shadow-sm flex items-center justify-between hover:shadow-md transition-all">
+                            <div>
+                                <p class="text-xs font-bold text-outline uppercase tracking-wider">Entregados Hoy</p>
+                                <h3 class="text-2xl font-bold text-green-600 mt-1" id="t-kpi-delivered">0</h3>
+                                <span class="text-[10px] text-on-surface-variant font-bold">Confirmados por mí</span>
+                            </div>
+                            <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                                <span class="material-symbols-outlined text-2xl">how_to_reg</span>
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl border border-outline-variant/30 shadow-sm flex items-center justify-between hover:shadow-md transition-all">
+                            <div>
+                                <p class="text-xs font-bold text-outline uppercase tracking-wider">Tiempo Promedio</p>
+                                <h3 class="text-2xl font-bold text-primary mt-1" id="t-kpi-avgtime">8.2 min</h3>
+                                <span class="text-[10px] text-green-600 font-bold flex items-center gap-0.5">
+                                    <span class="material-symbols-outlined text-xs">arrow_downward</span>
+                                    -38% vs manual
+                                </span>
+                            </div>
+                            <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                                <span class="material-symbols-outlined text-2xl">schedule</span>
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl border border-outline-variant/30 shadow-sm flex items-center justify-between hover:shadow-md transition-all">
+                            <div>
+                                <p class="text-xs font-bold text-outline uppercase tracking-wider">Avisos Anticipados</p>
+                                <h3 class="text-2xl font-bold text-orange-500 mt-1" id="t-kpi-advance">79%</h3>
+                                <span class="text-[10px] text-on-surface-variant font-bold">Padres con aviso 5/10 min</span>
+                            </div>
+                            <div class="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center text-orange-500">
+                                <span class="material-symbols-outlined text-2xl">tap_and_play</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-white p-5 rounded-xl border border-outline-variant/30 shadow-sm flex flex-col gap-3">
+                            <h3 class="font-bold text-primary text-sm flex items-center gap-2">
+                                <span class="material-symbols-outlined text-lg">bar_chart</span>
+                                Distribución de Salidas por Hora
+                            </h3>
+                            <div class="relative w-full h-64">
+                                <canvas id="t-chart-hours"></canvas>
+                            </div>
+                        </div>
+                        <div class="bg-white p-5 rounded-xl border border-outline-variant/30 shadow-sm flex flex-col gap-3">
+                            <h3 class="font-bold text-primary text-sm flex items-center gap-2">
+                                <span class="material-symbols-outlined text-lg">pie_chart</span>
+                                Tipo de Aviso de Padres
+                            </h3>
+                            <div class="relative w-full h-64">
+                                <canvas id="t-chart-notice"></canvas>
+                            </div>
+                        </div>
+                    </div>                    <!-- Dispatched List -->
+                    <div class="bg-white p-5 rounded-xl border border-outline-variant/30 shadow-sm flex flex-col gap-3">
+                        <h3 class="font-bold text-primary text-sm flex items-center gap-2">
+                            <span class="material-symbols-outlined text-lg">task_alt</span>
+                            Entregas Confirmadas del Día
+                        </h3>
+                        <div id="t-kpi-dispatch-list" class="flex flex-col gap-2 max-h-48 overflow-y-auto">
+                            <p class="text-xs text-outline italic text-center py-4">Sin entregas confirmadas aún.</p>
+                        </div>
+                    </div>
+
+                    <!-- Panel de Exportación de Reportes en Excel -->
+                    <div class="bg-white p-5 rounded-xl border border-outline-variant/30 shadow-sm flex flex-col gap-4">
+                        <div class="border-b border-outline-variant/20 pb-3">
+                            <h3 class="font-bold text-primary text-sm flex items-center gap-2">
+                                <span class="material-symbols-outlined text-lg">description</span>
+                                Reportes y Descargas Excel
+                            </h3>
+                            <p class="text-xs text-on-surface-variant">Generación de archivos descargables para el control académico</p>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Filtros de Reportes -->
+                            <div class="flex flex-col gap-3 p-4 bg-slate-50 border border-slate-200/60 rounded-xl">
+                                <h4 class="text-xs font-bold text-primary uppercase tracking-wider">Filtros del Reporte</h4>
+                                <div class="flex flex-col gap-2">
+                                    <div class="flex flex-col gap-1">
+                                        <label class="text-[10px] font-bold text-outline uppercase">Grupo</label>
+                                        <select id="t-rep-group" class="bg-white border border-outline-variant rounded-lg p-2 text-xs text-primary focus:outline-none focus:border-primary">
+                                            <option value="ALL">Todos mis grupos</option>
+                                            <!-- Poblado dinámicamente por JS -->
+                                        </select>
+                                    </div>
+                                    <div class="flex flex-col gap-1">
+                                        <label class="text-[10px] font-bold text-outline uppercase">Rango Temporal</label>
+                                        <select id="t-rep-time" class="bg-white border border-outline-variant rounded-lg p-2 text-xs text-primary focus:outline-none focus:border-primary">
+                                            <option value="TODAY">Hoy</option>
+                                            <option value="WEEK">Esta Semana (Últimos 7 días)</option>
+                                            <option value="MONTH">Este Mes (Últimos 30 días)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Acciones de Descarga -->
+                            <div class="flex flex-col justify-center gap-3">
+                                <button onclick="tExportDeliveriesToExcel()" class="w-full bg-[#166534] hover:bg-[#14532d] text-white py-3 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-sm">
+                                    <span class="material-symbols-outlined text-lg">download</span>
+                                    DESCARGAR BITÁCORA DE ENTREGAS (.XLSX)
+                                </button>
+                                <button onclick="tExportStudentsToExcel()" class="w-full bg-white hover:bg-slate-50 text-primary border border-primary py-3 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-sm">
+                                    <span class="material-symbols-outlined text-lg">download</span>
+                                    DESCARGAR PADRÓN DE ALUMNOS (.XLSX)
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- ── VISTA 3: MI PERFIL ── -->
+                <div id="t-view-profile" class="flex flex-col gap-6 hidden max-w-2xl">
+                    <!-- Profile Card -->
+                    <div class="bg-white rounded-2xl border border-outline-variant/30 shadow-sm overflow-hidden">
+                        <div class="bg-gradient-to-r from-primary to-green-600 p-6 flex items-center gap-5">
+                            <img id="t-profile-avatar" src="" class="w-20 h-20 rounded-full object-cover border-4 border-white/40 shadow-lg" alt="avatar" />
+                            <div>
+                                <h2 class="text-white font-bold text-xl" id="t-profile-name">–</h2>
+                                <p class="text-green-200 text-sm" id="t-profile-email">–</p>
+                                <div class="flex items-center gap-2 mt-2">
+                                    <span class="px-2 py-0.5 bg-white/20 text-white text-xs font-bold rounded-full" id="t-profile-level-badge">–</span>
+                                    <span class="px-2 py-0.5 bg-white/20 text-white text-xs font-bold rounded-full">Maestro</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-6 flex flex-col gap-4">
+                            <div>
+                                <p class="text-[10px] font-bold text-outline uppercase tracking-wider mb-2">Grupos Asignados</p>
+                                <div id="t-profile-groups" class="flex flex-wrap gap-2">
+                                    <!-- Populated by JS -->
+                                </div>
+                            </div>
+                            <div class="border-t border-outline-variant/20 pt-4 flex flex-col gap-3">
+                                <button onclick="openTeacherChangePwModal()"
+                                    class="flex items-center gap-3 p-3 rounded-xl hover:bg-surface-container transition-colors text-left border border-outline-variant/20">
+                                    <div class="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
+                                        <span class="material-symbols-outlined text-[18px]">key</span>
+                                    </div>
+                                    <div>
+                                        <p class="font-bold text-sm text-on-surface">Cambiar Contraseña</p>
+                                        <p class="text-[10px] text-on-surface-variant">Actualiza tus credenciales de acceso</p>
+                                    </div>
+                                    <span class="material-symbols-outlined text-outline ml-auto">chevron_right</span>
+                                </button>
+                                <button onclick="doTeacherLogout()"
+                                    class="flex items-center gap-3 p-3 rounded-xl hover:bg-red-50 transition-colors text-left border border-red-100">
+                                    <div class="w-9 h-9 rounded-full bg-red-50 flex items-center justify-center text-secondary flex-shrink-0">
+                                        <span class="material-symbols-outlined text-[18px]">logout</span>
+                                    </div>
+                                    <div>
+                                        <p class="font-bold text-sm text-secondary">Cerrar Sesión</p>
+                                        <p class="text-[10px] text-on-surface-variant">Salir de tu cuenta de maestro</p>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+
+        <!-- Right Panel: Entregas Confirmadas (Monitor) -->
+        <aside id="t-right-panel" class="bg-white border-l border-outline-variant/30 w-64 flex-shrink-0 flex flex-col overflow-hidden">
+            <div class="p-4 border-b border-outline-variant/20">
+                <h3 class="font-bold text-primary text-sm flex items-center gap-2">
+                    <span class="material-symbols-outlined text-lg" style="font-variation-settings:'FILL' 1;">check_circle</span>
+                    Entregados Hoy
+                </h3>
+            </div>
+            <div id="t-dispatched-list" class="flex-1 overflow-y-auto p-3 flex flex-col gap-2">
+                <div class="text-center py-8 text-outline flex flex-col items-center gap-2">
+                    <span class="material-symbols-outlined text-3xl">inbox</span>
+                    <p class="text-xs">Sin entregas aún</p>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Toast -->
+    <div id="t-toast-container" class="fixed bottom-6 left-72 flex flex-col gap-3 z-50 pointer-events-none"></div>
+
+    <!-- Change PW Modal (from profile) -->
+    <div id="t-cpw-overlay" class="fixed inset-0 z-[250] flex items-end justify-center hidden">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeTeacherChangePwModal()"></div>
+        <div class="relative bg-white rounded-t-3xl shadow-2xl w-full max-w-lg px-6 pt-4 pb-8 slide-up">
+            <div class="flex justify-between items-center mb-5">
+                <div>
+                    <h3 class="font-bold text-primary text-base">Cambiar Contraseña</h3>
+                    <p class="text-[11px] text-on-surface-variant">Mínimo 6 caracteres</p>
+                </div>
+                <button onclick="closeTeacherChangePwModal()" class="p-2 rounded-full hover:bg-surface-container text-outline">
+                    <span class="material-symbols-outlined text-[18px]">close</span>
+                </button>
+            </div>
+            <div class="flex flex-col gap-3">
+                <div class="flex flex-col gap-1">
+                    <label class="text-[10px] font-bold text-outline uppercase">Contraseña Actual</label>
+                    <input id="t-cpw-old" type="password" placeholder="••••••" class="iit-input border border-outline-variant rounded-xl p-3 text-sm bg-surface-container-low" />
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-[10px] font-bold text-outline uppercase">Nueva Contraseña</label>
+                    <input id="t-cpw-new" type="password" placeholder="••••••" class="iit-input border border-outline-variant rounded-xl p-3 text-sm bg-surface-container-low" />
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-[10px] font-bold text-outline uppercase">Confirmar Nueva Contraseña</label>
+                    <input id="t-cpw-confirm" type="password" placeholder="••••••" class="iit-input border border-outline-variant rounded-xl p-3 text-sm bg-surface-container-low" onkeydown="if(event.key==='Enter') doTeacherChangePwProfile()" />
+                </div>
+                <div id="t-cpw-error" class="hidden bg-red-50 border border-red-200 text-red-700 rounded-xl px-3 py-2 text-xs font-medium flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-sm">error</span>
+                    <span id="t-cpw-error-text"></span>
+                </div>
+                <button onclick="doTeacherChangePwProfile()" class="w-full bg-primary text-white font-bold rounded-xl py-3.5 text-sm hover:bg-green-800 active:scale-95 transition-all mt-1">
+                    GUARDAR CONTRASEÑA
+                </button>
+            </div>
+        </div>
+    </div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════
+let tCurrentUser   = null;
+let tAllStudents   = [];
+let tMyStudents    = [];   // Only students from my groups
+let tGroupFilter   = 'ALL';
+let tCurrentModule = 'MONITOR';
+let tDeliveredCount = 0;
+let tChartHours    = null;
+let tChartNotice   = null;
+const tChannel = new BroadcastChannel('stitch_pickup_channel');
+
+// Clock
+function tUpdateClock() {
+    const el = document.getElementById('t-clock');
+    if (el) el.innerText = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false });
+}
+setInterval(tUpdateClock, 1000);
+tUpdateClock();
+
+// ═══════════════════════════════════════════════════════
+//  BOOT
+// ═══════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+    const session = TeacherAuthService.getCurrentUser();
+    if (session) tBootApp(session);
+});
+
+function tBootApp(session) {
+    tCurrentUser = session;
+    tAllStudents = getStoredStudents();
+    // Filter students belonging to teacher's groups and level
+    tMyStudents = tAllStudents.filter(s => s.level === session.level && (session.groups || []).includes(s.group));
+
+    document.getElementById('login-screen').classList.add('hidden');
+    const app = document.getElementById('t-app-screen');
+    app.classList.remove('hidden');
+    app.classList.add('flex');
+
+    // Sidebar
+    document.getElementById('t-sidebar-avatar').src = session.avatar || '';
+    document.getElementById('t-sidebar-name').innerText = session.nombre;
+    document.getElementById('t-sidebar-level').innerText = session.level || '';
+
+    // Render group badges in sidebar
+    const gbContainer = document.getElementById('t-sidebar-groups');
+    gbContainer.innerHTML = '';
+    (session.groups || []).forEach(g => {
+        const el = document.createElement('div');
+        el.className = 'flex items-center gap-2 px-3 py-1.5 text-green-200 text-xs font-medium';
+        el.innerHTML = `<span class="material-symbols-outlined text-[14px] text-green-400">group</span>${g}`;
+        gbContainer.appendChild(el);
+    });
+
+    // Temp password warning
+    if (session.tempPassword) {
+        document.getElementById('t-temp-pw-banner').classList.remove('hidden');
+    }
+
+    // Poblar selector de reportes
+    const repGroup = document.getElementById('t-rep-group');
+    if (repGroup) {
+        repGroup.innerHTML = '<option value="ALL">Todos mis grupos</option>';
+        (session.groups || []).forEach(g => {
+            const opt = document.createElement('option');
+            opt.value = g;
+            opt.innerText = g;
+            repGroup.appendChild(opt);
+        });
+    }
+
+    // Populate group filter chips
+    tRenderGroupChips();
+    tSwitchModule('MONITOR');
+}
+
+// ═══════════════════════════════════════════════════════
+//  LOGIN
+// ═══════════════════════════════════════════════════════
+function doTeacherLogin() {
+    const email = document.getElementById('t-login-email').value.trim();
+    const password = document.getElementById('t-login-password').value;
+    const btn = document.getElementById('t-login-btn');
+    if (!email || !password) { tShowLoginError('Por favor ingresa tu email y contraseña.'); return; }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-[18px]">progress_activity</span> Verificando...';
+
+    setTimeout(() => {
+        const result = TeacherAuthService.login(email, password);
+        btn.disabled = false;
+        btn.innerHTML = '<span class="material-symbols-outlined text-[18px]">login</span> ENTRAR';
+
+        if (result.success) {
+            document.getElementById('t-login-error').classList.add('hidden');
+            tBootApp(result.user);
+            if (result.user.tempPassword) {
+                document.getElementById('t-change-password-modal').classList.remove('hidden');
+            }
+        } else {
+            tShowLoginError(result.error);
+            const card = document.getElementById('login-card');
+            card.classList.add('shake');
+            setTimeout(() => card.classList.remove('shake'), 500);
+        }
+    }, 600);
+}
+
+function tShowLoginError(msg) {
+    document.getElementById('t-login-error-text').innerText = msg;
+    document.getElementById('t-login-error').classList.remove('hidden');
+}
+
+function toggleTPasswordVis() {
+    const input = document.getElementById('t-login-password');
+    const icon = document.querySelector('#t-eye-toggle .material-symbols-outlined');
+    if (input.type === 'password') { input.type = 'text'; icon.innerText = 'visibility_off'; }
+    else { input.type = 'password'; icon.innerText = 'visibility'; }
+}
+
+// ═══════════════════════════════════════════════════════
+//  LOGOUT
+// ═══════════════════════════════════════════════════════
+function doTeacherLogout() {
+    TeacherAuthService.logout();
+    tCurrentUser = null;
+    document.getElementById('t-app-screen').classList.add('hidden');
+    document.getElementById('t-app-screen').classList.remove('flex');
+    document.getElementById('login-screen').classList.remove('hidden');
+    document.getElementById('t-login-email').value = '';
+    document.getElementById('t-login-password').value = '';
+    document.getElementById('t-login-error').classList.add('hidden');
+}
+
+// ═══════════════════════════════════════════════════════
+//  MODULE SWITCHING
+// ═══════════════════════════════════════════════════════
+function tSwitchModule(mod) {
+    tCurrentModule = mod;
+    const modules = ['MONITOR', 'KPIS', 'PROFILE'];
+    modules.forEach(m => {
+        const btn = document.getElementById(`t-mod-${m.toLowerCase()}`);
+        if (!btn) return;
+        if (m === mod) {
+            btn.className = 'flex items-center gap-3 px-4 py-2.5 bg-white/20 text-white font-bold rounded-lg transition-all w-full text-left';
+        } else {
+            btn.className = 'flex items-center gap-3 px-4 py-2.5 text-green-200 hover:bg-white/10 rounded-lg transition-all w-full text-left';
+        }
+    });
+
+    document.getElementById('t-view-monitor').classList.add('hidden');
+    document.getElementById('t-view-kpis').classList.add('hidden');
+    document.getElementById('t-view-profile').classList.add('hidden');
+    document.getElementById('t-right-panel').classList.add('hidden');
+    document.getElementById('t-stats-bar').classList.add('hidden');
+
+    const titles = {
+        MONITOR: ['Monitor de Alumnos', 'Mis grupos asignados'],
+        KPIS:    ['Dashboard KPIs', 'Métricas de entrega de mis grupos'],
+        PROFILE: ['Mi Perfil', 'Información y configuración']
+    };
+    document.getElementById('t-header-title').innerText = titles[mod][0];
+    document.getElementById('t-header-subtitle').innerText = titles[mod][1];
+
+    if (mod === 'MONITOR') {
+        document.getElementById('t-view-monitor').classList.remove('hidden');
+        document.getElementById('t-right-panel').classList.remove('hidden');
+        document.getElementById('t-stats-bar').classList.remove('hidden');
+        tRenderStudents();
+        tRenderRightPanelDispatched();
+        tUpdateStats();
+    } else if (mod === 'KPIS') {
+        document.getElementById('t-view-kpis').classList.remove('hidden');
+        tUpdateKpiCards();
+        tRenderKpiDispatchList();
+        setTimeout(tInitCharts, 50);
+    } else if (mod === 'PROFILE') {
+        document.getElementById('t-view-profile').classList.remove('hidden');
+        tRenderProfile();
+    }
+}
+
+// ═══════════════════════════════════════════════════════
+//  GROUP FILTER
+// ═══════════════════════════════════════════════════════
+function tRenderGroupChips() {
+    if (!tCurrentUser) return;
+    const container = document.getElementById('t-group-chips');
+    container.innerHTML = '';
+    (tCurrentUser.groups || []).forEach(g => {
+        const btn = document.createElement('button');
+        btn.id = `t-grp-${g.replace(/\s/g,'_')}`;
+        btn.onclick = () => tSetGroupFilter(g);
+        btn.className = 'px-3 py-1 bg-white border border-outline-variant text-primary font-bold text-xs rounded-full hover:bg-surface-container transition-all';
+        btn.innerText = g;
+        container.appendChild(btn);
+    });
+}
+
+function tSetGroupFilter(grp) {
+    tGroupFilter = grp;
+    // Update chip styles
+    document.getElementById('t-grp-all').className = grp === 'ALL'
+        ? 'px-3 py-1 bg-primary text-white font-bold text-xs rounded-full transition-all'
+        : 'px-3 py-1 bg-white border border-outline-variant text-primary font-bold text-xs rounded-full hover:bg-surface-container transition-all';
+    (tCurrentUser.groups || []).forEach(g => {
+        const btn = document.getElementById(`t-grp-${g.replace(/\s/g,'_')}`);
+        if (btn) btn.className = g === grp
+            ? 'px-3 py-1 bg-primary text-white font-bold text-xs rounded-full transition-all'
+            : 'px-3 py-1 bg-white border border-outline-variant text-primary font-bold text-xs rounded-full hover:bg-surface-container transition-all';
+    });
+    tRenderStudents();
+}
+
+// ═══════════════════════════════════════════════════════
+//  RENDER STUDENTS
+// ═══════════════════════════════════════════════════════
+function tCreateStudentCard(student) {
+    let borderClass = 'border-outline-variant/30';
+    let badgeClass = 'bg-surface-dim text-on-surface';
+    let badgeText = 'SIN REPORTE';
+    let buttonHTML = `<button class="w-full bg-surface-container text-on-surface-variant py-2 rounded-lg font-bold text-xs cursor-not-allowed" disabled>ESPERANDO</button>`;
+    let pulseClass = '';
+
+    if (student.status === 'URGENTE') {
+        borderClass = 'border-red-600/60';
+        badgeClass = 'bg-red-600 text-white';
+        badgeText = '¡URGENTE!';
+        pulseClass = 'animate-pulse shadow-2xl ring-4 ring-red-200';
+        buttonHTML = `
+            <button onclick="tConfirmPickup('${student.id}')" class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg font-bold text-xs transition-all flex items-center justify-center gap-1 shadow-sm">
+                CONFIRMAR ENTREGA
+                <span class="material-symbols-outlined text-sm">check_circle</span>
+            </button>`;
+    } else if (student.status === 'EN_FILA') {
+        borderClass = 'border-orange-500/60';
+        badgeClass = 'bg-orange-500 text-white';
+        badgeText = '¡YA EN FILA!';
+        pulseClass = 'ring-2 ring-orange-200 shadow-lg';
+        buttonHTML = `
+            <button onclick="tConfirmPickup('${student.id}')" class="w-full bg-primary hover:bg-green-800 text-white py-2 rounded-lg font-bold text-xs transition-all flex items-center justify-center gap-1">
+                CONFIRMAR ENTREGA <span class="material-symbols-outlined text-sm">check_circle</span>
+            </button>`;
+    } else if (student.status === '5_MIN') {
+        borderClass = 'border-orange-400/40';
+        badgeClass = 'bg-orange-400 text-white';
+        badgeText = 'A 5 MIN';
+        buttonHTML = `<button class="w-full bg-surface-container text-on-surface-variant py-2 rounded-lg font-bold text-xs cursor-not-allowed" disabled>PREPARAR ALUMNO</button>`;
+    } else if (student.status === '10_MIN') {
+        borderClass = 'border-yellow-500/40';
+        badgeClass = 'bg-yellow-500 text-on-surface';
+        badgeText = 'A 10 MIN';
+        buttonHTML = `<button class="w-full bg-surface-container text-on-surface-variant py-2 rounded-lg font-bold text-xs cursor-not-allowed" disabled>EN DISTANCIA</button>`;
+    }
+
+    const card = document.createElement('div');
+    card.className = `bg-white border ${borderClass} rounded-xl p-3 shadow-sm ${pulseClass} flex flex-col transition-all hover:shadow-md hover:-translate-y-0.5`;
+    card.id = `t-card-${student.id}`;
+
+    let methodBadgeHTML = '';
+    if (student.pickupMethod === 'WALK') {
+        methodBadgeHTML = `
+            <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-blue-50 border border-blue-200 text-blue-700 rounded text-[9px] font-bold">
+                <span class="material-symbols-outlined text-[10px]">directions_walk</span> A PIE
+            </span>`;
+    } else {
+        methodBadgeHTML = `
+            <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded text-[9px] font-bold">
+                <span class="material-symbols-outlined text-[10px]">directions_car</span> AUTO
+            </span>`;
+    }
+
+    card.innerHTML = `
+        <div class="flex justify-between items-center mb-2">
+            <img alt="${student.name}" class="w-12 h-12 rounded-full object-cover border-2 border-outline-variant/20" src="${student.avatar}"/>
+            <div class="flex flex-col items-end gap-1">
+                <span class="${badgeClass} px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider">${badgeText}</span>
+                ${methodBadgeHTML}
+            </div>
+        </div>
+        <div class="mb-2 flex-1">
+            <h3 class="font-bold text-sm text-primary truncate">${student.name}</h3>
+            <p class="text-on-surface-variant text-[10px] font-bold uppercase">${student.grade} · ${student.group || ''}</p>
+            <p class="text-outline text-[10px] mt-0.5">Padre: ${student.parent}</p>
+        </div>
+        ${student.lastUpdate ? `<p class="text-[10px] text-outline mb-2 italic">Reportado a las ${student.lastUpdate}</p>` : ''}
+        ${buttonHTML}
+    `;
+    return card;
+}
+
+function tRenderStudents() {
+    const grid = document.getElementById('t-student-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+
+    let filtered = tMyStudents.filter(s =>
+        s.status && s.status !== 'CONFIRMADO' &&
+        (tGroupFilter === 'ALL' || s.group === tGroupFilter)
+    );
+
+    const priority = { URGENTE: 0, EN_FILA: 1, '5_MIN': 2, '10_MIN': 3 };
+    filtered.sort((a, b) => {
+        const pa = priority[a.status] !== undefined ? priority[a.status] : 99;
+        const pb = priority[b.status] !== undefined ? priority[b.status] : 99;
+        return pa - pb;
+    });
+
+    if (filtered.length === 0) {
+        grid.innerHTML = `
+            <div class="col-span-full py-16 flex flex-col items-center justify-center text-center gap-4 text-outline">
+                <span class="material-symbols-outlined text-5xl">directions_car</span>
+                <p class="font-medium text-sm">Sin reportes activos en mis grupos.</p>
+                <p class="text-xs">Los alumnos aparecerán aquí cuando sus padres avisen que están en camino.</p>
+            </div>`;
+        return;
+    }
+
+    // Agrupar alumnos por familiar/padre
+    const parentGroups = {};
+    filtered.forEach(student => {
+        const p = student.parent;
+        if (!parentGroups[p]) parentGroups[p] = [];
+        parentGroups[p].push(student);
+    });
+
+    // Renderizar al grid
+    Object.entries(parentGroups).forEach(([parentName, groupStudents]) => {
+        if (groupStudents.length > 1) {
+            // Caso: Hermanos bajo responsabilidad de este mismo maestro (se muestran juntos)
+            const groupWrapper = document.createElement('div');
+            // Reemplazamos espacios por guiones para generar ID de contenedor HTML seguro
+            const safeParentId = parentName.replace(/[^a-zA-Z0-9]/g, '-');
+            groupWrapper.className = 'col-span-full border-2 border-indigo-200 bg-indigo-50/10 p-4 rounded-2xl flex flex-col gap-3 shadow-sm border-dashed';
+            
+            groupWrapper.innerHTML = `
+                <div class="flex items-center justify-between border-b border-indigo-100/60 pb-2">
+                    <span class="text-xs font-bold text-indigo-700 uppercase tracking-widest flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">group</span>
+                        Hermanos para Recoger Juntos (Familia de: ${parentName})
+                    </span>
+                    <span class="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[10px] font-bold rounded-full">
+                        ${groupStudents.length} Hermanos
+                    </span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3" id="siblings-grid-${safeParentId}">
+                </div>
+            `;
+            grid.appendChild(groupWrapper);
+            
+            const subGrid = document.getElementById(`siblings-grid-${safeParentId}`);
+            groupStudents.forEach(student => {
+                const card = tCreateStudentCard(student);
+                subGrid.appendChild(card);
+            });
+        } else {
+            // Caso: Alumno individual (o el hermano es de otro nivel no asignado a este maestro)
+            const student = groupStudents[0];
+            const card = tCreateStudentCard(student);
+            grid.appendChild(card);
+        }
+    });
+}
+
+// ═══════════════════════════════════════════════════════
+//  CONFIRM PICKUP
+// ═══════════════════════════════════════════════════════
+function tConfirmPickup(studentId) {
+    const student = tMyStudents.find(s => s.id === studentId);
+    if (!student) return;
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false });
+
+    // Encontrar en el array general de estudiantes y actualizar su estatus
+    const generalStudent = tAllStudents.find(s => s.id === studentId);
+    if (generalStudent) generalStudent.status = 'CONFIRMADO';
+    student.status = 'CONFIRMADO';
+    tDeliveredCount++;
+
+    // 1. Guardar en la bitácora local de la DB
+    DeliveryLogService.logTeacherConfirm(
+        studentId,
+        student.name,
+        student.group,
+        tCurrentUser.nombre,
+        student.pickupMethod
+    );
+
+    // 2. Guardar en la base de datos de estudiantes y confirmación diaria para persistencia
+    saveConfirmedToStorage(studentId);
+    saveStoredStudents(tAllStudents);
+
+    // 3. Notificar por Broadcast a las demás pantallas (Padre y Administrador)
+    tChannel.postMessage({ type: 'ADMIN_CONFIRM', studentId, time: timeStr });
+    tChannel.postMessage({ type: 'DATABASE_UPDATED' });
+
+    const cardEl = document.getElementById(`t-card-${studentId}`);
+    if (cardEl) {
+        cardEl.style.transform = 'scale(0.8) translateY(20px)';
+        cardEl.style.opacity = '0';
+        cardEl.style.transition = 'all 0.4s ease';
+        setTimeout(() => { 
+            tRenderStudents(); 
+            tRenderRightPanelDispatched(); 
+            tUpdateStats(); 
+        }, 400);
+    } else {
+        tRenderStudents(); 
+        tRenderRightPanelDispatched(); 
+        tUpdateStats();
+    }
+    tShowToast(`Alumno Entregado`, `${student.name} fue entregado exitosamente.`, student.avatar);
+}
+
+function tDismissUrgent(studentId) {
+    const student = tMyStudents.find(s => s.id === studentId);
+    if (student && student.status === 'URGENTE') student.status = 'EN_FILA';
+    tRenderStudents(); tUpdateStats();
+}
+
+function tRenderRightPanelDispatched() {
+    const list = document.getElementById('t-dispatched-list');
+    if (!list) return;
+    const logs = DeliveryLogService.getLogs();
+    const todayStr = new Date().toISOString().slice(0, 10);
+    
+    // Filtrar los de hoy y que correspondan a mis grupos y nivel escolar
+    const todayLogs = logs.filter(l => 
+        l.date === todayStr && 
+        (tCurrentUser.groups || []).includes(l.group) &&
+        tAllStudents.some(s => s.id === l.studentId && s.level === tCurrentUser.level)
+    );
+    
+    if (todayLogs.length === 0) {
+        list.innerHTML = `
+            <div class="text-center py-8 text-outline flex flex-col items-center gap-2">
+                <span class="material-symbols-outlined text-3xl">inbox</span>
+                <p class="text-xs">Sin entregas aún</p>
+            </div>`;
+        return;
+    }
+    
+    list.innerHTML = '';
+    // Mostrar los últimos 8 registros
+    todayLogs.slice(0, 8).forEach(log => {
+        const student = tMyStudents.find(s => s.id === log.studentId) || { avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150' };
+        const item = document.createElement('div');
+        item.className = `p-2.5 rounded-lg flex items-center gap-2 border ${log.parentConfirmed ? 'bg-green-50 border-green-200' : 'bg-slate-50 border-slate-200'} transition-all duration-300`;
+        
+        let iconHTML = '';
+        if (log.parentConfirmed) {
+            iconHTML = `<span class="material-symbols-outlined text-green-600 text-lg" style="font-variation-settings:'FILL' 1;" title="Recibido por el Padre">check_circle</span>`;
+        } else {
+            iconHTML = `<span class="material-symbols-outlined text-amber-500 text-lg animate-pulse" title="Entregado por escuela, esperando confirmación del padre">hourglass_top</span>`;
+        }
+        
+        item.innerHTML = `
+            <img src="${student.avatar}" class="w-9 h-9 rounded-full object-cover flex-shrink-0 border border-outline-variant/30" />
+            <div class="flex-1 min-w-0">
+                <p class="text-xs font-bold text-primary truncate uppercase">${log.studentName}</p>
+                <p class="text-[9px] text-outline">${log.timeTeacher} · ${log.group}</p>
+                ${log.parentConfirmed ? `<p class="text-[8px] text-green-700 font-bold">Padre recibió: ${log.timeParent}</p>` : `<p class="text-[8px] text-amber-600 font-bold">Esperando Padre...</p>`}
+            </div>
+            ${iconHTML}
+        `;
+        list.appendChild(item);
+    });
+}
+
+// ═══════════════════════════════════════════════════════
+//  STATS
+// ═══════════════════════════════════════════════════════
+function tUpdateStats() {
+    document.getElementById('t-stat-fila').innerText = tMyStudents.filter(s => s.status === 'EN_FILA' || s.status === 'URGENTE').length;
+    document.getElementById('t-stat-5').innerText = tMyStudents.filter(s => s.status === '5_MIN').length;
+    document.getElementById('t-stat-10').innerText = tMyStudents.filter(s => s.status === '10_MIN').length;
+}
+
+// ═══════════════════════════════════════════════════════
+//  KPI DASHBOARD
+// ═══════════════════════════════════════════════════════
+function tUpdateKpiCards() {
+    const pending = tMyStudents.filter(s => !s.status || (s.status !== 'CONFIRMADO')).length;
+    document.getElementById('t-kpi-pending').innerText = pending;
+    document.getElementById('t-kpi-delivered').innerText = tDeliveredCount;
+}
+
+function tInitCharts() {
+    // Chart 1: Hours distribution (simulated)
+    const ctx1 = document.getElementById('t-chart-hours');
+    if (ctx1) {
+        if (tChartHours) tChartHours.destroy();
+        tChartHours = new Chart(ctx1, {
+            type: 'bar',
+            data: {
+                labels: ['13:00', '13:15', '13:30', '13:45', '14:00', '14:15', '14:30', '14:45', '15:00'],
+                datasets: [{
+                    label: 'Alumnos entregados',
+                    data: [0, 2, 5, 8, 6, 4, 2, 1, 0],
+                    backgroundColor: 'rgba(22,101,52,0.7)',
+                    borderColor: '#166534',
+                    borderWidth: 1,
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, ticks: { stepSize: 2 }, grid: { color: 'rgba(0,0,0,0.04)' } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    }
+    // Chart 2: Notice type
+    const ctx2 = document.getElementById('t-chart-notice');
+    if (ctx2) {
+        if (tChartNotice) tChartNotice.destroy();
+        tChartNotice = new Chart(ctx2, {
+            type: 'doughnut',
+            data: {
+                labels: ['Aviso 10 min', 'Aviso 5 min', 'Llegada directa'],
+                datasets: [{
+                    data: [35, 44, 21],
+                    backgroundColor: ['#fbbf24', '#f97316', '#166534'],
+                    borderWidth: 2, borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 12 } }
+                }
+            }
+        });
+    }
+}
+
+// ═══════════════════════════════════════════════════════
+//  PROFILE
+// ═══════════════════════════════════════════════════════
+function tRenderProfile() {
+    if (!tCurrentUser) return;
+    document.getElementById('t-profile-avatar').src = tCurrentUser.avatar || '';
+    document.getElementById('t-profile-name').innerText = tCurrentUser.nombre;
+    document.getElementById('t-profile-email').innerText = tCurrentUser.email;
+    document.getElementById('t-profile-level-badge').innerText = tCurrentUser.level || '–';
+    const grpContainer = document.getElementById('t-profile-groups');
+    grpContainer.innerHTML = '';
+    (tCurrentUser.groups || []).forEach(g => {
+        const chip = document.createElement('span');
+        chip.className = 'px-3 py-1 bg-primary/10 border border-primary/30 text-primary rounded-full text-xs font-bold';
+        chip.innerText = g;
+        grpContainer.appendChild(chip);
+    });
+}
+
+// ═══════════════════════════════════════════════════════
+//  CHANGE PASSWORD
+// ═══════════════════════════════════════════════════════
+function openTeacherChangePwModal() {
+    document.getElementById('t-cpw-overlay').classList.remove('hidden');
+    ['t-cpw-old', 't-cpw-new', 't-cpw-confirm'].forEach(id => { document.getElementById(id).value = ''; });
+    document.getElementById('t-cpw-error').classList.add('hidden');
+}
+
+function closeTeacherChangePwModal() {
+    document.getElementById('t-cpw-overlay').classList.add('hidden');
+}
+
+function doTeacherChangePwTemp() {
+    const old = document.getElementById('tcp-old').value;
+    const nw  = document.getElementById('tcp-new').value;
+    const cf  = document.getElementById('tcp-confirm').value;
+    _tProcessPwChange(old, nw, cf, 'tcp-error', 'tcp-error-text', () => {
+        document.getElementById('t-change-password-modal').classList.add('hidden');
+        document.getElementById('t-temp-pw-banner').classList.add('hidden');
+        tShowToast('Contraseña actualizada ✓', 'Tu contraseña fue actualizada exitosamente.', null);
+    });
+}
+
+function doTeacherChangePwProfile() {
+    const old = document.getElementById('t-cpw-old').value;
+    const nw  = document.getElementById('t-cpw-new').value;
+    const cf  = document.getElementById('t-cpw-confirm').value;
+    _tProcessPwChange(old, nw, cf, 't-cpw-error', 't-cpw-error-text', () => {
+        closeTeacherChangePwModal();
+        document.getElementById('t-temp-pw-banner').classList.add('hidden');
+        tShowToast('Contraseña actualizada ✓', 'Tu contraseña fue actualizada exitosamente.', null);
+    });
+}
+
+function _tProcessPwChange(old, nw, confirm, errId, errTextId, onSuccess) {
+    if (!old || !nw || !confirm) { tShowPwError(errId, errTextId, 'Todos los campos son obligatorios.'); return; }
+    if (nw !== confirm) { tShowPwError(errId, errTextId, 'Las contraseñas no coinciden.'); return; }
+    const result = TeacherAuthService.changePassword(tCurrentUser.userId, old, nw);
+    if (result.success) { tCurrentUser.tempPassword = false; onSuccess(); }
+    else { tShowPwError(errId, errTextId, result.error); }
+}
+
+function tShowPwError(errId, errTextId, msg) {
+    document.getElementById(errTextId).innerText = msg;
+    document.getElementById(errId).classList.remove('hidden');
+}
+
+// ═══════════════════════════════════════════════════════
+//  BROADCAST CHANNEL
+// ═══════════════════════════════════════════════════════
+tChannel.onmessage = (event) => {
+    const data = event.data;
+    if (data.type === 'PARENT_UPDATE') {
+        // Check if this student belongs to my groups
+        const student = tMyStudents.find(s => s.id === data.studentId);
+        if (!student) return;
+        const prev = student.status;
+        let finalStatus = (data.status || '').trim().toUpperCase();
+        if (finalStatus === 'EN_FILA' && (prev === 'EN_FILA' || prev === 'URGENTE')) finalStatus = 'URGENTE';
+        student.status = finalStatus;
+        student.pickupMethod = data.pickupMethod || 'CAR';
+        student.lastUpdate = data.time;
+ 
+        let label = '';
+        if (finalStatus === '10_MIN') label = 'está a 10 minutos';
+        else if (finalStatus === '5_MIN') label = 'está a 5 minutos';
+        else if (finalStatus === 'EN_FILA') label = '¡ha llegado a la fila!';
+        else if (finalStatus === 'URGENTE') label = '⚠️ reporta demora';
+        
+        let methodText = data.pickupMethod === 'WALK' ? '🚶 (A pie)' : '🚗 (Auto)';
+        tShowToast('Actualización de Recogida', `${data.parentName} · ${data.studentName} ${label} ${methodText}`, data.avatar);
+
+        if (tCurrentModule === 'MONITOR') { tRenderStudents(); tUpdateStats(); }
+    } else if (data.type === 'PARENT_RECEIVE_CONFIRM') {
+        // El padre confirmó que ya recogió al alumno
+        const student = tMyStudents.find(s => s.id === data.studentId);
+        if (student) {
+            student.status = 'CONFIRMADO';
+            tShowToast('Recepción Confirmada ✓', `${data.parentName} confirmó que ya tiene a ${student.name} consigo.`, student.avatar);
+            
+            // Recargar las listas
+            tRenderRightPanelDispatched();
+            if (tCurrentModule === 'KPIS') tRenderKpiDispatchList();
+        }
+    } else if (data.type === 'DATABASE_UPDATED') {
+        tAllStudents = getStoredStudents();
+        tMyStudents = tAllStudents.filter(s => s.level === tCurrentUser.level && (tCurrentUser?.groups || []).includes(s.group));
+        if (tCurrentModule === 'MONITOR') { 
+            tRenderStudents(); 
+            tRenderRightPanelDispatched();
+            tUpdateStats(); 
+        }
+    }
+};
+
+// Renderizar la Bitácora de Auditoría en la vista KPIs
+function tRenderKpiDispatchList() {
+    const list = document.getElementById('t-kpi-dispatch-list');
+    if (!list) return;
+    const logs = DeliveryLogService.getLogs();
+    const todayStr = new Date().toISOString().slice(0, 10);
+    
+    // Filtrar los de hoy y que correspondan a mis grupos y nivel escolar
+    const todayLogs = logs.filter(l => 
+        l.date === todayStr && 
+        (tCurrentUser.groups || []).includes(l.group) &&
+        tAllStudents.some(s => s.id === l.studentId && s.level === tCurrentUser.level)
+    );
+    
+    if (todayLogs.length === 0) {
+        list.innerHTML = `<p class="text-xs text-outline italic text-center py-4">Sin entregas confirmadas hoy en mis grupos.</p>`;
+        return;
+    }
+    
+    list.innerHTML = '';
+    todayLogs.forEach(log => {
+        const student = tMyStudents.find(s => s.id === log.studentId) || { avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150' };
+        const item = document.createElement('div');
+        item.className = 'bg-slate-50 border border-outline-variant/30 p-2.5 rounded-lg flex items-center justify-between gap-3 text-xs';
+        
+        let statusBadge = '';
+        if (log.parentConfirmed) {
+            statusBadge = `
+                <span class="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 rounded-full text-[10px] font-bold">
+                    <span class="material-symbols-outlined text-[12px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                    Recibido por Padre (${log.timeParent})
+                </span>`;
+        } else {
+            statusBadge = `
+                <span class="inline-flex items-center gap-1 px-2 py-1 bg-amber-100 text-amber-800 rounded-full text-[10px] font-bold">
+                    <span class="material-symbols-outlined text-[12px] animate-pulse">hourglass_top</span>
+                    Espera de Padre
+                </span>`;
+        }
+        
+        item.innerHTML = `
+            <div class="flex items-center gap-2 min-w-0">
+                <img src="${student.avatar}" class="w-8 h-8 rounded-full object-cover border border-outline-variant/30" />
+                <div class="min-w-0">
+                    <p class="font-bold text-primary truncate uppercase">${log.studentName}</p>
+                    <p class="text-[9px] text-outline">Entregó: ${log.teacherName} a las ${log.timeTeacher}</p>
+                </div>
+            </div>
+            ${statusBadge}
+        `;
+        list.appendChild(item);
+    });
+}
+
+// Helpers persistencia diaria
+function getTodayKey() {
+    return 'confirmed_' + new Date().toISOString().slice(0, 10);
+}
+
+function saveConfirmedToStorage(studentId) {
+    try {
+        const key = getTodayKey();
+        const arr = JSON.parse(localStorage.getItem(key) || '[]');
+        if (!arr.includes(studentId)) {
+            arr.push(studentId);
+            localStorage.setItem(key, JSON.stringify(arr));
+        }
+    } catch (e) { }
+}
+
+function tShowToast(title, message, avatarUrl) {
+    const container = document.getElementById('t-toast-container');
+    if (!container) return;
+    const toast = document.createElement('div');
+    toast.className = 'bg-white/95 backdrop-blur-sm border-l-4 border-primary p-4 rounded-r-xl shadow-xl flex items-center gap-4 min-w-[300px] max-w-[380px] pointer-events-auto transition-all duration-500 transform translate-y-10 opacity-0 border border-outline-variant/30';
+    toast.innerHTML = `
+        ${avatarUrl
+            ? `<div class="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border border-outline-variant/30"><img src="${avatarUrl}" class="w-full h-full object-cover"/></div>`
+            : `<span class="material-symbols-outlined text-primary text-2xl">notifications</span>`}
+        <div class="flex-1 min-w-0">
+            <h4 class="font-bold text-xs text-primary uppercase truncate">${title}</h4>
+            <p class="text-xs text-on-surface-variant font-medium mt-0.5">${message}</p>
+        </div>
+        <button class="text-outline hover:text-primary flex-shrink-0" onclick="this.parentElement.remove()">
+            <span class="material-symbols-outlined text-sm">close</span>
+        </button>`;
+    container.appendChild(toast);
+    setTimeout(() => { toast.classList.remove('translate-y-10', 'opacity-0'); }, 50);
+    setTimeout(() => { toast.classList.add('opacity-0'); setTimeout(() => toast.remove(), 500); }, 6000);
+}
+
+// ═══════════════════════════════════════════════════════
+//  EXPORTS TO EXCEL (SHEETJS)
+// ═══════════════════════════════════════════════════════
+function tExportDeliveriesToExcel() {
+    if (!tCurrentUser) return;
+    const repGroup = document.getElementById('t-rep-group').value;
+    const repTime = document.getElementById('t-rep-time').value;
+
+    let logs = DeliveryLogService.getLogs();
+    
+    // 1. Filtrar por grupos asignados al maestro
+    logs = logs.filter(l => (tCurrentUser.groups || []).includes(l.group));
+
+    // 2. Filtrar por grupo seleccionado
+    if (repGroup !== 'ALL') {
+        logs = logs.filter(l => l.group === repGroup);
+    }
+
+    // 3. Filtrar por rango temporal
+    const now = new Date();
+    const todayStr = now.toISOString().slice(0, 10);
+
+    if (repTime === 'TODAY') {
+        logs = logs.filter(l => l.date === todayStr);
+    } else if (repTime === 'WEEK') {
+        const weekAgo = new Date();
+        weekAgo.setDate(now.getDate() - 7);
+        logs = logs.filter(l => new Date(l.date) >= weekAgo);
+    } else if (repTime === 'MONTH') {
+        const monthAgo = new Date();
+        monthAgo.setDate(now.getDate() - 30);
+        logs = logs.filter(l => new Date(l.date) >= monthAgo);
+    }
+
+    if (logs.length === 0) {
+        tShowToast('Reporte Vacío', 'No hay registros de entrega en el rango seleccionado.', null);
+        return;
+    }
+
+    // Mapear datos a español con nombres claros
+    const rows = logs.map(l => {
+        let waitTime = 'N/A';
+        if (l.parentConfirmed && l.timeTeacher && l.timeParent) {
+            const [h1, m1] = l.timeTeacher.split(':').map(Number);
+            const [h2, m2] = l.timeParent.split(':').map(Number);
+            waitTime = `${(h2*60 + m2) - (h1*60 + m1)} min`;
+        }
+        return {
+            'Fecha': l.date,
+            'Alumno': l.studentName,
+            'Grupo': l.group,
+            'Método Recogida': l.pickupMethod === 'WALK' ? 'A PIE' : 'AUTO',
+            'Entregó (Maestro/Guardia)': l.teacherName,
+            'Hora Entrega Escuela': l.timeTeacher || 'N/A',
+            'Hora Firma Recibido Familiar': l.timeParent || 'Esperando',
+            'Tiempo Espera': waitTime,
+            'Estado Auditoría': l.parentConfirmed ? 'RECIBIDO Y RESPALDADO' : 'ESPERA DE FIRMA'
+        };
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Bitácora Entregas');
+
+    // Auto-ajustar ancho de columnas para mejor visualización
+    const maxLens = {};
+    rows.forEach(row => {
+        Object.entries(row).forEach(([col, val]) => {
+            const strVal = String(val || '');
+            maxLens[col] = Math.max(maxLens[col] || col.length, strVal.length);
+        });
+    });
+    worksheet['!cols'] = Object.keys(maxLens).map(col => ({ wch: maxLens[col] + 3 }));
+
+    const filename = `Bitacora_Entregas_${tCurrentUser.nombre.replace(/\s+/g, '_')}_${repTime}.xlsx`;
+    XLSX.writeFile(workbook, filename);
+    tShowToast('Reporte Generado ✓', 'El archivo excel se ha descargado correctamente.', null);
+}
+
+function tExportStudentsToExcel() {
+    if (!tCurrentUser) return;
+    const repGroup = document.getElementById('t-rep-group').value;
+
+    let studentsToExport = [...tMyStudents];
+
+    if (repGroup !== 'ALL') {
+        studentsToExport = studentsToExport.filter(s => s.group === repGroup);
+    }
+
+    if (studentsToExport.length === 0) {
+        tShowToast('Reporte Vacío', 'No hay alumnos en el grupo seleccionado.', null);
+        return;
+    }
+
+    const rows = studentsToExport.map(s => ({
+        'ID Alumno': s.id,
+        'Nombre': s.name,
+        'Nivel': s.level,
+        'Grado': s.grade,
+        'Grupo': s.group,
+        'Cumpleaños': s.birthday,
+        'Familiar Principal': s.parent || 'No vinculado',
+        'Teléfono Contacto': s.family && s.family[0] ? s.family[0].phone : 'N/A'
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Listado Alumnos');
+
+    // Auto-ajustar ancho de columnas
+    const maxLens = {};
+    rows.forEach(row => {
+        Object.entries(row).forEach(([col, val]) => {
+            const strVal = String(val || '');
+            maxLens[col] = Math.max(maxLens[col] || col.length, strVal.length);
+        });
+    });
+    worksheet['!cols'] = Object.keys(maxLens).map(col => ({ wch: maxLens[col] + 3 }));
+
+    const filename = `Alumnos_Grupo_${repGroup === 'ALL' ? 'MisGrupos' : repGroup}.xlsx`;
+    XLSX.writeFile(workbook, filename);
+    tShowToast('Reporte Generado ✓', 'El listado de alumnos se descargó.', null);
+}
+</script>
+
+</body>
+</html>

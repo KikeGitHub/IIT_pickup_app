@@ -35,6 +35,20 @@ const DEFAULT_STUDENTS = [
         ]
     },
     { 
+        id: 'lucas_estrada', 
+        name: 'LUCAS ESTRADA', 
+        level: 'KINDER', 
+        grade: '1º KÍNDER', 
+        group: '1º B', 
+        birthday: '2020-09-14',
+        avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBSjH25FZv4tA8v_m--vMmYkOqzv9p6io65EZTIEZrxiyNX3BDt2dSWMsMbd2HVhGCo63q2SvOnNAeFQbT2Iuf-b9Ew-EajvSkp2KKpTNBmuodJc29xy0fR5pE6FG520lj_imxRdTMUxymznW7_zJCpVFVpguvETQ88Nu7gah5fEhdJoOQM0eg35ZnzJKijgWfxXOazxyEyma5c-jJJrWfd_S6-1Pb7SvkmbKMWBSXKAuBtQ_6EHG8QhnnoudOjTRBGMV1evoK_WHI', 
+        parent: 'Sofía de Estrada',
+        family: [
+            { name: 'Sofía de Estrada', relationship: 'Madre', phone: '7221234567', photo: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150', authorized: true },
+            { name: 'Ricardo Estrada', relationship: 'Padre', phone: '7229876543', photo: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=150', authorized: true }
+        ]
+    },
+    { 
         id: 'sofia_hernandez', 
         name: 'SOFÍA HERNÁNDEZ', 
         level: 'KINDER', 
@@ -104,11 +118,10 @@ const DEFAULT_STUDENTS = [
         group: '1º B', 
         birthday: '2019-01-30',
         avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA9CoF4geOWXY_-UpBIO-ye4Rxrd4dQ6xK1Zu-SAtrxQqGrwQ6SS0Cq03y0Qfw5Ct2ClO6vK3W6wYBo-kxbzvqvNr3lZk6TFAsbMQhEegnnMKhYHd3X3XfW-EEF51Nw3tLuO_Hqat_IeOVxAhmnFjLY2rpLKzZIzQh5JO1vn_bRSPi-XrXBGHj4VxU8NBO9k9oj2DJToj7pNNreQoZdCEK1_DKHnwhJWyJu2k7Ub4FgefcNYsqEZZEXFnQj9XGk6Oi7tPmQo8n7pEE', 
-        parent: 'Miguel Torres',
+        parent: 'Sofía de Estrada',
         family: [
-            { name: 'Miguel Torres', relationship: 'Padre', phone: '7225550501', photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150', authorized: true },
-            { name: 'Beatriz Torres', relationship: 'Madre', phone: '7225550502', photo: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150', authorized: true },
-            { name: 'Jorge Torres', relationship: 'Tío', phone: '7225550503', photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=150', authorized: true }
+            { name: 'Sofía de Estrada', relationship: 'Madre', phone: '7221234567', photo: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150', authorized: true },
+            { name: 'Ricardo Estrada', relationship: 'Padre', phone: '7229876543', photo: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=150', authorized: true }
         ]
     },
     { 
@@ -408,7 +421,25 @@ function getStoredStudents() {
         return DEFAULT_STUDENTS;
     }
     try {
-        return JSON.parse(list);
+        let parsed = JSON.parse(list);
+        if (!parsed.some(s => s.id === 'lucas_estrada')) {
+            parsed.push({ 
+                id: 'lucas_estrada', 
+                name: 'LUCAS ESTRADA', 
+                level: 'KINDER', 
+                grade: '1º KÍNDER', 
+                group: '1º B', 
+                birthday: '2020-09-14',
+                avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBSjH25FZv4tA8v_m--vMmYkOqzv9p6io65EZTIEZrxiyNX3BDt2dSWMsMbd2HVhGCo63q2SvOnNAeFQbT2Iuf-b9Ew-EajvSkp2KKpTNBmuodJc29xy0fR5pE6FG520lj_imxRdTMUxymznW7_zJCpVFVpguvETQ88Nu7gah5fEhdJoOQM0eg35ZnzJKijgWfxXOazxyEyma5c-jJJrWfd_S6-1Pb7SvkmbKMWBSXKAuBtQ_6EHG8QhnnoudOjTRBGMV1evoK_WHI', 
+                parent: 'Sofía de Estrada',
+                family: [
+                    { name: 'Sofía de Estrada', relationship: 'Madre', phone: '7221234567', photo: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150', authorized: true },
+                    { name: 'Ricardo Estrada', relationship: 'Padre', phone: '7229876543', photo: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=150', authorized: true }
+                ]
+            });
+            localStorage.setItem('stitch_students', JSON.stringify(parsed));
+        }
+        return parsed;
     } catch (e) {
         return DEFAULT_STUDENTS;
     }
@@ -434,3 +465,611 @@ function getStoredGroups() {
 function saveStoredGroups(groups) {
     localStorage.setItem('stitch_level_groups', JSON.stringify(groups));
 }
+
+// ============================================================
+// PARENT USER SYSTEM  (Demo → Spring Boot Ready)
+// ------------------------------------------------------------
+// En producción, los métodos de AuthService / UserService
+// serán reemplazados por llamadas fetch() al BE Spring Boot.
+// La firma de cada función se mantiene idéntica para un swap
+// trivial. Las contraseñas aquí son texto plano solo en demo;
+// en BE se usará BCrypt.
+// ============================================================
+
+const DEFAULT_PARENT_USERS = [
+    {
+        id: 'parent_001',
+        nombre: 'Sofía de Estrada',
+        email: 'sofia.estrada@demo.com',
+        // DEMO ONLY – en producción: BCrypt hash via Spring Security
+        password: 'Demo2024',
+        studentIds: ['mateo_estrada', 'isabella_torres', 'lucas_estrada'],
+        active: true,
+        tempPassword: false,
+        createdAt: '2026-01-10',
+        lastLogin: null,
+        phone: '7221234567',
+        avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150'
+    },
+    {
+        id: 'parent_002',
+        nombre: 'Pedro Hernández',
+        email: 'pedro.hernandez@demo.com',
+        password: 'Demo2024',
+        studentIds: ['sofia_hernandez'],
+        active: true,
+        tempPassword: false,
+        createdAt: '2026-01-10',
+        lastLogin: null,
+        phone: '7225550192',
+        avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=150'
+    },
+    {
+        id: 'parent_003',
+        nombre: 'María Durán',
+        email: 'maria.duran@demo.com',
+        password: 'Demo2024',
+        studentIds: ['danna_irina'],
+        active: true,
+        tempPassword: false,
+        createdAt: '2026-01-10',
+        lastLogin: null,
+        phone: '7225551501',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150'
+    },
+    {
+        id: 'parent_004',
+        nombre: 'Carlos Pérez',
+        email: 'carlos.perez@demo.com',
+        password: 'Demo2024',
+        studentIds: ['santiago_perez'],
+        active: true,
+        tempPassword: false,
+        createdAt: '2026-01-10',
+        lastLogin: null,
+        phone: '7225550291',
+        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=150'
+    },
+    {
+        id: 'parent_005',
+        nombre: 'Ana Gómez',
+        email: 'ana.gomez@demo.com',
+        password: 'Demo2024',
+        studentIds: ['valentina_gomez'],
+        active: true,
+        tempPassword: false,
+        createdAt: '2026-01-10',
+        lastLogin: null,
+        phone: '7225550301',
+        avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=150'
+    },
+    {
+        id: 'parent_006',
+        nombre: 'Laura Ruiz',
+        email: 'laura.ruiz@demo.com',
+        password: 'Demo2024',
+        studentIds: ['sebastian_ruiz'],
+        active: true,
+        tempPassword: false,
+        createdAt: '2026-01-10',
+        lastLogin: null,
+        phone: '7225550411',
+        avatar: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&q=80&w=150'
+    },
+    {
+        id: 'parent_007',
+        nombre: 'Javier Sánchez',
+        email: 'javier.sanchez@demo.com',
+        password: 'Demo2024',
+        studentIds: ['emiliano_sanchez'],
+        active: true,
+        tempPassword: false,
+        createdAt: '2026-01-10',
+        lastLogin: null,
+        phone: '7225551601',
+        avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=150'
+    },
+    {
+        id: 'parent_008',
+        nombre: 'Carmen López',
+        email: 'carmen.lopez@demo.com',
+        password: 'Demo2024',
+        studentIds: ['mariana_lopez'],
+        active: true,
+        tempPassword: false,
+        createdAt: '2026-01-10',
+        lastLogin: null,
+        phone: '7225552101',
+        avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150'
+    }
+];
+
+// -----------------------------------------------
+// Persistencia de Usuarios Padres
+// -----------------------------------------------
+function getStoredParentUsers() {
+    let data = localStorage.getItem('stitch_parent_users');
+    if (!data) {
+        localStorage.setItem('stitch_parent_users', JSON.stringify(DEFAULT_PARENT_USERS));
+        return DEFAULT_PARENT_USERS.map(u => ({ ...u }));
+    }
+    try {
+        return JSON.parse(data);
+    } catch (e) {
+        return DEFAULT_PARENT_USERS.map(u => ({ ...u }));
+    }
+}
+
+function saveStoredParentUsers(users) {
+    localStorage.setItem('stitch_parent_users', JSON.stringify(users));
+}
+
+// -----------------------------------------------
+// AuthService  –  Simula los endpoints REST:
+//   POST /api/auth/login
+//   POST /api/auth/logout
+//   POST /api/auth/change-password
+// -----------------------------------------------
+const AuthService = {
+    /**
+     * Intenta autenticar a un padre con email y password.
+     * @returns {{ success: boolean, user?: object, error?: string }}
+     * Producción: fetch POST /api/auth/login → { token, user }
+     */
+    login(email, password) {
+        const users = getStoredParentUsers();
+        const user = users.find(
+            u => u.email.toLowerCase() === email.toLowerCase() && u.password === password
+        );
+        if (!user) {
+            return { success: false, error: 'Credenciales incorrectas.' };
+        }
+        if (!user.active) {
+            return { success: false, error: 'Tu cuenta está desactivada. Contacta a la escuela.' };
+        }
+        // Actualizar lastLogin
+        user.lastLogin = new Date().toISOString();
+        saveStoredParentUsers(users);
+        // Guardar sesión
+        const session = { userId: user.id, email: user.email, nombre: user.nombre, studentIds: user.studentIds, avatar: user.avatar, tempPassword: user.tempPassword };
+        localStorage.setItem('stitch_auth_session', JSON.stringify(session));
+        return { success: true, user: session };
+    },
+
+    /**
+     * Cierra la sesión del padre.
+     * Producción: POST /api/auth/logout (invalida JWT)
+     */
+    logout() {
+        localStorage.removeItem('stitch_auth_session');
+    },
+
+    /**
+     * Retorna la sesión activa o null.
+     * Producción: valida JWT del header Authorization
+     */
+    getCurrentUser() {
+        try {
+            const raw = localStorage.getItem('stitch_auth_session');
+            if (!raw) return null;
+            const session = JSON.parse(raw);
+            if (session && session.email === 'sofia.estrada@demo.com' && session.studentIds && !session.studentIds.includes('lucas_estrada')) {
+                session.studentIds.push('lucas_estrada');
+                localStorage.setItem('stitch_auth_session', JSON.stringify(session));
+            }
+            return session;
+        } catch (e) {
+            return null;
+        }
+    },
+
+    /**
+     * Cambia la contraseña del usuario autenticado.
+     * @returns {{ success: boolean, error?: string }}
+     * Producción: PUT /api/auth/change-password { oldPassword, newPassword }
+     */
+    changePassword(userId, oldPassword, newPassword) {
+        if (!newPassword || newPassword.length < 6) {
+            return { success: false, error: 'La contraseña debe tener al menos 6 caracteres.' };
+        }
+        const users = getStoredParentUsers();
+        const user = users.find(u => u.id === userId);
+        if (!user) return { success: false, error: 'Usuario no encontrado.' };
+        if (user.password !== oldPassword) return { success: false, error: 'La contraseña actual es incorrecta.' };
+        user.password = newPassword;
+        user.tempPassword = false;
+        saveStoredParentUsers(users);
+        // Actualizar sesión
+        const session = AuthService.getCurrentUser();
+        if (session) {
+            session.tempPassword = false;
+            localStorage.setItem('stitch_auth_session', JSON.stringify(session));
+        }
+        return { success: true };
+    }
+};
+
+// -----------------------------------------------
+// UserService  –  Gestión desde el Super Admin.
+//   Simula endpoints REST:
+//   GET    /api/users/parents
+//   POST   /api/users/parents
+//   PUT    /api/users/parents/:id
+//   DELETE /api/users/parents/:id
+//   POST   /api/users/parents/:id/reset-password
+// -----------------------------------------------
+const UserService = {
+    /** Lista todos los usuarios padres */
+    getAll() {
+        return getStoredParentUsers();
+    },
+
+    /** Crea un nuevo usuario padre */
+    create({ nombre, email, password, studentIds = [], phone = '', avatar = '' }) {
+        const users = getStoredParentUsers();
+        // Validar email único
+        if (users.find(u => u.email.toLowerCase() === email.toLowerCase())) {
+            return { success: false, error: 'Ya existe un usuario con ese email.' };
+        }
+        const newUser = {
+            id: 'parent_' + Date.now(),
+            nombre,
+            email,
+            password: password || 'Temporal123',
+            studentIds,
+            active: true,
+            tempPassword: true,
+            createdAt: new Date().toISOString().slice(0, 10),
+            lastLogin: null,
+            phone,
+            avatar: avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150'
+        };
+        users.push(newUser);
+        saveStoredParentUsers(users);
+        return { success: true, user: newUser };
+    },
+
+    /** Actualiza datos de un usuario padre */
+    update(userId, { nombre, email, studentIds, phone, avatar, active }) {
+        const users = getStoredParentUsers();
+        const user = users.find(u => u.id === userId);
+        if (!user) return { success: false, error: 'Usuario no encontrado.' };
+        // Validar email único al cambiar
+        if (email && email.toLowerCase() !== user.email.toLowerCase()) {
+            if (users.find(u => u.id !== userId && u.email.toLowerCase() === email.toLowerCase())) {
+                return { success: false, error: 'El email ya está en uso.' };
+            }
+            user.email = email;
+        }
+        if (nombre !== undefined) user.nombre = nombre;
+        if (studentIds !== undefined) user.studentIds = studentIds;
+        if (phone !== undefined) user.phone = phone;
+        if (avatar !== undefined) user.avatar = avatar;
+        if (active !== undefined) user.active = active;
+        saveStoredParentUsers(users);
+        return { success: true, user };
+    },
+
+    /** Elimina un usuario padre */
+    delete(userId) {
+        let users = getStoredParentUsers();
+        const exists = users.find(u => u.id === userId);
+        if (!exists) return { success: false, error: 'Usuario no encontrado.' };
+        users = users.filter(u => u.id !== userId);
+        saveStoredParentUsers(users);
+        return { success: true };
+    },
+
+    /** Resetea la contraseña a un valor temporal */
+    resetPassword(userId, newTempPassword = null) {
+        const users = getStoredParentUsers();
+        const user = users.find(u => u.id === userId);
+        if (!user) return { success: false, error: 'Usuario no encontrado.' };
+        const temp = newTempPassword || 'Cambiar' + Math.floor(Math.random() * 9000 + 1000);
+        user.password = temp;
+        user.tempPassword = true;
+        saveStoredParentUsers(users);
+        return { success: true, tempPassword: temp };
+    },
+
+    /** Activa o desactiva una cuenta */
+    toggleActive(userId) {
+        const users = getStoredParentUsers();
+        const user = users.find(u => u.id === userId);
+        if (!user) return { success: false };
+        user.active = !user.active;
+        saveStoredParentUsers(users);
+        return { success: true, active: user.active };
+    }
+};
+
+// ============================================================
+// TEACHER USER SYSTEM  (Demo → Spring Boot Ready)
+// ------------------------------------------------------------
+// Mirrors the Parent User System. En producción, los métodos
+// serán reemplazados por llamadas fetch() al BE Spring Boot.
+// ============================================================
+
+const DEFAULT_TEACHER_USERS = [
+    {
+        id: 'teacher_001',
+        nombre: 'Ana Reyes',
+        email: 'ana.reyes@demo.com',
+        password: 'Demo2024',
+        level: 'KINDER',
+        groups: ['1º A', '1º B'],
+        active: true,
+        tempPassword: false,
+        createdAt: '2026-01-10',
+        lastLogin: null,
+        avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=150'
+    },
+    {
+        id: 'teacher_002',
+        nombre: 'Carlos Mendoza',
+        email: 'carlos.mendoza@demo.com',
+        password: 'Demo2024',
+        level: 'PRIMARIA',
+        groups: ['1º B', '2º C', '3º A'],
+        active: true,
+        tempPassword: false,
+        createdAt: '2026-01-10',
+        lastLogin: null,
+        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150'
+    },
+    {
+        id: 'teacher_003',
+        nombre: 'Sofía Vargas',
+        email: 'sofia.vargas@demo.com',
+        password: 'Demo2024',
+        level: 'SECUNDARIA',
+        groups: ['1º A', '2º A', '3º B'],
+        active: true,
+        tempPassword: false,
+        createdAt: '2026-01-10',
+        lastLogin: null,
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150'
+    },
+    {
+        id: 'teacher_004',
+        nombre: 'Jorge López',
+        email: 'jorge.lopez@demo.com',
+        password: 'Demo2024',
+        level: 'PRIMARIA',
+        groups: ['4º A', '5º B', '6º A'],
+        active: true,
+        tempPassword: false,
+        createdAt: '2026-01-10',
+        lastLogin: null,
+        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=150'
+    }
+];
+
+// -----------------------------------------------
+// Persistencia de Usuarios Maestros
+// -----------------------------------------------
+function getStoredTeacherUsers() {
+    let data = localStorage.getItem('stitch_teacher_users');
+    if (!data) {
+        localStorage.setItem('stitch_teacher_users', JSON.stringify(DEFAULT_TEACHER_USERS));
+        return DEFAULT_TEACHER_USERS.map(u => ({ ...u }));
+    }
+    try {
+        return JSON.parse(data);
+    } catch (e) {
+        return DEFAULT_TEACHER_USERS.map(u => ({ ...u }));
+    }
+}
+
+function saveStoredTeacherUsers(users) {
+    localStorage.setItem('stitch_teacher_users', JSON.stringify(users));
+}
+
+// -----------------------------------------------
+// TeacherAuthService  –  Simula los endpoints REST:
+//   POST /api/auth/teacher/login
+//   POST /api/auth/teacher/logout
+//   PUT  /api/auth/teacher/change-password
+// -----------------------------------------------
+const TeacherAuthService = {
+    /**
+     * Autentica a un maestro con email y password.
+     * @returns {{ success: boolean, user?: object, error?: string }}
+     */
+    login(email, password) {
+        const users = getStoredTeacherUsers();
+        const user = users.find(
+            u => u.email.toLowerCase() === email.toLowerCase() && u.password === password
+        );
+        if (!user) return { success: false, error: 'Credenciales incorrectas.' };
+        if (!user.active) return { success: false, error: 'Tu cuenta está desactivada. Contacta al administrador.' };
+        user.lastLogin = new Date().toISOString();
+        saveStoredTeacherUsers(users);
+        const session = {
+            userId: user.id,
+            email: user.email,
+            nombre: user.nombre,
+            level: user.level,
+            groups: user.groups,
+            avatar: user.avatar,
+            tempPassword: user.tempPassword
+        };
+        localStorage.setItem('stitch_teacher_session', JSON.stringify(session));
+        return { success: true, user: session };
+    },
+
+    logout() {
+        localStorage.removeItem('stitch_teacher_session');
+    },
+
+    getCurrentUser() {
+        try {
+            const raw = localStorage.getItem('stitch_teacher_session');
+            return raw ? JSON.parse(raw) : null;
+        } catch (e) {
+            return null;
+        }
+    },
+
+    changePassword(userId, oldPassword, newPassword) {
+        if (!newPassword || newPassword.length < 6) {
+            return { success: false, error: 'La contraseña debe tener al menos 6 caracteres.' };
+        }
+        const users = getStoredTeacherUsers();
+        const user = users.find(u => u.id === userId);
+        if (!user) return { success: false, error: 'Usuario no encontrado.' };
+        if (user.password !== oldPassword) return { success: false, error: 'La contraseña actual es incorrecta.' };
+        user.password = newPassword;
+        user.tempPassword = false;
+        saveStoredTeacherUsers(users);
+        const session = TeacherAuthService.getCurrentUser();
+        if (session) {
+            session.tempPassword = false;
+            localStorage.setItem('stitch_teacher_session', JSON.stringify(session));
+        }
+        return { success: true };
+    }
+};
+
+// -----------------------------------------------
+// TeacherService  –  Gestión desde el Super Admin.
+// -----------------------------------------------
+const TeacherService = {
+    getAll() {
+        return getStoredTeacherUsers();
+    },
+
+    create({ nombre, email, password, level = '', groups = [], avatar = '' }) {
+        const users = getStoredTeacherUsers();
+        if (users.find(u => u.email.toLowerCase() === email.toLowerCase())) {
+            return { success: false, error: 'Ya existe un maestro con ese email.' };
+        }
+        const newUser = {
+            id: 'teacher_' + Date.now(),
+            nombre, email,
+            password: password || 'Temporal123',
+            level, groups,
+            active: true,
+            tempPassword: true,
+            createdAt: new Date().toISOString().slice(0, 10),
+            lastLogin: null,
+            avatar: avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150'
+        };
+        users.push(newUser);
+        saveStoredTeacherUsers(users);
+        return { success: true, user: newUser };
+    },
+
+    update(userId, { nombre, email, level, groups, avatar, active }) {
+        const users = getStoredTeacherUsers();
+        const user = users.find(u => u.id === userId);
+        if (!user) return { success: false, error: 'Maestro no encontrado.' };
+        if (email && email.toLowerCase() !== user.email.toLowerCase()) {
+            if (users.find(u => u.id !== userId && u.email.toLowerCase() === email.toLowerCase())) {
+                return { success: false, error: 'El email ya está en uso.' };
+            }
+            user.email = email;
+        }
+        if (nombre !== undefined) user.nombre = nombre;
+        if (level !== undefined) user.level = level;
+        if (groups !== undefined) user.groups = groups;
+        if (avatar !== undefined) user.avatar = avatar;
+        if (active !== undefined) user.active = active;
+        saveStoredTeacherUsers(users);
+        return { success: true, user };
+    },
+
+    delete(userId) {
+        let users = getStoredTeacherUsers();
+        if (!users.find(u => u.id === userId)) return { success: false, error: 'Maestro no encontrado.' };
+        users = users.filter(u => u.id !== userId);
+        saveStoredTeacherUsers(users);
+        return { success: true };
+    },
+
+    resetPassword(userId, newTempPassword = null) {
+        const users = getStoredTeacherUsers();
+        const user = users.find(u => u.id === userId);
+        if (!user) return { success: false, error: 'Maestro no encontrado.' };
+        const temp = newTempPassword || 'Cambiar' + Math.floor(Math.random() * 9000 + 1000);
+        user.password = temp;
+        user.tempPassword = true;
+        saveStoredTeacherUsers(users);
+        return { success: true, tempPassword: temp };
+    },
+
+    toggleActive(userId) {
+        const users = getStoredTeacherUsers();
+        const user = users.find(u => u.id === userId);
+        if (!user) return { success: false };
+        user.active = !user.active;
+        saveStoredTeacherUsers(users);
+        return { success: true, active: user.active };
+    }
+};
+
+// -----------------------------------------------
+// DeliveryLogService – Auditoría de Entregas
+// -----------------------------------------------
+const DeliveryLogService = {
+    getLogs() {
+        try {
+            return JSON.parse(localStorage.getItem('stitch_delivery_logs') || '[]');
+        } catch(e) {
+            return [];
+        }
+    },
+    
+    saveLogs(logs) {
+        localStorage.setItem('stitch_delivery_logs', JSON.stringify(logs));
+    },
+
+    // Cuando el maestro/guardia entrega
+    logTeacherConfirm(studentId, studentName, group, teacherName, pickupMethod) {
+        const logs = this.getLogs();
+        const todayStr = new Date().toISOString().slice(0, 10);
+        const timeStr = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false });
+        
+        let log = logs.find(l => l.studentId === studentId && l.date === todayStr);
+        if (!log) {
+            log = {
+                id: 'del_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+                date: todayStr,
+                studentId,
+                studentName,
+                group,
+                teacherName: teacherName || 'Guardia / Administrador',
+                pickupMethod: pickupMethod || 'CAR',
+                status: 'ENTREGADO_ESCUELA',
+                timeTeacher: timeStr,
+                timeParent: null,
+                parentConfirmed: false
+            };
+            logs.unshift(log);
+        } else {
+            log.timeTeacher = timeStr;
+            log.teacherName = teacherName || log.teacherName;
+            log.pickupMethod = pickupMethod || log.pickupMethod;
+        }
+        this.saveLogs(logs);
+        return log;
+    },
+
+    // Cuando el padre confirma el "SÍ, YA LO RECIBÍ"
+    logParentConfirm(studentId) {
+        const logs = this.getLogs();
+        const todayStr = new Date().toISOString().slice(0, 10);
+        const timeStr = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false });
+        
+        const log = logs.find(l => l.studentId === studentId && l.date === todayStr);
+        if (log) {
+            log.parentConfirmed = true;
+            log.timeParent = timeStr;
+            log.status = 'RECIBIDO_PADRE';
+            this.saveLogs(logs);
+            return { success: true, log };
+        }
+        return { success: false, error: 'No se encontró el registro de entrega para hoy.' };
+    }
+};
+
