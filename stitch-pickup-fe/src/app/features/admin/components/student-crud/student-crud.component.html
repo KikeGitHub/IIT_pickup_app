@@ -71,8 +71,8 @@
 
   <!-- Students Table Card -->
   <div class="table-card">
-    <!-- Modern Loading Skeleton State -->
-    @if (adminService.isLoading()) {
+      <!-- Modern Loading Skeleton State -->
+    @if (adminService.isLoadingStudents()) {
       <div class="table-loading-header">
         <div class="loading-spinner-sm"></div>
         <span>Cargando catálogo de alumnos y tutores...</span>
@@ -183,8 +183,8 @@
           } @empty {
             <tr>
               <td colspan="7" class="empty-cell">
-                <span *ngIf="!adminService.isLoading()">No se encontraron alumnos con los criterios seleccionados.</span>
-                <span *ngIf="adminService.isLoading()">Cargando información...</span>
+                <span *ngIf="!adminService.isLoadingStudents()">No se encontraron alumnos con los criterios seleccionados.</span>
+                <span *ngIf="adminService.isLoadingStudents()">Cargando información...</span>
               </td>
             </tr>
           }

@@ -47,6 +47,7 @@ export class AdminService {
   readonly parents = signal<ParentUser[]>([]);
   readonly users = signal<AdminUser[]>([]);
   readonly isLoading = signal<boolean>(false);
+  readonly isLoadingStudents = signal<boolean>(false);
   readonly isTransacting = signal<boolean>(false);
   readonly transactionTitle = signal<string>('Procesando...');
   readonly transactionMessage = signal<string>('Por favor espera un momento.');
@@ -136,14 +137,15 @@ export class AdminService {
 
   // ─── Students CRUD ─────────────────────────────────────────────────────────
   loadStudents(): Observable<StudentDetail[]> {
-    this.isLoading.set(true);
+    // Usa su propia señal para no interferir con loadGroups/loadTeachers
+    this.isLoadingStudents.set(true);
     return this.http.get<StudentDetail[]>(`${this.apiUrl}/admin/students`).pipe(
       tap((data) => {
         this.students.set(data);
-        this.isLoading.set(false);
+        this.isLoadingStudents.set(false);
       }),
       catchError(() => {
-        this.isLoading.set(false);
+        this.isLoadingStudents.set(false);
         return of(this.students());
       })
     );

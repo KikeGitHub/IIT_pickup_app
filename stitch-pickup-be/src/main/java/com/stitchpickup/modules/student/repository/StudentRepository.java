@@ -33,6 +33,19 @@ public interface StudentRepository extends JpaRepository<Student, UUID> {
     @Query("SELECT s FROM Student s LEFT JOIN FETCH s.group ORDER BY s.name")
     List<Student> findAllWithGroup();
 
+    /**
+     * Carga alumnos + grupo + tutores (familyMembers) en una sola consulta SQL.
+     * Elimina el problema N+1 que antes generaba 2 queries extra por cada alumno
+     * al mapear StudentDetailResponse en StudentAdminService.
+     */
+    @Query("""
+        SELECT DISTINCT s FROM Student s
+        LEFT JOIN FETCH s.group
+        LEFT JOIN FETCH s.familyMembers
+        ORDER BY s.name
+        """)
+    List<Student> findAllWithGroupAndFamilyMembers();
+
     long countByGroupId(UUID groupId);
 
     List<Student> findByGroupId(UUID groupId);

@@ -18,8 +18,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -32,8 +35,22 @@ public class StudentAdminService {
 
     @Transactional(readOnly = true)
     public List<StudentDetailResponse> getAllStudents() {
-        return studentRepository.findAllWithGroup().stream()
-                .map(this::mapToDetailResponse)
+        // 1. Carga alumnos + grupo + tutores en UNA sola query JOIN FETCH.
+        //    Elimina el N+1 que antes hacía 2 queries por alumno.
+        List<Student> students = studentRepository.findAllWithGroupAndFamilyMembers();
+
+        // 2. Carga todos los maestros con sus grupos en UNA sola query.
+        //    Construye un mapa groupId → List<nombreMaestro> para consulta O(1).
+        Map<UUID, List<String>> teachersByGroup = teacherUserRepository.findAllWithGroups()
+                .stream()
+                .flatMap(t -> t.getGroups().stream()
+                        .map(g -> Map.entry(g.getId(), t.getNombre())))
+                .collect(Collectors.groupingBy(
+                        Map.Entry::getKey,
+                        Collectors.mapping(Map.Entry::getValue, Collectors.toList())));
+
+        return students.stream()
+                .map(s -> mapToDetailResponse(s, teachersByGroup))
                 .toList();
     }
 
@@ -173,18 +190,23 @@ public class StudentAdminService {
         studentRepository.deleteById(id);
     }
 
-    private StudentDetailResponse mapToDetailResponse(Student student) {
-        String groupId = student.getGroup() != null ? student.getGroup().getId().toString() : null;
+    /**
+     * Mapeo sin queries adicionales: recibe el mapa de maestros pre-cargado
+     * y usa los familyMembers ya traídos por el JOIN FETCH del repositorio.
+     * Complejidad: O(1) por alumno, en lugar de 2 queries N+1.
+     */
+    private StudentDetailResponse mapToDetailResponse(Student student,
+                                                       Map<UUID, List<String>> teachersByGroup) {
+        String groupId   = student.getGroup() != null ? student.getGroup().getId().toString() : null;
         String groupName = student.getGroup() != null ? student.getGroup().getName() : null;
 
-        List<String> teacherNames = new ArrayList<>();
-        if (student.getGroup() != null) {
-            teacherNames = teacherUserRepository.findByGroupId(student.getGroup().getId()).stream()
-                    .map(TeacherUser::getNombre)
-                    .toList();
-        }
+        // Lectura del mapa en memoria — sin query a BD
+        List<String> teacherNames = (student.getGroup() != null)
+                ? teachersByGroup.getOrDefault(student.getGroup().getId(), Collections.emptyList())
+                : Collections.emptyList();
 
-        List<FamilyMemberResponse> familyMembers = familyMemberRepository.findByStudentId(student.getId()).stream()
+        // familyMembers ya viene pre-cargado por el JOIN FETCH — sin query a BD
+        List<FamilyMemberResponse> familyMembers = student.getFamilyMembers().stream()
                 .map(fm -> new FamilyMemberResponse(
                         fm.getId().toString(),
                         fm.getName(),
