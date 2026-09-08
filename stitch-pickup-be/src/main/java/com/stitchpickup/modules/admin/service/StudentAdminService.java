@@ -35,22 +35,22 @@ public class StudentAdminService {
 
     @Transactional(readOnly = true)
     public List<StudentDetailResponse> getAllStudents() {
-        // 1. Carga alumnos + grupo + tutores en UNA sola query JOIN FETCH.
-        //    Elimina el N+1 que antes hacía 2 queries por alumno.
-        List<Student> students = studentRepository.findAllWithGroupAndFamilyMembers();
+        // Query 1: Todos los alumnos + grupo (JOIN FETCH)
+        List<Student> students = studentRepository.findAllWithGroup();
 
-        // 2. Carga todos los maestros con sus grupos en UNA sola query.
-        //    Construye un mapa groupId → List<nombreMaestro> para consulta O(1).
-        Map<UUID, List<String>> teachersByGroup = teacherUserRepository.findAllWithGroups()
+        // Query 2: Todos los tutores de TODOS los alumnos de una vez (IN clause)
+        //          Evita N queries individuales por alumno
+        List<UUID> studentIds = students.stream().map(Student::getId).toList();
+        Map<UUID, List<FamilyMember>> membersByStudent = familyMemberRepository
+                .findByStudentIdIn(studentIds)
                 .stream()
-                .flatMap(t -> t.getGroups().stream()
-                        .map(g -> Map.entry(g.getId(), t.getNombre())))
-                .collect(Collectors.groupingBy(
-                        Map.Entry::getKey,
-                        Collectors.mapping(Map.Entry::getValue, Collectors.toList())));
+                .collect(Collectors.groupingBy(fm -> fm.getStudent().getId()));
+
+        // Query 3: Todos los maestros + grupos, agrupados por groupId en memoria
+        Map<UUID, List<String>> teachersByGroup = buildTeacherMap();
 
         return students.stream()
-                .map(s -> mapToDetailResponse(s, teachersByGroup))
+                .map(s -> mapToDetailResponse(s, membersByStudent, teachersByGroup))
                 .toList();
     }
 
@@ -202,22 +202,65 @@ public class StudentAdminService {
     }
 
     /**
-     * Mapeo sin queries adicionales: recibe el mapa de maestros pre-cargado
-     * y usa los familyMembers ya traídos por el JOIN FETCH del repositorio.
-     * Complejidad: O(1) por alumno, en lugar de 2 queries N+1.
+     * Mapeo en bulk (para getAllStudents): recibe mapas pre-cargados en memoria.
+     * 0 queries adicionales por alumno — complejidad O(1) por alumno.
+     */
+    private StudentDetailResponse mapToDetailResponse(Student student,
+                                                       Map<UUID, List<FamilyMember>> membersByStudent,
+                                                       Map<UUID, List<String>> teachersByGroup) {
+        String groupId   = student.getGroup() != null ? student.getGroup().getId().toString() : null;
+        String groupName = student.getGroup() != null ? student.getGroup().getName() : null;
+
+        List<String> teacherNames = (student.getGroup() != null)
+                ? teachersByGroup.getOrDefault(student.getGroup().getId(), Collections.emptyList())
+                : Collections.emptyList();
+
+        List<FamilyMemberResponse> familyMembers = membersByStudent
+                .getOrDefault(student.getId(), Collections.emptyList())
+                .stream()
+                .map(fm -> new FamilyMemberResponse(
+                        fm.getId().toString(),
+                        fm.getName(),
+                        fm.getRelationship(),
+                        fm.getPhone(),
+                        fm.getPhotoUrl(),
+                        fm.getAuthorized() != null ? fm.getAuthorized() : true
+                ))
+                .toList();
+
+        return new StudentDetailResponse(
+                student.getId().toString(),
+                student.getName(),
+                student.getLevel().name(),
+                student.getGrade(),
+                groupId,
+                groupName,
+                student.getBirthday() != null ? student.getBirthday().toString() : null,
+                student.getGender(),
+                student.getCurp(),
+                student.getAvatarUrl(),
+                student.getActive() != null ? student.getActive() : true,
+                teacherNames,
+                familyMembers
+        );
+    }
+
+    /**
+     * Mapeo individual (para getById/create/update): consulta tutores y maestros
+     * directamente desde el repositorio para ese alumno puntual.
      */
     private StudentDetailResponse mapToDetailResponse(Student student,
                                                        Map<UUID, List<String>> teachersByGroup) {
         String groupId   = student.getGroup() != null ? student.getGroup().getId().toString() : null;
         String groupName = student.getGroup() != null ? student.getGroup().getName() : null;
 
-        // Lectura del mapa en memoria — sin query a BD
         List<String> teacherNames = (student.getGroup() != null)
                 ? teachersByGroup.getOrDefault(student.getGroup().getId(), Collections.emptyList())
                 : Collections.emptyList();
 
-        // familyMembers ya viene pre-cargado por el JOIN FETCH — sin query a BD
-        List<FamilyMemberResponse> familyMembers = student.getFamilyMembers().stream()
+        List<FamilyMemberResponse> familyMembers = familyMemberRepository
+                .findByStudentId(student.getId())
+                .stream()
                 .map(fm -> new FamilyMemberResponse(
                         fm.getId().toString(),
                         fm.getName(),
@@ -245,3 +288,4 @@ public class StudentAdminService {
         );
     }
 }
+

@@ -12,4 +12,11 @@ public interface FamilyMemberRepository extends JpaRepository<FamilyMember, UUID
     List<FamilyMember> findByStudentId(UUID studentId);
     List<FamilyMember> findByStudentIdAndAuthorizedTrue(UUID studentId);
     void deleteByStudentId(UUID studentId);
+
+    /**
+     * Carga todos los tutores de una lista de alumnos en UNA sola query SQL (IN clause).
+     * Usado en StudentAdminService.getAllStudents() para evitar N+1 queries.
+     */
+    List<FamilyMember> findByStudentIdIn(java.util.Collection<UUID> studentIds);
+
 }
