@@ -58,7 +58,7 @@ public class StudentAdminService {
     public StudentDetailResponse getStudentById(UUID id) {
         Student student = studentRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Alumno no encontrado: " + id));
-        return mapToDetailResponse(student);
+        return mapToDetailResponse(student, buildTeacherMap());
     }
 
     @Transactional
@@ -115,7 +115,7 @@ public class StudentAdminService {
             }
         }
 
-        return mapToDetailResponse(saved);
+        return mapToDetailResponse(saved, buildTeacherMap());
     }
 
     @Transactional
@@ -182,7 +182,18 @@ public class StudentAdminService {
             }
         }
 
-        return mapToDetailResponse(saved);
+        return mapToDetailResponse(saved, buildTeacherMap());
+    }
+
+    /** Construye el mapa groupId → nombres de maestros consultando la BD una sola vez. */
+    private Map<UUID, List<String>> buildTeacherMap() {
+        return teacherUserRepository.findAllWithGroups()
+                .stream()
+                .flatMap(t -> t.getGroups().stream()
+                        .map(g -> Map.entry(g.getId(), t.getNombre())))
+                .collect(Collectors.groupingBy(
+                        Map.Entry::getKey,
+                        Collectors.mapping(Map.Entry::getValue, Collectors.toList())));
     }
 
     @Transactional
