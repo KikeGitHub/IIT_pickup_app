@@ -78,7 +78,7 @@ export class StudentCrudComponent implements OnInit {
   readonly minBirthdayDate = '2005-01-01';
   studentGender: 'M' | 'F' = 'M';
   studentCurp = '';
-  studentAvatarUrl = '';
+  readonly studentAvatarUrl = signal<string>('');
   studentActive = true;
 
   // Up to 3 authorized pickup tutors
@@ -219,7 +219,7 @@ export class StudentCrudComponent implements OnInit {
     this.studentBirthday = '';
     this.studentGender = 'M';
     this.studentCurp = '';
-    this.studentAvatarUrl = '';
+    this.studentAvatarUrl.set('');
     this.studentActive = true;
     this.tutors = [
       { name: '', relationship: 'Mamá', phone: '', photoUrl: '', authorized: true },
@@ -240,7 +240,7 @@ export class StudentCrudComponent implements OnInit {
     this.studentBirthday = student.birthday || '';
     this.studentGender = (student.gender as 'M' | 'F') || 'M';
     this.studentCurp = student.curp || '';
-    this.studentAvatarUrl = student.avatarUrl || '';
+    this.studentAvatarUrl.set(student.avatarUrl || '');
     this.studentActive = student.active;
 
     // Load tutors or populate defaults up to 3
@@ -276,10 +276,10 @@ export class StudentCrudComponent implements OnInit {
       .subscribe({
         next: (url) => {
           // Thumbnail 400x400 con detección de cara si viene de Cloudinary
-          this.studentAvatarUrl = this.imageUpload.applyTransform(url, {
+          this.studentAvatarUrl.set(this.imageUpload.applyTransform(url, {
             width: 400, height: 400, crop: 'fill', gravity: 'face',
             format: 'auto', quality: 'auto'
-          });
+          }));
           this.isUploadingPhoto.set(false);
         },
         error: (err) => {
@@ -290,7 +290,7 @@ export class StudentCrudComponent implements OnInit {
   }
 
   clearPhoto(): void {
-    this.studentAvatarUrl = '';
+    this.studentAvatarUrl.set('');
   }
 
   saveStudent(): void {
@@ -315,7 +315,7 @@ export class StudentCrudComponent implements OnInit {
       birthday: this.studentBirthday || undefined,
       gender: this.studentGender,
       curp: this.studentCurp.trim().toUpperCase() || undefined,
-      avatarUrl: this.studentAvatarUrl || undefined,
+      avatarUrl: this.studentAvatarUrl() || undefined,
       active: this.studentActive,
       familyMembers: validTutors
     };

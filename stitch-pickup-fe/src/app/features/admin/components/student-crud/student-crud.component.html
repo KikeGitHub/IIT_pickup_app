@@ -293,8 +293,8 @@
               <label>Fotografía del Alumno</label>
               <div class="photo-upload-box">
                 <div class="photo-preview-wrap">
-                  @if (studentAvatarUrl) {
-                    <img [src]="studentAvatarUrl" alt="Foto alumno" class="photo-preview-img" />
+                  @if (studentAvatarUrl()) {
+                    <img [src]="studentAvatarUrl()" alt="Foto alumno" class="photo-preview-img" />
                   } @else {
                     <div class="photo-placeholder-icon">👤</div>
                   }
