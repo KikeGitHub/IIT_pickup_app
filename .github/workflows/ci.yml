@@ -1,0 +1,66 @@
+name: CI - Pull Request Checks
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths-ignore:
+      - '**.md'
+      - 'MANUAL_*.html'
+      - 'docs/**'
+      - '*.png'
+      - '*.jpg'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ─── 1. Validación de Compilación de Frontend (Angular) ──────────────────────
+  frontend-check:
+    name: Frontend Build Check (Angular)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: stitch-pickup-fe
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: stitch-pickup-fe/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Compile Angular production bundle
+        run: npm run build
+
+  # ─── 2. Validación de Compilación de Backend (Spring Boot / Java 21) ─────────
+  backend-check:
+    name: Backend Build Check (Spring Boot)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: stitch-pickup-be
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21 (Eclipse Temurin)
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'maven'
+
+      - name: Compile Java classes and test sources
+        run: mvn clean test-compile -DskipTests
