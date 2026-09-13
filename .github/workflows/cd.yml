@@ -1,0 +1,58 @@
+name: CD - Deploy to Hetzner Cloud
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '**.md'
+      - 'MANUAL_*.html'
+      - 'docs/**'
+      - '*.png'
+      - '*.jpg'
+  workflow_dispatch:
+
+concurrency:
+  group: hetzner-production-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to Production (Hetzner VPS)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy application via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.HETZNER_HOST }}
+          username: ${{ secrets.HETZNER_USER }}
+          key: ${{ secrets.HETZNER_SSH_KEY }}
+          port: ${{ secrets.HETZNER_PORT || 22 }}
+          script_stop: true
+          script: |
+            echo "🚀 [CI/CD] Conectado al servidor Hetzner ($(hostname))..."
+            cd /opt/iit_pickup
+
+            echo "📦 [CI/CD] Descargando últimos cambios de main..."
+            git fetch origin main
+            git checkout main
+            git pull origin main
+
+            echo "🐳 [CI/CD] Reconstruyendo y actualizando contenedores de Docker..."
+            if docker compose version &>/dev/null; then
+              docker compose up -d --build
+              docker image prune -f
+            else
+              sudo docker compose up -d --build
+              sudo docker image prune -f
+            fi
+
+            echo "🩺 [CI/CD] Estado de los contenedores:"
+            if docker compose version &>/dev/null; then
+              docker compose ps
+            else
+              sudo docker compose ps
+            fi
+
+            echo "✅ [CI/CD] ¡Despliegue a producción completado exitosamente!"
