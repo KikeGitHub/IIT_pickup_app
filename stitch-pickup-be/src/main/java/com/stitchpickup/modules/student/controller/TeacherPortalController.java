@@ -1,6 +1,7 @@
 package com.stitchpickup.modules.student.controller;
 
 import com.stitchpickup.modules.student.dto.TeacherGroupDetailResponse;
+import com.stitchpickup.modules.student.dto.TeacherParentAccountDto;
 import com.stitchpickup.modules.student.dto.TeacherStudentResponse;
 import com.stitchpickup.modules.student.dto.TeacherStudentUpdateRequest;
 import com.stitchpickup.modules.student.service.TeacherPortalService;
@@ -48,4 +49,16 @@ public class TeacherPortalController {
         UUID teacherId = UUID.fromString(tokenProvider.getUserIdFromToken(token));
         return ResponseEntity.ok(teacherPortalService.updateStudentByTeacher(teacherId, studentId, updateRequest));
     }
+
+    @PostMapping("/parents/{parentId}/reset-temp-password")
+    @Operation(summary = "Maestro restablece la contraseña temporal (IIT2026) para un padre de sus alumnos")
+    public ResponseEntity<TeacherParentAccountDto> resetParentPassword(
+            @PathVariable UUID parentId,
+            HttpServletRequest request) {
+
+        String token = request.getHeader("Authorization").substring(7);
+        UUID teacherId = UUID.fromString(tokenProvider.getUserIdFromToken(token));
+        return ResponseEntity.ok(teacherPortalService.resetParentTempPassword(teacherId, parentId));
+    }
 }
+

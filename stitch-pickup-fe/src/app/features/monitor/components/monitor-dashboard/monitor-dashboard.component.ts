@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 import { MonitorService, LevelFilter } from '../../services/monitor.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { WebSocketService } from '../../../../core/services/websocket.service';
-import { TeacherService, TeacherGroup, TeacherStudent, FamilyMemberDto, TeacherStudentUpdatePayload } from '../../../../core/services/teacher.service';
+import { TeacherService, TeacherGroup, TeacherStudent, FamilyMemberDto, TeacherStudentUpdatePayload, TeacherParentAccount } from '../../../../core/services/teacher.service';
 import { ImageUploadService } from '../../../../core/services/image-upload.service';
 import { StatsHeaderComponent } from '../stats-header/stats-header.component';
 import { LevelFilterSidebarComponent } from '../level-filter-sidebar/level-filter-sidebar.component';
@@ -64,6 +64,14 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
     { name: '', relationship: 'Papá', phone: '', photoUrl: '', authorized: true },
     { name: '', relationship: 'Tutor / Familiar', phone: '', photoUrl: '', authorized: true }
   ];
+
+  // WhatsApp Share Credentials Modal
+  readonly showShareModal = signal<boolean>(false);
+  readonly selectedStudentForShare = signal<TeacherStudent | null>(null);
+  readonly selectedParentIndex = signal<number>(0);
+  readonly isResettingPassword = signal<boolean>(false);
+  readonly copySuccess = signal<boolean>(false);
+  readonly resetSuccessMsg = signal<string>('');
 
   // Group selection filter in GROUPS tab
   readonly selectedGroupId = signal<string | null>(null);
@@ -379,6 +387,106 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
 
   onRevertDelivery(event: { deliveryId: string; studentName: string }): void {
     this.monitorService.revertDelivery(event.deliveryId, event.studentName);
+  }
+
+  // ─── WhatsApp / Parent Access Share Modal Methods ──────────────────────────
+
+  openShareModal(student: TeacherStudent): void {
+    this.selectedStudentForShare.set(student);
+    this.selectedParentIndex.set(0);
+    this.copySuccess.set(false);
+    this.resetSuccessMsg.set('');
+    this.showShareModal.set(true);
+  }
+
+  closeShareModal(): void {
+    this.showShareModal.set(false);
+    this.selectedStudentForShare.set(null);
+  }
+
+  selectParentForShare(index: number): void {
+    this.selectedParentIndex.set(index);
+    this.copySuccess.set(false);
+    this.resetSuccessMsg.set('');
+  }
+
+  get currentParentAccount(): TeacherParentAccount | null {
+    const student = this.selectedStudentForShare();
+    if (!student || !student.parentAccounts || student.parentAccounts.length === 0) return null;
+    return student.parentAccounts[this.selectedParentIndex()] || student.parentAccounts[0];
+  }
+
+  get shareMessage(): string {
+    const student = this.selectedStudentForShare();
+    const parent = this.currentParentAccount;
+    if (!student || !parent) return '';
+
+    const groupName = student.groupName || 'Colegio';
+    const portalUrl = `${window.location.origin}/auth/padres`;
+
+    if (parent.tempPassword) {
+      return `🚗 *IIT Pickup — Acceso al Portal de Padres*\n\n` +
+        `Estimado/a *${parent.nombre}*, le compartimos sus credenciales de acceso para *${student.name}* (${groupName}):\n\n` +
+        `🌐 *Portal:* ${portalUrl}\n` +
+        `👤 *Usuario:* ${parent.email}\n` +
+        `🔑 *Contraseña temporal:* IIT2026\n\n` +
+        `⚠️ _Por la seguridad de su hijo/a, al ingresar por primera vez el sistema le solicitará crear su contraseña personal e intransferible._`;
+    } else {
+      return `🚗 *IIT Pickup — Acceso al Portal de Padres*\n\n` +
+        `Estimado/a *${parent.nombre}*, le compartimos el enlace de acceso al sistema para *${student.name}* (${groupName}):\n\n` +
+        `🌐 *Portal:* ${portalUrl}\n` +
+        `👤 *Usuario:* ${parent.email}\n` +
+        `🔑 *Contraseña:* Ya configurada previamente por usted.\n\n` +
+        `💡 _Si olvidó su contraseña, puede solicitarnos restablecerla temporalmente a IIT2026._`;
+    }
+  }
+
+  copyShareMessage(): void {
+    const msg = this.shareMessage;
+    if (!msg) return;
+
+    navigator.clipboard.writeText(msg).then(() => {
+      this.copySuccess.set(true);
+      setTimeout(() => this.copySuccess.set(false), 3000);
+    });
+  }
+
+  openWhatsAppDirect(): void {
+    const msg = this.shareMessage;
+    if (!msg) return;
+    const parent = this.currentParentAccount;
+    const phone = parent?.phone ? parent.phone.replace(/\D/g, '') : '';
+    const cleanPhone = phone.length === 10 ? `52${phone}` : phone;
+    const url = cleanPhone.length >= 10
+      ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`
+      : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+    window.open(url, '_blank');
+  }
+
+  resetPassword(parentId: string): void {
+    if (!confirm('¿Deseas restablecer la contraseña a IIT2026 para esta cuenta de padre?')) return;
+
+    this.isResettingPassword.set(true);
+    this.resetSuccessMsg.set('');
+
+    this.teacherService.resetParentPassword(parentId).subscribe({
+      next: () => {
+        this.isResettingPassword.set(false);
+        this.resetSuccessMsg.set('¡Contraseña restablecida a IIT2026 exitosamente!');
+        // Update local state in modal
+        const current = this.selectedStudentForShare();
+        if (current && current.parentAccounts) {
+          const updatedAccounts = current.parentAccounts.map((p) =>
+            p.id === parentId ? { ...p, tempPassword: true } : p
+          );
+          this.selectedStudentForShare.set({ ...current, parentAccounts: updatedAccounts });
+        }
+      },
+      error: (err) => {
+        this.isResettingPassword.set(false);
+        alert(err.error?.message || 'Error al restablecer la contraseña.');
+      }
+    });
   }
 
   logout(): void {

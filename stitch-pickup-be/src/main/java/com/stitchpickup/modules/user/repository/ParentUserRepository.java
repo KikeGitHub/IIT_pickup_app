@@ -32,4 +32,8 @@ public interface ParentUserRepository extends JpaRepository<ParentUser, UUID> {
 
     @Query("SELECT DISTINCT p FROM ParentUser p LEFT JOIN FETCH p.students ORDER BY p.nombre")
     List<ParentUser> findAllWithStudents();
+
+    @Query("SELECT p FROM ParentUser p JOIN p.students s WHERE s.id = :studentId ORDER BY p.nombre")
+    List<ParentUser> findByStudentId(@Param("studentId") UUID studentId);
 }
+

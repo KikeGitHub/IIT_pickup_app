@@ -12,6 +12,14 @@ export interface FamilyMemberDto {
   authorized: boolean;
 }
 
+export interface TeacherParentAccount {
+  id: string;
+  nombre: string;
+  email: string;
+  phone?: string;
+  tempPassword: boolean;
+}
+
 export interface TeacherStudent {
   id: string;
   name: string;
@@ -25,6 +33,7 @@ export interface TeacherStudent {
   avatarUrl?: string;
   active: boolean;
   familyMembers: FamilyMemberDto[];
+  parentAccounts?: TeacherParentAccount[];
 }
 
 export interface TeacherGroup {
@@ -76,6 +85,24 @@ export class TeacherService {
           groups.map((g) => ({
             ...g,
             students: g.students.map((s) => (s.id === studentId ? { ...s, ...updated } : s))
+          }))
+        );
+      })
+    );
+  }
+
+  resetParentPassword(parentId: string): Observable<TeacherParentAccount> {
+    return this.http.post<TeacherParentAccount>(`${this.apiUrl}/teacher/parents/${parentId}/reset-temp-password`, {}).pipe(
+      tap((updatedParent) => {
+        this.myGroups.update((groups) =>
+          groups.map((g) => ({
+            ...g,
+            students: g.students.map((s) => ({
+              ...s,
+              parentAccounts: s.parentAccounts?.map((p) =>
+                p.id === parentId ? { ...p, tempPassword: true } : p
+              )
+            }))
           }))
         );
       })

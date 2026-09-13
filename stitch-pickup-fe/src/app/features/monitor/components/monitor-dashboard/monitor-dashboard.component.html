@@ -284,6 +284,9 @@
                       </td>
                       <td>
                         <div class="action-btns">
+                          <button type="button" class="btn-action-wa" (click)="openShareModal(s)" title="Compartir acceso para padres por WhatsApp">
+                            <span>💬 Acceso</span>
+                          </button>
                           <button type="button" class="btn-action-edit" (click)="openEditStudentModal(s)" title="Editar alumno">
                             <span>✏️ Editar</span>
                           </button>
@@ -341,6 +344,9 @@
                   </div>
 
                   <div class="m-card-actions">
+                    <button type="button" class="btn-wa-mobile" (click)="openShareModal(s)">
+                      <span>💬 Acceso Padres (WhatsApp)</span>
+                    </button>
                     <button type="button" class="btn-edit-mobile" (click)="openEditStudentModal(s)">
                       <span>✏️ Editar Alumno / Fotografía</span>
                     </button>
@@ -496,14 +502,140 @@
 
         </div>
 
-        <footer class="modal-footer">
-          <button type="button" class="btn-secondary" (click)="closeEditModal()">Cancelar</button>
-          <button type="button" class="btn-primary" [disabled]="isSavingStudent() || isUploadingPhoto()" (click)="saveStudent()">
-            {{ isSavingStudent() ? 'Guardando...' : 'Guardar Cambios' }}
-          </button>
-        </footer>
+          <footer class="modal-footer">
+            <button type="button" class="btn-secondary" (click)="closeEditModal()">Cancelar</button>
+            <button type="button" class="btn-primary" [disabled]="isSavingStudent() || isUploadingPhoto()" (click)="saveStudent()">
+              {{ isSavingStudent() ? 'Guardando...' : 'Guardar Cambios' }}
+            </button>
+          </footer>
+        </div>
       </div>
-    </div>
+    }
+
+  <!-- Modal: Share Parent Credentials / WhatsApp Card -->
+  @if (showShareModal()) {
+    @if (selectedStudentForShare(); as student) {
+      <div class="modal-backdrop" (click)="closeShareModal()">
+        <div class="modal-card modal-card--share" (click)="$event.stopPropagation()">
+          <header class="modal-header modal-header--wa">
+            <div class="header-wa-title">
+              <span class="wa-icon-bubble">💬</span>
+              <div>
+                <h3>Ficha de Acceso para Padres</h3>
+                <p class="header-wa-sub">{{ student.name }} &bull; {{ student.groupName || 'Grupo Escolar' }}</p>
+              </div>
+            </div>
+            <button type="button" class="btn-close" (click)="closeShareModal()">&times;</button>
+          </header>
+
+          <div class="modal-body share-modal-body">
+            <!-- If no parent accounts linked -->
+            @if (!student.parentAccounts || student.parentAccounts.length === 0) {
+              <div class="no-parent-warning">
+                <span class="warn-icon">⚠️</span>
+                <div>
+                  <h4>No hay cuentas de usuario padre vinculadas</h4>
+                  <p>Este alumno aún no tiene un usuario padre vinculado en el sistema. Los accesos se vinculan desde el panel de Administración.</p>
+                </div>
+              </div>
+            } @else {
+              <!-- Tabs if multiple parent accounts -->
+              @if (student.parentAccounts.length > 1) {
+                <div class="parent-tabs-bar">
+                  <span class="tabs-label">Seleccionar cuenta:</span>
+                  <div class="parent-pills">
+                    @for (p of student.parentAccounts; track p.id; let idx = $index) {
+                      <button
+                        type="button"
+                        class="parent-pill-btn"
+                        [class.parent-pill-btn--active]="selectedParentIndex() === idx"
+                        (click)="selectParentForShare(idx)"
+                      >
+                        👤 {{ p.nombre || p.email }}
+                      </button>
+                    }
+                  </div>
+                </div>
+              }
+
+              <!-- Current Parent Account Card -->
+              @if (currentParentAccount; as parent) {
+                <div class="parent-info-card">
+                  <div class="p-card-header">
+                    <div class="p-card-details">
+                      <span class="p-name">{{ parent.nombre }}</span>
+                      <span class="p-email">✉️ {{ parent.email }}</span>
+                      <span class="p-phone" *ngIf="parent.phone">📞 {{ parent.phone }}</span>
+                    </div>
+
+                    <div class="p-card-status">
+                      @if (parent.tempPassword) {
+                        <span class="badge-status badge-status--temp" title="El padre aún no ha ingresado al portal">
+                          🟡 Clave Temporal (IIT2026)
+                        </span>
+                      } @else {
+                        <span class="badge-status badge-status--active" title="El padre ya configuró su contraseña privada">
+                          🟢 Contraseña Personal Activa
+                        </span>
+                      }
+                    </div>
+                  </div>
+
+                  <!-- Reset password button if already active -->
+                  <div class="p-reset-bar" *ngIf="!parent.tempPassword">
+                    <span class="reset-hint">¿El padre olvidó su contraseña?</span>
+                    <button
+                      type="button"
+                      class="btn-reset-pwd"
+                      [disabled]="isResettingPassword()"
+                      (click)="resetPassword(parent.id)"
+                    >
+                      {{ isResettingPassword() ? '⏳ Restableciendo...' : '🔄 Restablecer a IIT2026' }}
+                    </button>
+                  </div>
+
+                  <div class="alert-success-sm" *ngIf="resetSuccessMsg()">
+                    ✅ {{ resetSuccessMsg() }}
+                  </div>
+                </div>
+
+                <!-- WhatsApp Message Preview -->
+                <div class="wa-preview-wrap">
+                  <div class="wa-preview-header">
+                    <span class="wa-preview-tag">📱 Mensaje listo para WhatsApp:</span>
+                  </div>
+                  <pre class="wa-preview-box">{{ shareMessage }}</pre>
+                </div>
+              }
+            }
+          </div>
+
+          <footer class="modal-footer modal-footer--share">
+            <button type="button" class="btn-secondary" (click)="closeShareModal()">Cerrar</button>
+
+            @if (currentParentAccount) {
+              <button
+                type="button"
+                class="btn-wa-direct"
+                (click)="openWhatsAppDirect()"
+                title="Abrir chat de WhatsApp"
+              >
+                <span>💬 Abrir en WhatsApp</span>
+              </button>
+
+              <button
+                type="button"
+                class="btn-wa-copy"
+                [class.btn-wa-copy--success]="copySuccess()"
+                (click)="copyShareMessage()"
+              >
+                <span>{{ copySuccess() ? '✅ ¡Mensaje Copiado!' : '📋 Copiar Mensaje' }}</span>
+              </button>
+            }
+          </footer>
+        </div>
+      </div>
+    }
   }
 
 </div>

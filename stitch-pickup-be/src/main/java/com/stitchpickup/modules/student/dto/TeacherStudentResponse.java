@@ -15,5 +15,7 @@ public record TeacherStudentResponse(
     String curp,
     String avatarUrl,
     boolean active,
-    List<FamilyMemberResponse> familyMembers
+    List<FamilyMemberResponse> familyMembers,
+    List<TeacherParentAccountDto> parentAccounts
 ) {}
+

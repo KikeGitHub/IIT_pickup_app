@@ -3,6 +3,7 @@ package com.stitchpickup.modules.student.service;
 import com.stitchpickup.modules.admin.dto.FamilyMemberRequest;
 import com.stitchpickup.modules.admin.dto.FamilyMemberResponse;
 import com.stitchpickup.modules.student.dto.TeacherGroupDetailResponse;
+import com.stitchpickup.modules.student.dto.TeacherParentAccountDto;
 import com.stitchpickup.modules.student.dto.TeacherStudentResponse;
 import com.stitchpickup.modules.student.dto.TeacherStudentUpdateRequest;
 import com.stitchpickup.modules.student.entity.FamilyMember;
@@ -11,9 +12,12 @@ import com.stitchpickup.modules.student.entity.Student;
 import com.stitchpickup.modules.student.repository.FamilyMemberRepository;
 import com.stitchpickup.modules.student.repository.SchoolGroupRepository;
 import com.stitchpickup.modules.student.repository.StudentRepository;
+import com.stitchpickup.modules.user.entity.ParentUser;
 import com.stitchpickup.modules.user.entity.TeacherUser;
+import com.stitchpickup.modules.user.repository.ParentUserRepository;
 import com.stitchpickup.modules.user.repository.TeacherUserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +34,8 @@ public class TeacherPortalService {
     private final SchoolGroupRepository schoolGroupRepository;
     private final StudentRepository studentRepository;
     private final FamilyMemberRepository familyMemberRepository;
+    private final ParentUserRepository parentUserRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional(readOnly = true)
     public List<TeacherGroupDetailResponse> getMyGroupsWithStudents(UUID teacherId) {
@@ -138,6 +144,16 @@ public class TeacherPortalService {
                 ))
                 .toList();
 
+        List<TeacherParentAccountDto> parentAccounts = parentUserRepository.findByStudentId(s.getId()).stream()
+                .map(p -> new TeacherParentAccountDto(
+                        p.getId().toString(),
+                        p.getNombre(),
+                        p.getEmail(),
+                        p.getPhone(),
+                        Boolean.TRUE.equals(p.getTempPassword())
+                ))
+                .toList();
+
         return new TeacherStudentResponse(
                 s.getId().toString(),
                 s.getName(),
@@ -150,7 +166,39 @@ public class TeacherPortalService {
                 s.getCurp(),
                 s.getAvatarUrl(),
                 Boolean.TRUE.equals(s.getActive()),
-                tutors
+                tutors,
+                parentAccounts
+        );
+    }
+
+    @Transactional
+    public TeacherParentAccountDto resetParentTempPassword(UUID teacherId, UUID parentId) {
+        TeacherUser teacher = teacherUserRepository.findByIdWithGroups(teacherId)
+                .orElseThrow(() -> new IllegalArgumentException("Maestro no encontrado: " + teacherId));
+
+        ParentUser parent = parentUserRepository.findByIdWithStudents(parentId)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario padre no encontrado: " + parentId));
+
+        // Validar que el padre pertenece a al menos un alumno de los grupos asignados al maestro
+        if (!"ADMIN".equalsIgnoreCase(teacher.getRole()) && !teacher.getGroups().isEmpty()) {
+            boolean hasAccess = parent.getStudents().stream().anyMatch(student ->
+                    student.getGroup() != null && teacher.getGroups().stream().anyMatch(g -> g.getId().equals(student.getGroup().getId()))
+            );
+            if (!hasAccess) {
+                throw new SecurityException("No tienes autorización para restablecer contraseñas de padres fuera de tus grupos.");
+            }
+        }
+
+        parent.setPasswordHash(passwordEncoder.encode("IIT2026"));
+        parent.setTempPassword(true);
+        ParentUser updated = parentUserRepository.save(parent);
+
+        return new TeacherParentAccountDto(
+                updated.getId().toString(),
+                updated.getNombre(),
+                updated.getEmail(),
+                updated.getPhone(),
+                true
         );
     }
 }
