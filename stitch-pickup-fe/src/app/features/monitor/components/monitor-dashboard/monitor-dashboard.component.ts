@@ -422,7 +422,7 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
     if (!student || !parent) return '';
 
     const groupName = student.groupName || 'Colegio';
-    const portalUrl = `${window.location.origin}/auth/padres`;
+    const portalUrl = 'https://pickup.institutoingles.edu.mx/auth/padres';
 
     if (parent.tempPassword) {
       return `🚗 *IIT Pickup — Acceso al Portal de Padres*\n\n` +
