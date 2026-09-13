@@ -65,3 +65,34 @@ body {
   background: rgba(v.$color-primary, 0.15);
   color: v.$color-on-surface;
 }
+
+// ─── Global Form Control Safety & Anti-Overflow ──────────────────────────────
+
+input,
+select,
+textarea {
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+.form-control {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.form-group {
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.form-row,
+.form-row-2,
+.form-grid,
+.form-grid--2col {
+  min-width: 0;
+  box-sizing: border-box;
+}
+

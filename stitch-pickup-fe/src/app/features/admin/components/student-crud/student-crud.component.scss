@@ -402,7 +402,7 @@
 .modal-card {
   background: white;
   width: 100%;
-  max-width: 780px;
+  max-width: 860px;
   max-height: 92vh;
   border-radius: v.$radius-lg;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.25);
@@ -461,22 +461,38 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: v.$space-md;
+  min-width: 0;
 }
 
 .form-row-2 {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: v.$space-sm;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
   gap: 5px;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
 
   label { font-size: 12px; font-weight: v.$font-weight-semibold; color: v.$color-on-surface; }
 
   .form-control {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
     padding: 7px 10px;
     border-radius: v.$radius-md;
     border: 1px solid v.$color-outline-variant;
@@ -507,8 +523,11 @@
 
 .tutors-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(235px, 1fr));
   gap: v.$space-md;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .tutor-card-form {
@@ -519,6 +538,9 @@
   display: flex;
   flex-direction: column;
   gap: v.$space-xs;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow: hidden;
 
   .tutor-form-header {
     display: flex;
@@ -527,11 +549,13 @@
     border-bottom: 1px solid rgba(0, 0, 0, 0.06);
     padding-bottom: 4px;
     margin-bottom: 4px;
+    min-width: 0;
 
     .tutor-num {
       font-size: 12px;
       font-weight: v.$font-weight-bold;
       color: v.$color-primary;
+      white-space: nowrap;
     }
 
     .auth-switch {
@@ -542,6 +566,7 @@
       cursor: pointer;
       color: #16a34a;
       font-weight: v.$font-weight-semibold;
+      white-space: nowrap;
     }
   }
 
@@ -549,6 +574,35 @@
     display: flex;
     flex-direction: column;
     gap: 6px;
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
+
+    .form-group {
+      gap: 3px;
+      min-width: 0;
+      width: 100%;
+      box-sizing: border-box;
+
+      label {
+        font-size: 11px;
+        font-weight: v.$font-weight-semibold;
+        color: v.$color-on-surface-variant;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .form-control {
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+        padding: 6px 9px;
+        font-size: 12px;
+      }
+    }
   }
 }
 
