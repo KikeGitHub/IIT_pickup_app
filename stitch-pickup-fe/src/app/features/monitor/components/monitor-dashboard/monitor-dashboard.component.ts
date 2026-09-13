@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 import { MonitorService, LevelFilter } from '../../services/monitor.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { WebSocketService } from '../../../../core/services/websocket.service';
-import { TeacherService, TeacherGroup, TeacherStudent, FamilyMemberDto, TeacherStudentUpdatePayload, TeacherParentAccount } from '../../../../core/services/teacher.service';
+import { TeacherService, TeacherGroup, TeacherStudent, FamilyMemberDto, TeacherStudentUpdatePayload, TeacherParentAccount, TeacherStudentCreatePayload, TeacherParentAccountInput } from '../../../../core/services/teacher.service';
 import { ImageUploadService } from '../../../../core/services/image-upload.service';
 import { StatsHeaderComponent } from '../stats-header/stats-header.component';
 import { LevelFilterSidebarComponent } from '../level-filter-sidebar/level-filter-sidebar.component';
@@ -75,6 +75,35 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
 
   // Group selection filter in GROUPS tab
   readonly selectedGroupId = signal<string | null>(null);
+
+  // Active status filter in group roster: 'ALL' | 'ACTIVE' | 'INACTIVE'
+  readonly activeFilter = signal<'ALL' | 'ACTIVE' | 'INACTIVE'>('ACTIVE');
+
+  // New Student Modal State
+  readonly showCreateModal = signal<boolean>(false);
+  readonly isCreatingStudent = signal<boolean>(false);
+  readonly isUploadingNewPhoto = signal<boolean>(false);
+  readonly createError = signal<string>('');
+  newName = '';
+  newGrade = '';
+  newBirthday = '';
+  newGender: 'M' | 'F' = 'M';
+  newCurp = '';
+  newAvatarUrl = '';
+  newParentName = '';
+  newParentEmail = '';
+  newParentPhone = '';
+  copyParentToPickup = true;
+  newTutors: FamilyMemberDto[] = [
+    { name: '', relationship: 'Mamá', phone: '', photoUrl: '', authorized: true },
+    { name: '', relationship: 'Papá', phone: '', photoUrl: '', authorized: true },
+    { name: '', relationship: 'Tutor / Familiar', phone: '', photoUrl: '', authorized: true }
+  ];
+
+  // Deactivate / Reactivate Confirmation Modal State
+  readonly showConfirmDeactivateModal = signal<boolean>(false);
+  readonly studentForDeactivate = signal<TeacherStudent | null>(null);
+  readonly isTogglingActive = signal<boolean>(false);
 
   ngOnInit(): void {
     const token = this.authService.getToken();
@@ -230,10 +259,34 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
     return this.teacherService.myGroups().find(g => g.id === gid) || this.teacherService.myGroups()[0];
   }
 
+  setActiveFilter(filter: 'ALL' | 'ACTIVE' | 'INACTIVE'): void {
+    this.activeFilter.set(filter);
+  }
+
+  get activeStudentsCount(): number {
+    return this.currentGroup?.students.filter(s => s.active).length || 0;
+  }
+
+  get inactiveStudentsCount(): number {
+    return this.currentGroup?.students.filter(s => !s.active).length || 0;
+  }
+
+  get totalStudentsCount(): number {
+    return this.currentGroup?.students.length || 0;
+  }
+
   get filteredGroupStudents(): TeacherStudent[] {
     const grp = this.currentGroup;
     if (!grp || !grp.students) return [];
     let list = grp.students;
+
+    const filter = this.activeFilter();
+    if (filter === 'ACTIVE') {
+      list = list.filter(s => s.active);
+    } else if (filter === 'INACTIVE') {
+      list = list.filter(s => !s.active);
+    }
+
     if (this.studentSearchQuery.trim()) {
       const q = this.studentSearchQuery.toLowerCase();
       list = list.filter(s =>
@@ -373,6 +426,171 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
       error: (err) => {
         this.isSavingStudent.set(false);
         this.editError = err.error?.message || 'Error al actualizar el alumno.';
+      }
+    });
+  }
+
+  // ─── Create New Student Methods ────────────────────────────────────────────
+
+  openCreateStudentModal(): void {
+    const grp = this.currentGroup;
+    this.createError.set('');
+    this.newName = '';
+    this.newGrade = grp?.name || '';
+    this.newBirthday = '';
+    this.newGender = 'M';
+    this.newCurp = '';
+    this.newAvatarUrl = '';
+    this.newParentName = '';
+    this.newParentEmail = '';
+    this.newParentPhone = '';
+    this.copyParentToPickup = true;
+    this.newTutors = [
+      { name: '', relationship: 'Mamá', phone: '', photoUrl: '', authorized: true },
+      { name: '', relationship: 'Papá', phone: '', photoUrl: '', authorized: true },
+      { name: '', relationship: 'Tutor / Familiar', phone: '', photoUrl: '', authorized: true }
+    ];
+    this.showCreateModal.set(true);
+  }
+
+  closeCreateModal(): void {
+    this.showCreateModal.set(false);
+  }
+
+  onParentDataChange(): void {
+    if (this.copyParentToPickup && this.newTutors.length > 0) {
+      if (this.newParentName.trim()) {
+        this.newTutors[0].name = this.newParentName.trim();
+      }
+      if (this.newParentPhone.trim()) {
+        this.newTutors[0].phone = this.newParentPhone.trim();
+      }
+    }
+  }
+
+  onNewPhotoSelected(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      this.createError.set('La fotografía no debe superar 5MB.');
+      return;
+    }
+
+    this.isUploadingNewPhoto.set(true);
+    this.imageUpload
+      .uploadFile(file, 'student', undefined, this.newName || undefined)
+      .subscribe({
+        next: (url: string) => {
+          this.newAvatarUrl = this.imageUpload.applyTransform(url, {
+            width: 400,
+            height: 400,
+            crop: 'fill',
+            gravity: 'face',
+            format: 'auto',
+            quality: 'auto'
+          });
+          this.isUploadingNewPhoto.set(false);
+        },
+        error: (err: any) => {
+          this.isUploadingNewPhoto.set(false);
+          alert(err.error?.message || err.message || 'Error al subir la fotografía.');
+        }
+      });
+  }
+
+  saveNewStudent(): void {
+    if (!this.newName.trim()) {
+      this.createError.set('El nombre del alumno es obligatorio.');
+      return;
+    }
+    const grp = this.currentGroup;
+    if (!grp) {
+      this.createError.set('No hay un grupo escolar seleccionado.');
+      return;
+    }
+
+    if (this.newParentEmail.trim() && !this.newParentEmail.includes('@')) {
+      this.createError.set('Por favor ingresa un correo electrónico válido para el padre.');
+      return;
+    }
+
+    this.isCreatingStudent.set(true);
+    this.createError.set('');
+
+    const parentAccounts: TeacherParentAccountInput[] = [];
+    if (this.newParentEmail.trim()) {
+      parentAccounts.push({
+        nombre: this.newParentName.trim() || undefined,
+        email: this.newParentEmail.trim().toLowerCase(),
+        phone: this.newParentPhone.trim() || undefined
+      });
+    }
+
+    const validTutors = this.newTutors
+      .filter(t => t.name && t.name.trim().length > 0)
+      .map(t => ({
+        ...t,
+        name: t.name.trim(),
+        relationship: t.relationship || 'Tutor',
+        phone: t.phone ? t.phone.trim() : '',
+        photoUrl: t.photoUrl || '',
+        authorized: t.authorized !== false
+      }));
+
+    const payload: TeacherStudentCreatePayload = {
+      name: this.newName.trim(),
+      groupId: grp.id,
+      grade: this.newGrade.trim() || grp.name,
+      birthday: this.newBirthday || undefined,
+      gender: this.newGender,
+      curp: this.newCurp.trim() ? this.newCurp.trim().toUpperCase() : undefined,
+      avatarUrl: this.newAvatarUrl ? this.newAvatarUrl.trim() : undefined,
+      parentAccounts: parentAccounts.length > 0 ? parentAccounts : undefined,
+      familyMembers: validTutors.length > 0 ? validTutors : undefined
+    };
+
+    this.teacherService.createStudent(payload).subscribe({
+      next: (created) => {
+        this.isCreatingStudent.set(false);
+        this.closeCreateModal();
+        // Si se vinculó cuenta de padre, abrir automáticamente la ficha de WhatsApp para enviar accesos
+        if (created.parentAccounts && created.parentAccounts.length > 0) {
+          this.openShareModal(created);
+        }
+      },
+      error: (err) => {
+        this.isCreatingStudent.set(false);
+        this.createError.set(err.error?.message || 'Error al registrar al alumno.');
+      }
+    });
+  }
+
+  // ─── Deactivate / Reactivate Student Methods ───────────────────────────────
+
+  openConfirmToggleActive(student: TeacherStudent): void {
+    this.studentForDeactivate.set(student);
+    this.showConfirmDeactivateModal.set(true);
+  }
+
+  closeConfirmToggleActive(): void {
+    this.showConfirmDeactivateModal.set(false);
+    this.studentForDeactivate.set(null);
+  }
+
+  executeToggleActive(): void {
+    const student = this.studentForDeactivate();
+    if (!student) return;
+
+    this.isTogglingActive.set(true);
+    this.teacherService.toggleStudentActive(student.id).subscribe({
+      next: () => {
+        this.isTogglingActive.set(false);
+        this.closeConfirmToggleActive();
+      },
+      error: (err) => {
+        this.isTogglingActive.set(false);
+        alert(err.error?.message || 'Error al actualizar el estado del alumno.');
       }
     });
   }

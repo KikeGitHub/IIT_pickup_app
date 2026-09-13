@@ -2,10 +2,7 @@ package com.stitchpickup.modules.student.service;
 
 import com.stitchpickup.modules.admin.dto.FamilyMemberRequest;
 import com.stitchpickup.modules.admin.dto.FamilyMemberResponse;
-import com.stitchpickup.modules.student.dto.TeacherGroupDetailResponse;
-import com.stitchpickup.modules.student.dto.TeacherParentAccountDto;
-import com.stitchpickup.modules.student.dto.TeacherStudentResponse;
-import com.stitchpickup.modules.student.dto.TeacherStudentUpdateRequest;
+import com.stitchpickup.modules.student.dto.*;
 import com.stitchpickup.modules.student.entity.FamilyMember;
 import com.stitchpickup.modules.student.entity.SchoolGroup;
 import com.stitchpickup.modules.student.entity.Student;
@@ -23,7 +20,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -57,7 +56,6 @@ public class TeacherPortalService {
             List<Student> students = studentRepository.findByGroupId(group.getId());
 
             List<TeacherStudentResponse> studentResponses = students.stream()
-                    .filter(s -> Boolean.TRUE.equals(s.getActive()))
                     .map(this::mapToStudentResponse)
                     .toList();
 
@@ -200,5 +198,124 @@ public class TeacherPortalService {
                 updated.getPhone(),
                 true
         );
+    }
+
+    @Transactional
+    public TeacherStudentResponse createStudentByTeacher(UUID teacherId, TeacherStudentCreateRequest request) {
+        TeacherUser teacher = teacherUserRepository.findByIdWithGroups(teacherId)
+                .orElseThrow(() -> new IllegalArgumentException("Maestro no encontrado: " + teacherId));
+
+        UUID groupId = UUID.fromString(request.groupId());
+        SchoolGroup group = schoolGroupRepository.findById(groupId)
+                .orElseThrow(() -> new IllegalArgumentException("Grupo escolar no encontrado: " + request.groupId()));
+
+        // Validar que el maestro tenga asignado este grupo (salvo que sea ADMIN)
+        if (!"ADMIN".equalsIgnoreCase(teacher.getRole()) && !teacher.getGroups().isEmpty()) {
+            if (teacher.getGroups().stream().noneMatch(g -> g.getId().equals(groupId))) {
+                throw new SecurityException("No tienes autorización para registrar alumnos fuera de tus grupos asignados.");
+            }
+        }
+
+        LocalDate bday = null;
+        if (request.birthday() != null && !request.birthday().isBlank()) {
+            try {
+                LocalDate parsed = LocalDate.parse(request.birthday());
+                if (parsed.isAfter(LocalDate.now())) {
+                    throw new IllegalArgumentException("La fecha de nacimiento no puede ser una fecha futura (" + request.birthday() + ")");
+                }
+                bday = parsed;
+            } catch (IllegalArgumentException e) {
+                throw e;
+            } catch (Exception ignored) {}
+        }
+
+        Student student = Student.builder()
+                .name(request.name().trim())
+                .group(group)
+                .level(group.getLevel())
+                .grade(request.grade() != null && !request.grade().isBlank() ? request.grade().trim() : group.getName())
+                .birthday(bday)
+                .gender(request.gender() != null && !request.gender().isBlank() ? request.gender().trim().toUpperCase() : null)
+                .curp(request.curp() != null && !request.curp().isBlank() ? request.curp().trim().toUpperCase() : null)
+                .avatarUrl(request.avatarUrl() != null && !request.avatarUrl().isBlank() ? request.avatarUrl().trim() : null)
+                .active(true)
+                .build();
+
+        Student saved = studentRepository.save(student);
+
+        // Guardar tutores de pickup autorizados
+        if (request.familyMembers() != null) {
+            for (FamilyMemberRequest fm : request.familyMembers()) {
+                if (fm.name() != null && !fm.name().isBlank()) {
+                    FamilyMember member = FamilyMember.builder()
+                            .student(saved)
+                            .name(fm.name().trim())
+                            .relationship(fm.relationship() != null && !fm.relationship().isBlank() ? fm.relationship().trim() : "Tutor")
+                            .phone(fm.phone() != null ? fm.phone().trim() : "")
+                            .photoUrl(fm.photoUrl())
+                            .authorized(fm.authorized() != null ? fm.authorized() : true)
+                            .build();
+                    familyMemberRepository.save(member);
+                }
+            }
+        }
+
+        // Crear o vincular cuentas de padres para acceso al portal
+        if (request.parentAccounts() != null) {
+            for (TeacherParentAccountInputDto pDto : request.parentAccounts()) {
+                if (pDto.email() != null && !pDto.email().isBlank()) {
+                    String cleanEmail = pDto.email().trim().toLowerCase();
+                    String cleanPhone = pDto.phone() != null ? pDto.phone().trim() : null;
+                    String cleanNombre = pDto.nombre() != null && !pDto.nombre().isBlank()
+                            ? pDto.nombre().trim()
+                            : "Tutor de " + saved.getName();
+
+                    var existingOpt = parentUserRepository.findByEmailWithStudents(cleanEmail);
+                    if (existingOpt.isPresent()) {
+                        ParentUser parent = existingOpt.get();
+                        parent.getStudents().add(saved);
+                        if ((parent.getPhone() == null || parent.getPhone().isBlank()) && cleanPhone != null) {
+                            parent.setPhone(cleanPhone);
+                        }
+                        parentUserRepository.save(parent);
+                    } else {
+                        ParentUser newParent = ParentUser.builder()
+                                .nombre(cleanNombre)
+                                .email(cleanEmail)
+                                .phone(cleanPhone)
+                                .passwordHash(passwordEncoder.encode("IIT2026"))
+                                .tempPassword(true)
+                                .active(true)
+                                .students(new HashSet<>(List.of(saved)))
+                                .build();
+                        parentUserRepository.save(newParent);
+                    }
+                }
+            }
+        }
+
+        return mapToStudentResponse(saved);
+    }
+
+    @Transactional
+    public TeacherStudentResponse toggleStudentActiveByTeacher(UUID teacherId, UUID studentId) {
+        TeacherUser teacher = teacherUserRepository.findByIdWithGroups(teacherId)
+                .orElseThrow(() -> new IllegalArgumentException("Maestro no encontrado: " + teacherId));
+
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new IllegalArgumentException("Alumno no encontrado: " + studentId));
+
+        // Validar que el alumno pertenece a uno de los grupos asignados al maestro
+        if (!"ADMIN".equalsIgnoreCase(teacher.getRole()) && !teacher.getGroups().isEmpty()) {
+            if (student.getGroup() == null || teacher.getGroups().stream().noneMatch(g -> g.getId().equals(student.getGroup().getId()))) {
+                throw new SecurityException("No tienes autorización para gestionar alumnos fuera de tus grupos asignados.");
+            }
+        }
+
+        boolean newStatus = !Boolean.TRUE.equals(student.getActive());
+        student.setActive(newStatus);
+        Student updated = studentRepository.save(student);
+
+        return mapToStudentResponse(updated);
     }
 }

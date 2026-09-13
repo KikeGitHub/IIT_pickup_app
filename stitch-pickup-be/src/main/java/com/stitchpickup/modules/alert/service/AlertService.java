@@ -56,6 +56,10 @@ public class AlertService {
             throw new SecurityException("No tienes autorización para emitir alertas para este alumno.");
         }
 
+        if (Boolean.FALSE.equals(student.getActive())) {
+            throw new IllegalArgumentException("El alumno se encuentra inactivo o dado de baja en el sistema.");
+        }
+
         Alert.AlertStatus statusEnum = Alert.AlertStatus.valueOf(request.status());
         Alert.PickupMethod methodEnum = Alert.PickupMethod.valueOf(request.pickupMethod());
 

@@ -53,6 +53,24 @@ export interface TeacherStudentUpdatePayload {
   familyMembers?: FamilyMemberDto[];
 }
 
+export interface TeacherParentAccountInput {
+  nombre?: string;
+  email: string;
+  phone?: string;
+}
+
+export interface TeacherStudentCreatePayload {
+  name: string;
+  groupId: string;
+  grade?: string;
+  birthday?: string;
+  gender?: string;
+  curp?: string;
+  avatarUrl?: string;
+  parentAccounts?: TeacherParentAccountInput[];
+  familyMembers?: FamilyMemberDto[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -77,6 +95,24 @@ export class TeacherService {
     );
   }
 
+  createStudent(payload: TeacherStudentCreatePayload): Observable<TeacherStudent> {
+    return this.http.post<TeacherStudent>(`${this.apiUrl}/teacher/students`, payload).pipe(
+      tap((newStudent) => {
+        this.myGroups.update((groups) =>
+          groups.map((g) => {
+            if (g.id === payload.groupId) {
+              return {
+                ...g,
+                students: [...g.students, newStudent]
+              };
+            }
+            return g;
+          })
+        );
+      })
+    );
+  }
+
   updateStudent(studentId: string, payload: TeacherStudentUpdatePayload): Observable<TeacherStudent> {
     return this.http.put<TeacherStudent>(`${this.apiUrl}/teacher/students/${studentId}`, payload).pipe(
       tap((updated) => {
@@ -85,6 +121,19 @@ export class TeacherService {
           groups.map((g) => ({
             ...g,
             students: g.students.map((s) => (s.id === studentId ? { ...s, ...updated } : s))
+          }))
+        );
+      })
+    );
+  }
+
+  toggleStudentActive(studentId: string): Observable<TeacherStudent> {
+    return this.http.patch<TeacherStudent>(`${this.apiUrl}/teacher/students/${studentId}/toggle-active`, {}).pipe(
+      tap((updated) => {
+        this.myGroups.update((groups) =>
+          groups.map((g) => ({
+            ...g,
+            students: g.students.map((s) => (s.id === studentId ? { ...s, active: updated.active } : s))
           }))
         );
       })

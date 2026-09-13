@@ -192,8 +192,48 @@
                 (click)="studentSearchQuery = ''"
               >&times;</button>
             </div>
-            <div class="roster-count-badge">
-              <span>{{ filteredGroupStudents.length }} de {{ grp.students.length }} alumnos</span>
+
+            <!-- Active / Inactive filter pills -->
+            <div class="status-filter-pills">
+              <button
+                type="button"
+                class="status-pill-btn"
+                [class.status-pill-btn--active]="activeFilter() === 'ACTIVE'"
+                (click)="setActiveFilter('ACTIVE')"
+                title="Mostrar únicamente alumnos activos"
+              >
+                Activos ({{ activeStudentsCount }})
+              </button>
+              <button
+                type="button"
+                class="status-pill-btn status-pill-btn--inactive"
+                [class.status-pill-btn--active]="activeFilter() === 'INACTIVE'"
+                (click)="setActiveFilter('INACTIVE')"
+                title="Mostrar alumnos dados de baja"
+              >
+                Bajas ({{ inactiveStudentsCount }})
+              </button>
+              <button
+                type="button"
+                class="status-pill-btn"
+                [class.status-pill-btn--active]="activeFilter() === 'ALL'"
+                (click)="setActiveFilter('ALL')"
+                title="Mostrar todos los alumnos"
+              >
+                Todos ({{ totalStudentsCount }})
+              </button>
+            </div>
+
+            <!-- Add Student Button -->
+            <div class="roster-toolbar-actions">
+              <button
+                type="button"
+                class="btn-add-student"
+                (click)="openCreateStudentModal()"
+                title="Registrar nuevo alumno en este salón"
+              >
+                <span>➕ Registrar Alumno</span>
+              </button>
             </div>
           </div>
 
@@ -240,7 +280,7 @@
                 </thead>
                 <tbody>
                   @for (s of filteredGroupStudents; track s.id) {
-                    <tr>
+                    <tr [class.student-row--inactive]="!s.active">
                       <td>
                         <div class="student-cell">
                           <div class="student-avatar-wrap">
@@ -251,7 +291,10 @@
                             }
                           </div>
                           <div>
-                            <p class="s-name">{{ s.name }}</p>
+                            <div class="s-name-row">
+                              <p class="s-name">{{ s.name }}</p>
+                              <span class="badge-inactive-pill" *ngIf="!s.active">🚫 Baja</span>
+                            </div>
                             <p class="s-meta" *ngIf="s.curp || s.gender">
                               <span class="curp-badge" *ngIf="s.curp">🏷️ {{ s.curp }}</span>
                               <span class="gender-pill" *ngIf="s.gender" [class.gender-pill--m]="s.gender === 'M'" [class.gender-pill--f]="s.gender === 'F'">
@@ -290,6 +333,15 @@
                           <button type="button" class="btn-action-edit" (click)="openEditStudentModal(s)" title="Editar alumno">
                             <span>✏️ Editar</span>
                           </button>
+                          @if (s.active) {
+                            <button type="button" class="btn-action-deactivate" (click)="openConfirmToggleActive(s)" title="Dar de baja alumno">
+                              <span>🚫 Baja</span>
+                            </button>
+                          } @else {
+                            <button type="button" class="btn-action-reactivate" (click)="openConfirmToggleActive(s)" title="Reactivar alumno">
+                              <span>🔄 Activar</span>
+                            </button>
+                          }
                         </div>
                       </td>
                     </tr>
@@ -307,7 +359,7 @@
             <!-- Mobile-First Cards View (< 768px) -->
             <div class="roster-mobile-view">
               @for (s of filteredGroupStudents; track s.id) {
-                <div class="mobile-student-card">
+                <div class="mobile-student-card" [class.mobile-student-card--inactive]="!s.active">
                   <div class="m-card-top">
                     <div class="m-avatar-wrap">
                       @if (s.avatarUrl) {
@@ -317,7 +369,10 @@
                       }
                     </div>
                     <div class="m-info">
-                      <h3 class="m-name">{{ s.name }}</h3>
+                      <div class="m-name-wrap">
+                        <h3 class="m-name">{{ s.name }}</h3>
+                        <span class="badge-inactive-pill" *ngIf="!s.active">🚫 Baja</span>
+                      </div>
                       <div class="m-badges">
                         <span class="level-tag" [class]="'level-tag--' + s.level.toLowerCase()">{{ s.level }}</span>
                         <span class="grade-tag" *ngIf="s.grade">{{ s.grade }}</span>
@@ -347,9 +402,20 @@
                     <button type="button" class="btn-wa-mobile" (click)="openShareModal(s)">
                       <span>💬 Acceso Padres (WhatsApp)</span>
                     </button>
-                    <button type="button" class="btn-edit-mobile" (click)="openEditStudentModal(s)">
-                      <span>✏️ Editar Alumno / Fotografía</span>
-                    </button>
+                    <div class="m-card-subactions">
+                      <button type="button" class="btn-edit-mobile" (click)="openEditStudentModal(s)">
+                        <span>✏️ Editar Alumno</span>
+                      </button>
+                      @if (s.active) {
+                        <button type="button" class="btn-deactivate-mobile" (click)="openConfirmToggleActive(s)">
+                          <span>🚫 Dar de Baja</span>
+                        </button>
+                      } @else {
+                        <button type="button" class="btn-reactivate-mobile" (click)="openConfirmToggleActive(s)">
+                          <span>🔄 Reactivar</span>
+                        </button>
+                      }
+                    </div>
                   </div>
                 </div>
               } @empty {
@@ -632,6 +698,285 @@
                 <span>{{ copySuccess() ? '✅ ¡Mensaje Copiado!' : '📋 Copiar Mensaje' }}</span>
               </button>
             }
+          </footer>
+        </div>
+      </div>
+    }
+  }
+
+  <!-- Modal: Create New Student -->
+  @if (showCreateModal()) {
+    <div class="modal-backdrop" (click)="closeCreateModal()">
+      <div class="modal-card modal-card--xl modal-card--create" (click)="$event.stopPropagation()">
+        <header class="modal-header">
+          <div>
+            <h3>➕ Registrar Nuevo Alumno</h3>
+            <p class="modal-subtitle" *ngIf="currentGroup">
+              Salón: <strong>{{ currentGroup.level }} — {{ currentGroup.name }}</strong>
+            </p>
+          </div>
+          <button type="button" class="btn-close" (click)="closeCreateModal()">&times;</button>
+        </header>
+
+        <div class="modal-body">
+          @if (createError()) {
+            <div class="alert-error">⚠️ {{ createError() }}</div>
+          }
+
+          <!-- SECTION 1: DATOS DEL ALUMNO -->
+          <div class="form-section-title">
+            <span class="section-num">1</span>
+            <h4>Datos Escolares del Alumno</h4>
+          </div>
+
+          <div class="form-grid form-grid--2col">
+            <div class="form-group form-group--span2">
+              <label for="newName">Nombre Completo del Alumno *</label>
+              <input
+                id="newName"
+                type="text"
+                [(ngModel)]="newName"
+                placeholder="Ej: García Martínez Sofía"
+                class="form-control"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="newCurp">CURP (Opcional)</label>
+              <input
+                id="newCurp"
+                type="text"
+                [(ngModel)]="newCurp"
+                placeholder="18 caracteres"
+                maxlength="18"
+                class="form-control"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="newGrade">Grado Escolar</label>
+              <input
+                id="newGrade"
+                type="text"
+                [(ngModel)]="newGrade"
+                placeholder="Ej: 3o. de Secundaria-C"
+                class="form-control"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="newGender">Sexo</label>
+              <select id="newGender" [(ngModel)]="newGender" class="form-control">
+                <option value="M">Masculino (👦)</option>
+                <option value="F">Femenino (👧)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="newBirthday">Fecha de Nacimiento</label>
+              <input
+                id="newBirthday"
+                type="date"
+                [(ngModel)]="newBirthday"
+                class="form-control"
+              />
+            </div>
+
+            <div class="form-group form-group--span2">
+              <label>Fotografía del Alumno (Opcional)</label>
+              <div class="photo-upload-row">
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  (change)="onNewPhotoSelected($event)"
+                  class="file-input"
+                  id="newPhotoFile"
+                />
+                <label for="newPhotoFile" class="btn-secondary btn-upload">
+                  <span>{{ isUploadingNewPhoto() ? 'Subiendo...' : '📷 Seleccionar Foto' }}</span>
+                </label>
+                <div class="photo-preview-wrap" *ngIf="newAvatarUrl">
+                  <img [src]="newAvatarUrl" alt="Foto preview" class="avatar-preview-sm" />
+                  <span class="preview-ok">✅ Foto cargada</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECTION 2: CUENTA DE ACCESO PADRES (PORTAL WEB) -->
+          <div class="form-section-title">
+            <span class="section-num">2</span>
+            <h4>Cuenta de Acceso para Padres (Portal de Padres)</h4>
+          </div>
+
+          <div class="info-callout">
+            <span class="info-icon">💡</span>
+            <p>
+              Se creará la cuenta con la contraseña inicial <strong>IIT2026</strong>. Si el correo ya existe en el colegio por tener otro hijo, se vinculará de inmediato sin duplicar.
+            </p>
+          </div>
+
+          <div class="form-grid form-grid--3col">
+            <div class="form-group">
+              <label for="newParentName">Nombre del Padre/Tutor</label>
+              <input
+                id="newParentName"
+                type="text"
+                [(ngModel)]="newParentName"
+                (input)="onParentDataChange()"
+                placeholder="Nombre del papá o mamá"
+                class="form-control"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="newParentEmail">Correo Electrónico (Usuario de Acceso)</label>
+              <input
+                id="newParentEmail"
+                type="email"
+                [(ngModel)]="newParentEmail"
+                placeholder="correo@ejemplo.com"
+                class="form-control"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="newParentPhone">Teléfono WhatsApp (10 dígitos)</label>
+              <input
+                id="newParentPhone"
+                type="tel"
+                [(ngModel)]="newParentPhone"
+                (input)="onParentDataChange()"
+                placeholder="722-123-4567"
+                class="form-control"
+              />
+            </div>
+          </div>
+
+          <div class="copy-checkbox-row">
+            <label class="checkbox-label">
+              <input
+                type="checkbox"
+                [(ngModel)]="copyParentToPickup"
+                (change)="onParentDataChange()"
+              />
+              <span>Copiar automáticamente como Tutor Autorizado de Salida (Pickup)</span>
+            </label>
+          </div>
+
+          <!-- SECTION 3: TUTORES AUTORIZADOS DE PICKUP -->
+          <div class="form-section-title">
+            <span class="section-num">3</span>
+            <h4>Personas Autorizadas para Recoger al Alumno (Pickup)</h4>
+          </div>
+
+          <div class="tutors-editor">
+            @for (t of newTutors; track $index; let idx = $index) {
+              <div class="tutor-edit-card">
+                <div class="tutor-card-header">
+                  <span class="tutor-badge">Tutor {{ idx + 1 }}</span>
+                  <label class="toggle-auth">
+                    <input type="checkbox" [(ngModel)]="t.authorized" />
+                    <span>Autorizado para recoger</span>
+                  </label>
+                </div>
+
+                <div class="tutor-inputs-grid">
+                  <div class="form-group">
+                    <label>Nombre Completo</label>
+                    <input
+                      type="text"
+                      [(ngModel)]="t.name"
+                      placeholder="Ej: Lic. Roberto Pérez"
+                      class="form-control"
+                    />
+                  </div>
+
+                  <div class="form-group">
+                    <label>Parentesco</label>
+                    <select [(ngModel)]="t.relationship" class="form-control">
+                      <option value="Mamá">Mamá</option>
+                      <option value="Papá">Papá</option>
+                      <option value="Abuela / Abuelo">Abuela / Abuelo</option>
+                      <option value="Tía / Tío">Tía / Tío</option>
+                      <option value="Hermano(a)">Hermano(a)</option>
+                      <option value="Tutor / Familiar">Tutor / Familiar</option>
+                      <option value="Chofer">Chofer</option>
+                    </select>
+                  </div>
+
+                  <div class="form-group">
+                    <label>Teléfono</label>
+                    <input
+                      type="tel"
+                      [(ngModel)]="t.phone"
+                      placeholder="722-123-4567"
+                      class="form-control"
+                    />
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+
+        </div>
+
+        <footer class="modal-footer">
+          <button type="button" class="btn-secondary" (click)="closeCreateModal()">Cancelar</button>
+          <button
+            type="button"
+            class="btn-primary"
+            [disabled]="isCreatingStudent() || isUploadingNewPhoto()"
+            (click)="saveNewStudent()"
+          >
+            {{ isCreatingStudent() ? 'Guardando Alumno...' : 'Guardar y Generar Acceso' }}
+          </button>
+        </footer>
+      </div>
+    </div>
+  }
+
+  <!-- Modal: Confirm Toggle Active (Baja / Reactivar) -->
+  @if (showConfirmDeactivateModal()) {
+    @if (studentForDeactivate(); as st) {
+      <div class="modal-backdrop" (click)="closeConfirmToggleActive()">
+        <div class="modal-card modal-card--sm" (click)="$event.stopPropagation()">
+          <header class="modal-header" [class.modal-header--danger]="st.active" [class.modal-header--success]="!st.active">
+            <h3>{{ st.active ? '🚫 Confirmar Baja de Alumno' : '🔄 Reactivar Alumno' }}</h3>
+            <button type="button" class="btn-close" (click)="closeConfirmToggleActive()">&times;</button>
+          </header>
+
+          <div class="modal-body">
+            @if (st.active) {
+              <div class="confirm-deactivate-body">
+                <p>¿Estás seguro de que deseas dar de baja a <strong>{{ st.name }}</strong>?</p>
+                <div class="deactivate-warning-box">
+                  <span class="warn-icon">⚠️</span>
+                  <p>
+                    El alumno se marcará como <strong>Inactivo</strong> y dejará de aparecer en las listas de entrega diaria de la puerta. El historial de salidas pasadas se mantendrá 100% íntegro.
+                  </p>
+                </div>
+              </div>
+            } @else {
+              <div class="confirm-reactivate-body">
+                <p>¿Deseas reactivar a <strong>{{ st.name }}</strong>?</p>
+                <p class="reactivate-info-text">
+                  El alumno volverá a estar disponible en las entregas diarias de salida para su grupo.
+                </p>
+              </div>
+            }
+          </div>
+
+          <footer class="modal-footer">
+            <button type="button" class="btn-secondary" (click)="closeConfirmToggleActive()">Cancelar</button>
+            <button
+              type="button"
+              [class]="st.active ? 'btn-danger' : 'btn-primary'"
+              [disabled]="isTogglingActive()"
+              (click)="executeToggleActive()"
+            >
+              {{ isTogglingActive() ? 'Procesando...' : (st.active ? 'Sí, Dar de Baja' : 'Sí, Reactivar Alumno') }}
+            </button>
           </footer>
         </div>
       </div>
