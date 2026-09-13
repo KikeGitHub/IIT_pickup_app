@@ -5,7 +5,8 @@ import { Router } from '@angular/router';
 import { MonitorService, LevelFilter } from '../../services/monitor.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { WebSocketService } from '../../../../core/services/websocket.service';
-import { TeacherService, TeacherGroup, TeacherStudent } from '../../../../core/services/teacher.service';
+import { TeacherService, TeacherGroup, TeacherStudent, FamilyMemberDto, TeacherStudentUpdatePayload } from '../../../../core/services/teacher.service';
+import { ImageUploadService } from '../../../../core/services/image-upload.service';
 import { StatsHeaderComponent } from '../stats-header/stats-header.component';
 import { LevelFilterSidebarComponent } from '../level-filter-sidebar/level-filter-sidebar.component';
 import { StudentMonitorCardComponent } from '../student-monitor-card/student-monitor-card.component';
@@ -34,6 +35,7 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
   readonly monitorService = inject(MonitorService);
   readonly authService = inject(AuthService);
   readonly teacherService = inject(TeacherService);
+  readonly imageUpload = inject(ImageUploadService);
   readonly ws = inject(WebSocketService);
   private readonly router = inject(Router);
 
@@ -54,6 +56,14 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
   editAvatarUrl = '';
   editError = '';
   isSavingStudent = signal<boolean>(false);
+  readonly isUploadingPhoto = signal<boolean>(false);
+
+  // 3 Authorized Pickup Tutors for currently edited student
+  tutors: FamilyMemberDto[] = [
+    { name: '', relationship: 'Mamá', phone: '', photoUrl: '', authorized: true },
+    { name: '', relationship: 'Papá', phone: '', photoUrl: '', authorized: true },
+    { name: '', relationship: 'Tutor / Familiar', phone: '', photoUrl: '', authorized: true }
+  ];
 
   // Group selection filter in GROUPS tab
   readonly selectedGroupId = signal<string | null>(null);
@@ -258,6 +268,15 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
     this.editCurp = student.curp || '';
     this.editAvatarUrl = student.avatarUrl || '';
     this.editError = '';
+
+    // Load tutors or populate defaults up to 3
+    const existing = student.familyMembers || [];
+    this.tutors = [
+      existing[0] ? { ...existing[0] } : { name: '', relationship: 'Mamá', phone: '', photoUrl: '', authorized: true },
+      existing[1] ? { ...existing[1] } : { name: '', relationship: 'Papá', phone: '', photoUrl: '', authorized: true },
+      existing[2] ? { ...existing[2] } : { name: '', relationship: 'Tutor / Familiar', phone: '', photoUrl: '', authorized: true }
+    ];
+
     this.showEditModal.set(true);
   }
 
@@ -268,18 +287,36 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
 
   onPhotoFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
-    if (input.files && input.files[0]) {
-      const file = input.files[0];
-      if (file.size > 2 * 1024 * 1024) {
-        this.editError = 'La fotografía no debe superar 2MB.';
-        return;
-      }
-      const reader = new FileReader();
-      reader.onload = () => {
-        this.editAvatarUrl = reader.result as string;
-      };
-      reader.readAsDataURL(file);
+    const file = input.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      this.editError = 'La fotografía no debe superar 5MB.';
+      return;
     }
+
+    this.editError = '';
+    this.isUploadingPhoto.set(true);
+
+    this.imageUpload
+      .uploadFile(file, 'student', this.editingStudent()?.id, this.editName || undefined)
+      .subscribe({
+        next: (url) => {
+          this.editAvatarUrl = this.imageUpload.applyTransform(url, {
+            width: 400,
+            height: 400,
+            crop: 'fill',
+            gravity: 'face',
+            format: 'auto',
+            quality: 'auto'
+          });
+          this.isUploadingPhoto.set(false);
+        },
+        error: (err) => {
+          this.editError = err.message || 'Error al subir la fotografía.';
+          this.isUploadingPhoto.set(false);
+        }
+      });
   }
 
   clearPhoto(): void {
@@ -298,13 +335,26 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
     this.isSavingStudent.set(true);
     this.editError = '';
 
-    const payload = {
+    // Filter valid filled tutors
+    const validTutors = this.tutors
+      .filter((t) => t.name && t.name.trim().length > 0)
+      .map((t) => ({
+        id: t.id,
+        name: t.name.trim(),
+        relationship: t.relationship || 'Tutor',
+        phone: t.phone ? t.phone.trim() : '',
+        photoUrl: t.photoUrl || '',
+        authorized: t.authorized !== false
+      }));
+
+    const payload: TeacherStudentUpdatePayload = {
       name: this.editName.trim(),
       grade: this.editGrade.trim() || undefined,
       birthday: this.editBirthday || undefined,
       gender: this.editGender,
       curp: this.editCurp.trim().toUpperCase() || undefined,
-      avatarUrl: this.editAvatarUrl.trim() || undefined
+      avatarUrl: this.editAvatarUrl.trim() || undefined,
+      familyMembers: validTutors
     };
 
     this.teacherService.updateStudent(s.id, payload).subscribe({

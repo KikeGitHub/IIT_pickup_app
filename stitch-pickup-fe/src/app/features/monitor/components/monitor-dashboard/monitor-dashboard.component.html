@@ -361,7 +361,7 @@
   <!-- Modal: Teacher Edit Student Profile -->
   @if (showEditModal()) {
     <div class="modal-backdrop" (click)="closeEditModal()">
-      <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-card modal-card--xl" (click)="$event.stopPropagation()">
         <header class="modal-header">
           <h3>✏️ Editar Datos del Alumno</h3>
           <button type="button" class="btn-close" (click)="closeEditModal()">&times;</button>
@@ -423,34 +423,82 @@
               </div>
 
               <div class="photo-upload-controls">
-                <label for="teacherPhotoFile" class="btn-select-file">
-                  📁 Seleccionar desde mi dispositivo
+                <label for="teacherPhotoFile" class="btn-select-file" [class.btn-select-file--disabled]="isUploadingPhoto()">
+                  {{ isUploadingPhoto() ? '⏳ Subiendo foto...' : '📁 Seleccionar desde mi dispositivo' }}
                 </label>
                 <input
                   id="teacherPhotoFile"
                   type="file"
                   accept="image/png,image/jpeg,image/webp,image/jpg"
+                  [disabled]="isUploadingPhoto()"
                   (change)="onPhotoFileSelected($event)"
                   class="file-input-hidden"
                 />
 
                 <button
                   type="button"
-                  *ngIf="editAvatarUrl"
+                  *ngIf="editAvatarUrl && !isUploadingPhoto()"
                   class="btn-clear-photo"
                   (click)="clearPhoto()"
                 >
                   Quitar foto
                 </button>
-                <small class="photo-hint">Formatos soportados: JPG, PNG, WEBP (Máx 2MB)</small>
+                <small class="photo-hint">Formatos soportados: JPG, PNG, WEBP (Máx 5MB)</small>
               </div>
             </div>
           </div>
+
+          <!-- 3 Authorized Pickup Tutors Section -->
+          <div class="form-section-title mt-lg">
+            <span>🛡️ Familiares / Tutores Autorizados para Pickup (Hasta 3)</span>
+          </div>
+          <p class="section-desc">Registra a las personas autorizadas que pueden presentarse a recoger al alumno en puerta o circuito vehicular.</p>
+
+          <div class="tutors-grid">
+            @for (t of tutors; track $index) {
+              <div class="tutor-card-form">
+                <div class="tutor-form-header">
+                  <span class="tutor-num">Tutor #{{ $index + 1 }}</span>
+                  <label class="auth-switch">
+                    <input type="checkbox" [(ngModel)]="t.authorized" />
+                    <span>Autorizado</span>
+                  </label>
+                </div>
+
+                <div class="tutor-form-body">
+                  <div class="form-group">
+                    <label>Nombre Completo</label>
+                    <input type="text" [(ngModel)]="t.name" placeholder="Ej: Carlos Ramírez Soto" class="form-control" />
+                  </div>
+
+                  <div class="form-row-2">
+                    <div class="form-group">
+                      <label>Parentesco</label>
+                      <select [(ngModel)]="t.relationship" class="form-control">
+                        <option value="Mamá">Mamá</option>
+                        <option value="Papá">Papá</option>
+                        <option value="Abuelo/a">Abuelo/a</option>
+                        <option value="Tío/a">Tío/a</option>
+                        <option value="Chofer">Chofer</option>
+                        <option value="Tutor Legal">Tutor Legal</option>
+                      </select>
+                    </div>
+
+                    <div class="form-group">
+                      <label>Teléfono</label>
+                      <input type="tel" [(ngModel)]="t.phone" placeholder="722-123-4567" class="form-control" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+
         </div>
 
         <footer class="modal-footer">
           <button type="button" class="btn-secondary" (click)="closeEditModal()">Cancelar</button>
-          <button type="button" class="btn-primary" [disabled]="isSavingStudent()" (click)="saveStudent()">
+          <button type="button" class="btn-primary" [disabled]="isSavingStudent() || isUploadingPhoto()" (click)="saveStudent()">
             {{ isSavingStudent() ? 'Guardando...' : 'Guardar Cambios' }}
           </button>
         </footer>

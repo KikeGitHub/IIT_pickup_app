@@ -987,6 +987,10 @@
   overflow: hidden;
   animation: modalIn 0.2s ease-out;
 
+  &--xl {
+    max-width: 780px;
+  }
+
   .modal-header {
     display: flex;
     justify-content: space-between;
@@ -1144,9 +1148,16 @@
       transition: all 0.2s;
       width: fit-content;
 
-      &:hover {
+      &:hover:not(&--disabled) {
         background: #2563eb;
         color: white;
+      }
+
+      &--disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        border-color: #94a3b8;
+        color: #64748b;
       }
     }
 
@@ -1176,5 +1187,99 @@
 @keyframes modalIn {
   from { opacity: 0; transform: scale(0.95); }
   to { opacity: 1; transform: scale(1); }
+}
+
+.form-section-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1e293b;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 4px;
+}
+
+.section-desc {
+  margin: -6px 0 6px 0;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.mt-lg {
+  margin-top: 14px;
+}
+
+.form-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.tutors-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px;
+}
+
+.tutor-card-form {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: v.$radius-md;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  .tutor-form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 4px;
+    margin-bottom: 4px;
+
+    .tutor-num {
+      font-size: 12px;
+      font-weight: 700;
+      color: #2563eb;
+    }
+
+    .auth-switch {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      cursor: pointer;
+      color: #16a34a;
+      font-weight: 600;
+      user-select: none;
+
+      input[type="checkbox"] {
+        cursor: pointer;
+        accent-color: #16a34a;
+      }
+    }
+  }
+
+  .tutor-form-body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    .form-group {
+      gap: 3px;
+
+      label {
+        font-size: 11px;
+        font-weight: 600;
+        color: #475569;
+      }
+
+      .form-control {
+        padding: 6px 9px;
+        font-size: 12px;
+        border: 1px solid #cbd5e1;
+        border-radius: v.$radius-sm;
+      }
+    }
+  }
 }
 

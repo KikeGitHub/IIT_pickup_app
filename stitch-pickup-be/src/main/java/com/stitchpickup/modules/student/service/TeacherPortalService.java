@@ -1,5 +1,6 @@
 package com.stitchpickup.modules.student.service;
 
+import com.stitchpickup.modules.admin.dto.FamilyMemberRequest;
 import com.stitchpickup.modules.admin.dto.FamilyMemberResponse;
 import com.stitchpickup.modules.student.dto.TeacherGroupDetailResponse;
 import com.stitchpickup.modules.student.dto.TeacherStudentResponse;
@@ -101,6 +102,27 @@ public class TeacherPortalService {
         }
 
         Student saved = studentRepository.save(student);
+
+        // Actualizar tutores de pickup autorizados (reemplazar si se envían)
+        if (request.familyMembers() != null) {
+            List<FamilyMember> existingMembers = familyMemberRepository.findByStudentId(saved.getId());
+            familyMemberRepository.deleteAll(existingMembers);
+
+            for (FamilyMemberRequest fm : request.familyMembers()) {
+                if (fm.name() != null && !fm.name().isBlank()) {
+                    FamilyMember member = FamilyMember.builder()
+                            .student(saved)
+                            .name(fm.name().trim())
+                            .relationship(fm.relationship() != null && !fm.relationship().isBlank() ? fm.relationship().trim() : "Tutor")
+                            .phone(fm.phone() != null ? fm.phone().trim() : "")
+                            .photoUrl(fm.photoUrl())
+                            .authorized(fm.authorized() != null ? fm.authorized() : true)
+                            .build();
+                    familyMemberRepository.save(member);
+                }
+            }
+        }
+
         return mapToStudentResponse(saved);
     }
 

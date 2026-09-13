@@ -41,6 +41,7 @@ export interface TeacherStudentUpdatePayload {
   gender?: string;
   curp?: string;
   avatarUrl?: string;
+  familyMembers?: FamilyMemberDto[];
 }
 
 @Injectable({
