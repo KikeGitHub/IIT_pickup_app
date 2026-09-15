@@ -239,13 +239,26 @@ export class MonitorService {
           );
         }, 2000);
 
+        const statusLabel: Record<string, string> = { TEN_MIN: '10 MIN', FIVE_MIN: '5 MIN', EN_FILA: 'EN FILA', URGENTE: 'URGENTE' };
+        const label = statusLabel[event.status] || event.status;
+        const methodStr = event.pickupMethod === 'CAR' ? 'En Auto' : 'A Pie';
+
         if (event.status === 'URGENTE') {
           this.sound.playUrgentSound();
+          this.sound.notifyWithVibration(
+            `🚨 URGENTE: ${event.studentName}`,
+            `Grupo ${event.groupName} (${event.level}) • Requiere atención inmediata del personal`,
+            'alert-' + event.studentId
+          );
           this.notification.warning(`🚨 ${event.studentName} — URGENTE`);
         } else {
           this.sound.playAlertSound();
-          const statusLabel: Record<string, string> = { TEN_MIN: '10 MIN', FIVE_MIN: '5 MIN', EN_FILA: 'EN FILA' };
-          this.notification.info(`📍 ${event.studentName} — ${statusLabel[event.status] || event.status}`);
+          this.sound.notifyWithVibration(
+            `🚗 ${event.studentName} (${label})`,
+            `Modalidad: ${methodStr} • Grupo: ${event.groupName}`,
+            'alert-' + event.studentId
+          );
+          this.notification.info(`📍 ${event.studentName} — ${label}`);
         }
       } else {
         const newAlert: MonitorAlert = {
@@ -271,13 +284,26 @@ export class MonitorService {
           );
         }, 2000);
 
+        const statusLabel: Record<string, string> = { TEN_MIN: '10 MIN', FIVE_MIN: '5 MIN', EN_FILA: 'EN FILA', URGENTE: 'URGENTE' };
+        const label = statusLabel[event.status] || event.status;
+        const methodStr = event.pickupMethod === 'CAR' ? 'En Auto' : 'A Pie';
+
         if (event.status === 'URGENTE') {
           this.sound.playUrgentSound();
+          this.sound.notifyWithVibration(
+            `🚨 NUEVA ALERTA: ${event.studentName}`,
+            `Grupo ${event.groupName} (${event.level}) • Alumno en espera`,
+            'alert-' + event.studentId
+          );
           this.notification.warning(`🚨 NUEVA: ${event.studentName} — URGENTE`);
         } else {
           this.sound.playAlertSound();
-          const statusLabel: Record<string, string> = { TEN_MIN: '10 MIN', FIVE_MIN: '5 MIN', EN_FILA: 'EN FILA' };
-          this.notification.info(`📍 NUEVA: ${event.studentName} — ${statusLabel[event.status] || event.status}`);
+          this.sound.notifyWithVibration(
+            `🚗 NUEVA: ${event.studentName} (${label})`,
+            `Modalidad: ${methodStr} • Grupo: ${event.groupName}`,
+            'alert-' + event.studentId
+          );
+          this.notification.info(`📍 NUEVA: ${event.studentName} — ${label}`);
         }
       }
     });
@@ -294,30 +320,32 @@ export class MonitorService {
 
       // Actualizar el flag isDispatched en el alert correspondiente
       this.alerts.update(alerts =>
-        alerts.map(a => (a.studentId === delivery.studentId || a.id === delivery.id) ? { ...a, isDispatched: true } : a)
+        alerts.map(a => a.studentId === delivery.studentId ? { ...a, isDispatched: delivery.status === 'ENTREGADO_ESCUELA' || delivery.status === 'RECIBIDO_PADRE' } : a)
       );
 
+      // Actualizar o agregar en la lista de entregados
       this.deliveries.update(list => {
-        const idx = list.findIndex(d => d.studentId === delivery.studentId || d.id === delivery.id);
+        const idx = list.findIndex(d => d.id === delivery.id || d.studentId === delivery.studentId);
+        const record: DeliveryRecord = {
+          id: delivery.id,
+          studentId: delivery.studentId,
+          studentName: delivery.studentName,
+          level: delivery.level,
+          groupName: delivery.groupName,
+          teacherName: delivery.teacherName,
+          pickupMethod: delivery.pickupMethod ?? '',
+          status: delivery.status,
+          teacherConfirmedAt: delivery.teacherConfirmedAt || new Date().toISOString(),
+          parentConfirmedAt: delivery.parentConfirmedAt,
+          parentRejectedAt: delivery.parentRejectedAt,
+          revertedAt: delivery.revertedAt,
+          revertedBy: delivery.revertedBy,
+          logDate: delivery.logDate || new Date().toISOString().substring(0, 10)
+        };
         if (idx !== -1) {
-          return list.map((item, i) => i === idx ? { ...item, ...delivery } : item);
+          return list.map((item, i) => i === idx ? record : item);
         } else {
-          return [{
-            id: delivery.id,
-            studentId: delivery.studentId,
-            studentName: delivery.studentName,
-            level: delivery.level,
-            groupName: delivery.groupName,
-            teacherName: delivery.teacherName,
-            pickupMethod: delivery.pickupMethod || 'CAR',
-            status: delivery.status,
-            teacherConfirmedAt: delivery.teacherConfirmedAt || new Date().toISOString(),
-            parentConfirmedAt: delivery.parentConfirmedAt,
-            parentRejectedAt: delivery.parentRejectedAt,
-            revertedAt: delivery.revertedAt,
-            revertedBy: delivery.revertedBy,
-            logDate: delivery.logDate
-          }, ...list];
+          return [record, ...list];
         }
       });
     });

@@ -12,6 +12,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 import java.util.Map;
 
@@ -36,6 +39,10 @@ public class ImageUploadService {
 
     private static final String ROOT_FOLDER   = "iit-pickup-fotos";
     private static final int    MAX_DIM_PX    = 1000;
+
+    /** Formato de fecha para nombres únicos: Día (dd), Mes (MM), Año (yy), Hora (HH), Minuto (mm), Segundo (ss) */
+    private static final DateTimeFormatter TIMESTAMP_FORMATTER = DateTimeFormatter.ofPattern("ddMMyyHHmmss");
+    private static final ZoneId MEXICO_ZONE = ZoneId.of("America/Mexico_City");
 
     private final Cloudinary cloudinary;
 
@@ -88,22 +95,33 @@ public class ImageUploadService {
     }
 
     /**
-     * Construye el public_id: {type}_{identifier}_{extraName}
-     * Ejemplo: student_abc123_sofia-ramirez
+     * Construye el public_id único con indicador de fecha y hora (DDMMAAHHmmss):
+     * Formato: {nombre/identifier}_{DDMMAAHHMMSS}
+     * Ejemplo: aldaco_sanchez_mateo_150926114532
      */
     private String buildPublicId(ImageUploadRequest req) {
-        StringBuilder sb = new StringBuilder(req.type().toLowerCase());
-        if (req.identifier() != null && !req.identifier().isBlank()) {
-            sb.append("_").append(sanitize(req.identifier()));
-        }
+        StringBuilder sb = new StringBuilder();
+
         if (req.extraName() != null && !req.extraName().isBlank()) {
-            sb.append("_").append(sanitize(req.extraName()));
+            sb.append(sanitize(req.extraName()));
+        } else if (req.identifier() != null && !req.identifier().isBlank()) {
+            sb.append(req.type().toLowerCase()).append("_").append(sanitize(req.identifier()));
+        } else {
+            sb.append(req.type().toLowerCase());
         }
+
+        // Indicador de fecha y hora: DDMMAAHH con minutos y segundos para garantizar que nunca se repita
+        String timestamp = LocalDateTime.now(MEXICO_ZONE).format(TIMESTAMP_FORMATTER);
+        sb.append("_").append(timestamp);
+
         return sb.toString();
     }
 
     private String sanitize(String input) {
-        return input.toLowerCase()
+        if (input == null) return "";
+        String normalized = java.text.Normalizer.normalize(input, java.text.Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "");
+        return normalized.toLowerCase()
                 .replaceAll("[^a-z0-9-]", "_")
                 .replaceAll("_+", "_")
                 .replaceAll("^_|_$", "");

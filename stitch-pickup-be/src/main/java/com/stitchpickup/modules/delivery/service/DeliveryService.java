@@ -5,6 +5,8 @@ import com.stitchpickup.modules.alert.repository.AlertRepository;
 import com.stitchpickup.modules.delivery.dto.DeliveryLogResponse;
 import com.stitchpickup.modules.delivery.entity.DeliveryLog;
 import com.stitchpickup.modules.delivery.repository.DeliveryLogRepository;
+import com.stitchpickup.modules.user.entity.ParentUser;
+import com.stitchpickup.modules.user.repository.ParentUserRepository;
 import com.stitchpickup.websocket.NotificationPublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.UUID;
 
@@ -38,6 +41,7 @@ public class DeliveryService {
 
     private final DeliveryLogRepository deliveryLogRepository;
     private final AlertRepository alertRepository;
+    private final ParentUserRepository parentUserRepository;
     private final NotificationPublisher publisher;
 
     @Transactional
@@ -84,6 +88,32 @@ public class DeliveryService {
                 .stream()
                 .filter(d -> d.getStatus() != DeliveryLog.DeliveryStatus.REVERTIDO_DOCENTE)
                 .map(this::mapToResponse).toList();
+    }
+
+    /**
+     * getPendingDeliveriesForParent — Retorna las entregas de hoy que se encuentran en estado
+     * ENTREGADO_ESCUELA para cualquiera de los alumnos vinculados al padre autenticado.
+     * Permite sincronizar la interfaz del padre al refrescar, reconectar o desbloquear el celular.
+     */
+    @Transactional(readOnly = true)
+    public List<DeliveryLogResponse> getPendingDeliveriesForParent(UUID parentId) {
+        ZoneId zoneId = ZoneId.of("America/Mexico_City");
+        LocalDate today = LocalDate.now(zoneId);
+
+        ParentUser parent = parentUserRepository.findByIdWithStudents(parentId).orElse(null);
+        if (parent == null || parent.getStudents() == null || parent.getStudents().isEmpty()) {
+            return List.of();
+        }
+
+        List<UUID> studentIds = parent.getStudents().stream()
+                .map(com.stitchpickup.modules.student.entity.Student::getId)
+                .toList();
+
+        return deliveryLogRepository.findByStudentIdInAndLogDate(studentIds, today)
+                .stream()
+                .filter(d -> d.getStatus() == DeliveryLog.DeliveryStatus.ENTREGADO_ESCUELA)
+                .map(this::mapToResponse)
+                .toList();
     }
 
     @Transactional

@@ -19,13 +19,15 @@
   @if (activeTab() === 'MONITOR') {
     <main class="monitor-layout">
 
-      <!-- Left Sidebar: Level Filters -->
-      <aside class="layout-sidebar">
-        <app-level-filter-sidebar
-          [selectedLevel]="monitorService.selectedLevel()"
-          [totalCount]="monitorService.totalActive()"
-          (filterChange)="onFilterChange($event)"
-        ></app-level-filter-sidebar>
+      <!-- Left Sidebar: Level Filters (Solo para monitores generales / admins) -->
+      <aside class="layout-sidebar" [class.layout-sidebar--no-filters]="authService.userRole() === 'TEACHER'">
+        @if (authService.userRole() !== 'TEACHER') {
+          <app-level-filter-sidebar
+            [selectedLevel]="monitorService.selectedLevel()"
+            [totalCount]="monitorService.totalActive()"
+            (filterChange)="onFilterChange($event)"
+          ></app-level-filter-sidebar>
+        }
 
         <!-- History Section on Sidebar for desktop -->
         <div class="desktop-history">
@@ -46,13 +48,53 @@
           [compact]="true"
         ></app-pwa-install-banner>
 
+        <!-- Mobile/Tablet Horizontal Level Filter Pills (Oculto para maestros: solo ven sus alumnos asignados) -->
+        @if (authService.userRole() !== 'TEACHER') {
+          <div class="mobile-level-pills" role="tablist" aria-label="Filtro por nivel escolar">
+            <button
+              type="button"
+              class="pill-btn"
+              [class.pill-btn--active]="monitorService.selectedLevel() === 'ALL'"
+              (click)="onFilterChange('ALL')"
+            >
+              <span>🏢 Todos ({{ monitorService.totalActive() }})</span>
+            </button>
+            <button
+              type="button"
+              class="pill-btn"
+              [class.pill-btn--active]="monitorService.selectedLevel() === 'KINDER'"
+              (click)="onFilterChange('KINDER')"
+            >
+              <span>🌱 Kinder</span>
+            </button>
+            <button
+              type="button"
+              class="pill-btn"
+              [class.pill-btn--active]="monitorService.selectedLevel() === 'PRIMARIA'"
+              (click)="onFilterChange('PRIMARIA')"
+            >
+              <span>📚 Primaria</span>
+            </button>
+            <button
+              type="button"
+              class="pill-btn"
+              [class.pill-btn--active]="monitorService.selectedLevel() === 'SECUNDARIA'"
+              (click)="onFilterChange('SECUNDARIA')"
+            >
+              <span>🎓 Secundaria</span>
+            </button>
+          </div>
+        }
+
         <header class="content-header">
           <div class="header-titles">
             <h2 class="section-title">
-              <span>Alertas Activas</span>
+              <span>{{ authService.userRole() === 'TEACHER' ? 'Mis Alumnos en Espera' : 'Alumnos en Espera' }}</span>
               <span class="active-badge">{{ monitorService.filteredAlerts().length }}</span>
             </h2>
-            <p class="section-sub">Tarjetas actualizadas en tiempo real mediante WebSocket</p>
+            <p class="section-sub">
+              {{ authService.userRole() === 'TEACHER' ? 'Alertas en vivo de tus grupos asignados' : 'Actualización en tiempo real vía WebSocket' }}
+            </p>
           </div>
         </header>
 
@@ -72,6 +114,33 @@
             </div>
           }
         </div>
+
+        <!-- Mobile Deliveries Accordion / History -->
+        <div class="mobile-deliveries-section">
+          <button
+            type="button"
+            class="btn-toggle-deliveries"
+            (click)="toggleMobileDeliveries()"
+          >
+            <div class="toggle-left">
+              <span class="d-icon">📋</span>
+              <span class="d-text">Entregados Hoy</span>
+              <span class="d-badge">{{ monitorService.dispatchedCount() }}</span>
+            </div>
+            <span class="d-arrow" [class.d-arrow--open]="isMobileDeliveriesOpen()">▾</span>
+          </button>
+
+          @if (isMobileDeliveriesOpen()) {
+            <div class="mobile-deliveries-content">
+              <app-dispatch-confirmation
+                [deliveries]="monitorService.deliveries()"
+                [revertingDeliveryId]="monitorService.revertingDeliveryId()"
+                (revert)="onRevertDelivery($event)"
+              ></app-dispatch-confirmation>
+            </div>
+          }
+        </div>
+
       </section>
 
     </main>
@@ -80,97 +149,99 @@
   <!-- View 2: Teacher's Assigned Groups & Students Roster -->
   @if (activeTab() === 'GROUPS') {
     <main class="groups-roster-layout">
-      <div class="roster-header-box">
+      <!-- Encabezado sutil solo en desktop -->
+      <div class="roster-header-box desktop-only-header">
         <div>
           <h2>👥 Mis Grupos & Alumnos Asignados</h2>
           <p class="text-muted">Consulta la lista de alumnos de tus grupos y actualiza sus datos o fotografías</p>
         </div>
       </div>
 
-      <!-- Premium Group & Grade Cascading Filter -->
-      <div class="roster-filter-card">
-        <!-- 1. Level Switcher Tabs (if multiple levels exist) -->
-        <div class="level-tabs-bar" *ngIf="availableLevels.length > 1">
-          @for (lvl of availableLevels; track lvl.level) {
-            <button
-              type="button"
-              class="level-filter-btn"
-              [class.level-filter-btn--active]="selectedGroupLevel() === lvl.level"
-              (click)="setGroupLevel(lvl.level)"
-            >
-              <span class="l-label">{{ lvl.label }}</span>
-              <span class="l-count">{{ lvl.count }}</span>
-            </button>
-          }
-        </div>
-
-        <!-- 2. Cascading Grade & Group Selectors Row -->
-        <div class="selectors-row" *ngIf="teacherService.myGroups().length > 1">
-          <!-- Grade Filter Dropdown -->
-          <div class="select-field" *ngIf="availableGradesInLevel.length > 1">
-            <label class="field-label">📖 Filtrar por Grado:</label>
-            <select
-              [ngModel]="selectedGradeFilter()"
-              (ngModelChange)="setGradeFilter($event)"
-              class="form-select-premium"
-            >
-              <option value="ALL">Todos los Grados ({{ availableGradesInLevel.length }})</option>
-              @for (gr of availableGradesInLevel; track gr) {
-                <option [value]="gr">{{ gr }}</option>
-              }
-            </select>
+      <!-- Selector de Grupos si tiene más de 1 grupo -->
+      @if (teacherService.myGroups().length > 1) {
+        <div class="roster-filter-card">
+          <!-- 1. Level Switcher Tabs (if multiple levels exist) -->
+          <div class="level-tabs-bar" *ngIf="availableLevels.length > 1">
+            @for (lvl of availableLevels; track lvl.level) {
+              <button
+                type="button"
+                class="level-filter-btn"
+                [class.level-filter-btn--active]="selectedGroupLevel() === lvl.level"
+                (click)="setGroupLevel(lvl.level)"
+              >
+                <span class="l-label">{{ lvl.label }}</span>
+                <span class="l-count">{{ lvl.count }}</span>
+              </button>
+            }
           </div>
 
-          <!-- Hero Classroom / Group Selector Dropdown with Quick Steppers -->
-          <div class="select-field select-field--hero">
-            <label class="field-label">🏫 Salón / Grupo Activo:</label>
-            <div class="hero-selector-wrapper">
-              <button
-                type="button"
-                class="btn-stepper"
-                [disabled]="filteredGroupsDropdown.length <= 1"
-                (click)="goToPreviousGroup()"
-                title="Salón anterior"
-              >
-                ◀
-              </button>
-
+          <!-- 2. Cascading Grade & Group Selectors Row -->
+          <div class="selectors-row">
+            <!-- Grade Filter Dropdown -->
+            <div class="select-field" *ngIf="availableGradesInLevel.length > 1">
+              <label class="field-label">📖 Filtrar por Grado:</label>
               <select
-                [ngModel]="selectedGroupId()"
-                (ngModelChange)="selectGroup($event)"
-                class="form-select-hero"
+                [ngModel]="selectedGradeFilter()"
+                (ngModelChange)="setGradeFilter($event)"
+                class="form-select-premium"
               >
-                @for (g of filteredGroupsDropdown; track g.id) {
-                  <option [value]="g.id">
-                    {{ g.level }} · Grupo {{ g.name }} ({{ g.students.length }} alumnos)
-                  </option>
+                <option value="ALL">Todos los Grados ({{ availableGradesInLevel.length }})</option>
+                @for (gr of availableGradesInLevel; track gr) {
+                  <option [value]="gr">{{ gr }}</option>
                 }
               </select>
+            </div>
 
-              <button
-                type="button"
-                class="btn-stepper"
-                [disabled]="filteredGroupsDropdown.length <= 1"
-                (click)="goToNextGroup()"
-                title="Salón siguiente"
-              >
-                ▶
-              </button>
+            <!-- Hero Classroom / Group Selector Dropdown with Quick Steppers -->
+            <div class="select-field select-field--hero">
+              <label class="field-label">🏫 Salón / Grupo Activo:</label>
+              <div class="hero-selector-wrapper">
+                <button
+                  type="button"
+                  class="btn-stepper"
+                  [disabled]="filteredGroupsDropdown.length <= 1"
+                  (click)="goToPreviousGroup()"
+                  title="Salón anterior"
+                >
+                  ◀
+                </button>
+
+                <select
+                  [ngModel]="selectedGroupId()"
+                  (ngModelChange)="selectGroup($event)"
+                  class="form-select-hero"
+                >
+                  @for (g of filteredGroupsDropdown; track g.id) {
+                    <option [value]="g.id">
+                      {{ g.level }} · Grupo {{ g.name }} ({{ g.students.length }} alumnos)
+                    </option>
+                  }
+                </select>
+
+                <button
+                  type="button"
+                  class="btn-stepper"
+                  [disabled]="filteredGroupsDropdown.length <= 1"
+                  (click)="goToNextGroup()"
+                  title="Salón siguiente"
+                >
+                  ▶
+                </button>
+              </div>
             </div>
           </div>
         </div>
-
-        <!-- Single Assigned Group Banner (for teachers with only 1 classroom) -->
-        <div class="single-group-banner" *ngIf="teacherService.myGroups().length === 1 && currentGroup">
-          <span class="banner-icon">🏫</span>
-          <span class="banner-text">Grupo asignado: <strong>{{ currentGroup.level }} — Grupo {{ currentGroup.name }}</strong> ({{ currentGroup.students.length }} alumnos registrados)</span>
+      } @else if (teacherService.myGroups().length === 1 && currentGroup) {
+        <!-- Subtítulo compacto de grupo asignado (no ocupa espacio) -->
+        <div class="single-group-compact-bar">
+          <span class="g-badge">🏫 Grupo {{ currentGroup.name }}</span>
+          <span class="g-meta">{{ currentGroup.level }} · {{ currentGroup.students.length }} alumnos</span>
         </div>
-
-        <!-- No groups notice -->
-        <div class="no-groups-notice" *ngIf="teacherService.myGroups().length === 0 && !teacherService.isLoading()">
+      } @else if (teacherService.myGroups().length === 0 && !teacherService.isLoading()) {
+        <div class="no-groups-notice">
           No tienes grupos escolares asignados actualmente.
         </div>
-      </div>
+      }
 
       <!-- Student Roster for Selected Group -->
       @if (currentGroup; as grp) {
@@ -182,7 +253,7 @@
               <input
                 type="text"
                 [(ngModel)]="studentSearchQuery"
-                placeholder="Buscar por nombre o CURP en {{ grp.name }}..."
+                placeholder="Buscar por nombre o CURP..."
                 class="search-input"
               />
               <button
@@ -193,8 +264,8 @@
               >&times;</button>
             </div>
 
-            <!-- Active / Inactive filter pills -->
-            <div class="status-filter-pills">
+            <!-- Active / Inactive filter pills (Desktop only) -->
+            <div class="status-filter-pills desktop-only-pills">
               <button
                 type="button"
                 class="status-pill-btn"
@@ -232,7 +303,7 @@
                 (click)="openCreateStudentModal()"
                 title="Registrar nuevo alumno en este salón"
               >
-                <span>➕ Registrar Alumno</span>
+                <span>➕ Registrar</span>
               </button>
             </div>
           </div>
@@ -285,7 +356,7 @@
                         <div class="student-cell">
                           <div class="student-avatar-wrap">
                             @if (s.avatarUrl) {
-                              <img [src]="s.avatarUrl" [alt]="s.name" class="student-avatar-img" />
+                              <img [src]="s.avatarUrl" [alt]="s.name" class="student-avatar-img" (error)="onAvatarError(s)" />
                             } @else {
                               <span class="student-avatar">{{ s.name.charAt(0) }}</span>
                             }
@@ -360,62 +431,82 @@
             <div class="roster-mobile-view">
               @for (s of filteredGroupStudents; track s.id) {
                 <div class="mobile-student-card" [class.mobile-student-card--inactive]="!s.active">
-                  <div class="m-card-top">
+                  <div class="m-card-body">
+                    <!-- Left: Avatar -->
                     <div class="m-avatar-wrap">
                       @if (s.avatarUrl) {
-                        <img [src]="s.avatarUrl" [alt]="s.name" class="m-avatar-img" />
+                        <img [src]="s.avatarUrl" [alt]="s.name" class="m-avatar-img" (error)="onAvatarError(s)" />
                       } @else {
                         <span class="m-avatar-initial">{{ s.name.charAt(0) }}</span>
                       }
                     </div>
-                    <div class="m-info">
-                      <div class="m-name-wrap">
-                        <h3 class="m-name">{{ s.name }}</h3>
-                        <span class="badge-inactive-pill" *ngIf="!s.active">🚫 Baja</span>
+
+                    <!-- Center: Student Details -->
+                    <div class="m-student-info">
+                      <div class="m-name-line">
+                        <strong class="m-student-name">{{ s.name }}</strong>
+                        <span class="badge-inactive-pill" *ngIf="!s.active">Baja</span>
                       </div>
-                      <div class="m-badges">
-                        <span class="level-tag" [class]="'level-tag--' + s.level.toLowerCase()">{{ s.level }}</span>
-                        <span class="grade-tag" *ngIf="s.grade">{{ s.grade }}</span>
-                        <span class="gender-pill" *ngIf="s.gender" [class.gender-pill--m]="s.gender === 'M'" [class.gender-pill--f]="s.gender === 'F'">
-                          {{ s.gender === 'M' ? '👦 M' : '👧 F' }}
-                        </span>
+
+                      <div class="m-meta-line">
+                        <span class="m-grade-tag" *ngIf="s.grade">{{ s.grade }}</span>
+                        <span class="m-gender-tag" *ngIf="s.gender">{{ s.gender === 'M' ? '👦 M' : '👧 F' }}</span>
+                        <span class="m-curp-tag" *ngIf="s.curp">🏷️ {{ s.curp }}</span>
                       </div>
-                      <p class="m-curp" *ngIf="s.curp">🏷️ {{ s.curp }}</p>
+
+                      <!-- Compact Tutor Contact Line -->
+                      <div class="m-tutor-line">
+                        @if (s.familyMembers && s.familyMembers.length > 0) {
+                          <span class="m-tutor-name" [title]="s.familyMembers[0].phone ? 'Tel: ' + s.familyMembers[0].phone : ''">
+                            🛡️ {{ s.familyMembers[0].name }} ({{ s.familyMembers[0].relationship }})
+                          </span>
+                        } @else {
+                          <span class="m-tutor-empty">Sin tutores registrados</span>
+                        }
+                      </div>
                     </div>
                   </div>
 
-                  <!-- Tutors for Mobile -->
-                  <div class="m-tutors-section">
-                    <span class="m-tutors-title">🛡️ Tutores de Pickup:</span>
-                    <div class="m-tutors-chips">
-                      @for (t of s.familyMembers; track t.name) {
-                        <span class="tutor-pill" [title]="t.phone ? 'Tel: ' + t.phone : ''">
-                          {{ t.name }} ({{ t.relationship }})
-                        </span>
-                      } @empty {
-                        <span class="text-muted-xs">Sin tutores registrados</span>
-                      }
-                    </div>
-                  </div>
-
-                  <div class="m-card-actions">
-                    <button type="button" class="btn-wa-mobile" (click)="openShareModal(s)">
-                      <span>💬 Acceso Padres (WhatsApp)</span>
+                  <!-- Bottom: Thumb-friendly Actions Row -->
+                  <div class="m-card-footer">
+                    <button
+                      type="button"
+                      class="btn-m-wa"
+                      (click)="openShareModal(s)"
+                      title="Enviar credenciales a papás por WhatsApp"
+                    >
+                      <span class="m-wa-icon">💬</span>
+                      <span>WhatsApp Padres</span>
                     </button>
-                    <div class="m-card-subactions">
-                      <button type="button" class="btn-edit-mobile" (click)="openEditStudentModal(s)">
-                        <span>✏️ Editar Alumno</span>
+
+                    <button
+                      type="button"
+                      class="btn-m-edit"
+                      (click)="openEditStudentModal(s)"
+                      title="Editar datos del alumno"
+                    >
+                      <span>✏️ Editar</span>
+                    </button>
+
+                    @if (s.active) {
+                      <button
+                        type="button"
+                        class="btn-m-toggle-active btn-m-toggle-active--danger"
+                        (click)="openConfirmToggleActive(s)"
+                        title="Dar de baja alumno"
+                      >
+                        <span>🚫</span>
                       </button>
-                      @if (s.active) {
-                        <button type="button" class="btn-deactivate-mobile" (click)="openConfirmToggleActive(s)">
-                          <span>🚫 Dar de Baja</span>
-                        </button>
-                      } @else {
-                        <button type="button" class="btn-reactivate-mobile" (click)="openConfirmToggleActive(s)">
-                          <span>🔄 Reactivar</span>
-                        </button>
-                      }
-                    </div>
+                    } @else {
+                      <button
+                        type="button"
+                        class="btn-m-toggle-active btn-m-toggle-active--restore"
+                        (click)="openConfirmToggleActive(s)"
+                        title="Reactivar alumno"
+                      >
+                        <span>🔄</span>
+                      </button>
+                    }
                   </div>
                 </div>
               } @empty {

@@ -11,6 +11,18 @@
     </div>
 
     <div class="header-actions">
+      <!-- Sound & Notifications Test Button -->
+      <button
+        type="button"
+        class="btn-audio-toggle"
+        (click)="testAudio()"
+        [class.btn-audio-toggle--ready]="sound.audioUnlocked()"
+        [title]="sound.audioUnlocked() ? 'Sonido y vibración listos. Toca para probar.' : 'Toca para activar y probar sonido en tu celular'"
+      >
+        <span class="audio-icon">{{ sound.audioUnlocked() ? '🔊' : '🔇' }}</span>
+        <span class="audio-text">{{ sound.audioUnlocked() ? 'Sonido OK' : 'Activar Sonido' }}</span>
+      </button>
+
       <!-- Connectivity Indicator -->
       <div
         class="online-badge"
@@ -35,10 +47,25 @@
   <!-- Main Container -->
   <main class="portal-main">
 
+    <!-- Top Persistent Banner when Student is waiting at gate -->
+    @if (pendingDelivery(); as d) {
+      <div class="urgent-gate-banner" (click)="confirmDeliveryReceipt()">
+        <div class="banner-badge-icon">🚗</div>
+        <div class="banner-body">
+          <strong class="banner-title">¡{{ d.studentName }} ya está en la puerta!</strong>
+          <span class="banner-desc">Entregado por {{ d.teacherName || 'Docente' }} • Toca aquí para confirmar recepción</span>
+        </div>
+        <button type="button" class="btn-quick-confirm" (click)="confirmDeliveryReceipt(); $event.stopPropagation()">
+          Recibí a mi hijo
+        </button>
+      </div>
+    }
+
     <!-- PWA Install Banner -->
     <app-pwa-install-banner
       title="Instala la App de IIT Pickup (Padres)"
       message="Notifica tu llegada más rápido con un solo toque desde tu pantalla de inicio."
+      [compact]="true"
     ></app-pwa-install-banner>
 
     @if (studentService.isLoading()) {
@@ -49,7 +76,7 @@
     } @else {
       <div class="dashboard-grid">
 
-        <!-- Student Info Card -->
+        <!-- 1. Student Info Card (Compact) -->
         <section aria-label="Información del alumno">
           <app-student-card
             [students]="studentService.students()"
@@ -59,24 +86,16 @@
           ></app-student-card>
         </section>
 
-        <!-- Current Status Banner -->
-        <section aria-label="Estado actual de la alerta">
-          <app-alert-status-card
-            [alertStatus]="currentAlertStatus"
-          ></app-alert-status-card>
-        </section>
-
-        <!-- Pickup Mode Selector (Car vs Walk) -->
-        <section aria-label="Modalidad de entrega">
+        <!-- 2. Pickup Mode Selector (Car vs Walk) -->
+        <section aria-label="Modalidad de entrega" class="mode-section">
           <app-pickup-mode-selector
             [selectedMethod]="currentAlertStatus.pickupMethod"
             (methodChange)="onPickupMethodChange($event)"
           ></app-pickup-mode-selector>
         </section>
 
-        <!-- Proximity Alert Buttons -->
-        <section aria-label="Botones de alerta de proximidad">
-          <h3 class="section-heading">Emitir Alerta de Proximidad</h3>
+        <!-- 3. Proximity Alert Buttons (Front & Center, Tactile) -->
+        <section aria-label="Botones de alerta de proximidad" class="alerts-section">
           <app-alert-buttons
             [activeStatus]="currentAlertStatus.lastStatus"
             [disabled]="currentAlertStatus.state === 'SENDING'"
@@ -84,9 +103,34 @@
           ></app-alert-buttons>
         </section>
 
-        <!-- Day History Timeline -->
-        <section aria-label="Historial del día">
-          <app-day-history [events]="currentStudentEvents"></app-day-history>
+        <!-- 4. Current Status Banner -->
+        <section aria-label="Estado actual de la alerta">
+          <app-alert-status-card
+            [alertStatus]="currentAlertStatus"
+          ></app-alert-status-card>
+        </section>
+
+        <!-- 5. Collapsible Day History Timeline -->
+        <section aria-label="Historial del día" class="history-accordion">
+          <button type="button" class="btn-toggle-history" (click)="toggleHistory()">
+            <div class="history-title-row">
+              <svg viewBox="0 0 24 24" fill="none" class="history-icon">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                <polyline points="12 6 12 12 16 14" stroke="currentColor" stroke-width="2"/>
+              </svg>
+              <span>Historial de Hoy</span>
+              <span class="history-counter-pill" *ngIf="currentStudentEvents.length > 0">
+                {{ currentStudentEvents.length }}
+              </span>
+            </div>
+            <span class="chevron-arrow" [class.chevron-arrow--open]="isHistoryOpen()">▾</span>
+          </button>
+
+          @if (isHistoryOpen()) {
+            <div class="history-accordion-body">
+              <app-day-history [events]="currentStudentEvents"></app-day-history>
+            </div>
+          }
         </section>
 
       </div>

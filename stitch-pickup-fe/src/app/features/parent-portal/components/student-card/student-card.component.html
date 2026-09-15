@@ -42,27 +42,8 @@
           <span class="meta-separator">•</span>
           <span class="meta-group">Grupo {{ student.groupName }}</span>
           <span class="meta-separator" *ngIf="student.gender">•</span>
-          <span class="meta-gender" *ngIf="student.gender">{{ student.gender === 'M' ? '👦 Niño' : '👧 Niña' }}</span>
+          <span class="meta-gender" *ngIf="student.gender">{{ student.gender === 'M' ? '👦' : '👧' }}</span>
         </p>
-
-        <p class="student-curp-meta" *ngIf="student.curp">
-          <span class="curp-badge">🏷️ CURP: {{ student.curp }}</span>
-        </p>
-
-        <!-- Visible Tutors Section -->
-        <div class="tutors-preview-bar">
-          <div class="tutors-chips-wrap">
-            <span class="tutors-title-tag">👥 Tutores autorizados:</span>
-            @for (m of student.familyMembers; track m.id) {
-              <span class="tutor-chip" [title]="m.phone ? 'Tel: ' + m.phone : ''">
-                <strong class="chip-name">{{ m.name }}</strong>
-                <span class="chip-rel">({{ m.relationship || 'Tutor' }})</span>
-              </span>
-            } @empty {
-              <span class="tutor-chip tutor-chip--empty">Registrado por coordinación escolar</span>
-            }
-          </div>
-        </div>
 
         <div class="card-buttons-row">
           <button
@@ -71,7 +52,7 @@
             (click)="onEdit()"
             title="Subir o cambiar fotografía del alumno"
           >
-            <span>📷 Subir / Cambiar Foto</span>
+            <span>📷 Foto</span>
           </button>
 
           <button
@@ -80,7 +61,7 @@
             (click)="toggleMembersModal()"
             title="Ver información de contacto de tutores"
           >
-            <span>👥 Ver Contactos</span>
+            <span>👥 Tutores ({{ student.familyMembers.length || 0 }})</span>
           </button>
         </div>
       </div>
@@ -91,22 +72,31 @@
       <div class="modal-backdrop" (click)="toggleMembersModal()">
         <div class="modal-card" (click)="$event.stopPropagation()">
           <header class="modal-header">
-            <h3>Familiares Autorizados</h3>
+            <h3>Familiares & Tutores de {{ student.name }}</h3>
             <button type="button" class="close-btn" (click)="toggleMembersModal()">&times;</button>
           </header>
 
           <div class="modal-body">
+            @if (student.curp) {
+              <div class="curp-box">
+                <span class="curp-lbl">🏷️ CURP Oficial:</span>
+                <strong>{{ student.curp }}</strong>
+              </div>
+            }
+
+            <p class="modal-subtitle">Personas autorizadas para entrega de este alumno:</p>
+
             @for (m of student.familyMembers; track m.id) {
               <div class="member-row">
                 <div class="member-avatar">{{ m.name.charAt(0) }}</div>
                 <div class="member-info">
                   <p class="member-name">{{ m.name }}</p>
-                  <p class="member-rel">{{ m.relationship }} • {{ m.phone }}</p>
+                  <p class="member-rel">{{ m.relationship }} • {{ m.phone || 'Sin teléfono' }}</p>
                 </div>
                 <span class="badge-authorized">Autorizado</span>
               </div>
             } @empty {
-              <p class="empty-msg">No hay otros familiares registrados.</p>
+              <p class="empty-msg">Registrado por coordinación escolar.</p>
             }
           </div>
         </div>
