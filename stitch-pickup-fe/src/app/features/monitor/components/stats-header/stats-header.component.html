@@ -1,17 +1,14 @@
 <header class="monitor-header">
-  <div class="header-left">
+  <!-- Top Bar: Brand, Teacher info & Quick Actions -->
+  <div class="header-top">
     <div class="brand">
       <img src="/logo_IIT.png" alt="IIT" class="brand-logo" />
       <div class="brand-info">
-        <div class="title-row">
-          <h1 class="brand-title">Monitor de Entregas</h1>
+        <div class="brand-user-row">
+          <strong class="teacher-name">{{ teacherName || 'Personal IIT' }}</strong>
           <span class="portal-badge" *ngIf="authService.userRole() === 'TEACHER'">DOCENTE</span>
           <span class="portal-badge portal-badge--admin" *ngIf="authService.userRole() === 'ADMIN'">ADMIN</span>
           <span class="portal-badge portal-badge--monitor" *ngIf="authService.userRole() === 'MONITOR'">MONITOR</span>
-        </div>
-
-        <div class="brand-meta-row">
-          <strong class="teacher-name">{{ teacherName || 'Personal IIT' }}</strong>
 
           @if (teacherGroups.length > 0) {
             <div class="groups-pills">
@@ -22,28 +19,45 @@
           } @else if (authService.currentUser()?.level) {
             <span class="header-level-pill">{{ authService.currentUser()?.level }}</span>
           }
-
-          <span class="header-time-pill" title="Hora actual">
-            <svg viewBox="0 0 24 24" fill="none" class="time-icon">
-              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
-              <polyline points="12 6 12 12 16 14" stroke="currentColor" stroke-width="2"/>
-            </svg>
-            <span class="time-text">{{ now() }}</span>
-          </span>
         </div>
       </div>
     </div>
 
-    <!-- Navigation Tabs for Teacher / Admin (MONITOR only stays on live monitor) -->
+    <!-- Quick Utilities: Theme & Logout (Ultra-resumido) -->
+    <div class="header-tools">
+      <!-- Theme Switcher -->
+      <button
+        type="button"
+        class="btn-icon-btn"
+        (click)="onToggleTheme()"
+        [title]="currentTheme === 'light' ? 'Cambiar a Modo Oscuro' : 'Cambiar a Modo Claro'"
+      >
+        <span>{{ currentTheme === 'light' ? '🌙' : '☀️' }}</span>
+      </button>
+
+      @if (authService.userRole() === 'ADMIN' || authService.userRole() === 'MONITOR') {
+        <a routerLink="/admin" class="btn-icon-btn" title="Volver al Panel Administrativo">
+          <svg viewBox="0 0 24 24" fill="none" class="link-icon"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" stroke-width="2"/><polyline points="9 22 9 12 15 12 15 22" stroke="currentColor" stroke-width="2"/></svg>
+        </a>
+      }
+
+      <button type="button" class="logout-btn" (click)="onLogout()" title="Cerrar Sesión">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke="currentColor" stroke-width="2"/><polyline points="16 17 21 12 16 7" stroke="currentColor" stroke-width="2"/><line x1="21" y1="12" x2="9" y2="12" stroke="currentColor" stroke-width="2"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Bottom Row: Navigation Tabs & Compact KPIs -->
+  <div class="header-bottom">
     @if (authService.userRole() === 'TEACHER' || authService.userRole() === 'ADMIN') {
-      <div class="portal-tabs">
+      <nav class="portal-tabs" aria-label="Navegación del portal">
         <button
           type="button"
           class="tab-btn"
           [class.tab-btn--active]="activeTab === 'MONITOR'"
           (click)="setTab('MONITOR')"
         >
-          <span>🚗 Monitor en Vivo</span>
+          <span>🚗 Monitor</span>
         </button>
         <button
           type="button"
@@ -51,72 +65,29 @@
           [class.tab-btn--active]="activeTab === 'GROUPS'"
           (click)="setTab('GROUPS')"
         >
-          <span>👥 Mis Grupos & Alumnos</span>
+          <span>👥 Mis Alumnos</span>
         </button>
+      </nav>
+    }
+
+    <!-- Ultra-Compact KPI Row -->
+    <div class="kpi-row" *ngIf="activeTab === 'MONITOR'" role="list" aria-label="Estadísticas de alumnos">
+      <div class="kpi-card" role="listitem">
+        <span class="kpi-num">{{ totalActive }}</span>
+        <span class="kpi-lbl">Espera</span>
       </div>
-    }
-  </div>
-
-  <!-- KPI stats (Shown on Monitor view) -->
-  <div class="kpi-row" *ngIf="activeTab === 'MONITOR'" role="list" aria-label="Estadísticas del día">
-    <div class="kpi-card" role="listitem">
-      <span class="kpi-num">{{ totalActive }}</span>
-      <span class="kpi-lbl">En espera</span>
+      <div class="kpi-card kpi-card--enfila" role="listitem">
+        <span class="kpi-num">{{ enFilaCount }}</span>
+        <span class="kpi-lbl">En fila</span>
+      </div>
+      <div class="kpi-card kpi-card--urgent" role="listitem" [class.kpi-card--pulse]="urgentCount > 0">
+        <span class="kpi-num">{{ urgentCount }}</span>
+        <span class="kpi-lbl">Urgente</span>
+      </div>
+      <div class="kpi-card kpi-card--done" role="listitem">
+        <span class="kpi-num">{{ dispatchedCount }}</span>
+        <span class="kpi-lbl">Entregados</span>
+      </div>
     </div>
-    <div class="kpi-card kpi-card--enfila" role="listitem">
-      <span class="kpi-num">{{ enFilaCount }}</span>
-      <span class="kpi-lbl">En fila</span>
-    </div>
-    <div class="kpi-card kpi-card--urgent" role="listitem" [class.kpi-card--pulse]="urgentCount > 0">
-      <span class="kpi-num">{{ urgentCount }}</span>
-      <span class="kpi-lbl">Urgente</span>
-    </div>
-    <div class="kpi-card kpi-card--done" role="listitem">
-      <span class="kpi-num">{{ dispatchedCount }}</span>
-      <span class="kpi-lbl">Entregados</span>
-    </div>
-  </div>
-
-  <!-- Connection status + Theme Toggle + Audio Test + logout -->
-  <div class="header-right">
-
-    <!-- Sound & Vibration Test Button for Mobile / Tablet -->
-    <button
-      type="button"
-      class="btn-audio-test"
-      (click)="onTestAlerts()"
-      [class.btn-audio-test--ready]="sound.audioUnlocked()"
-      [title]="sound.audioUnlocked() ? 'Alertas y vibración listos. Toca para probar.' : 'Toca para activar y probar alertas sonoras y vibración'"
-    >
-      <span class="audio-icon">{{ sound.audioUnlocked() ? '🔊' : '🔇' }}</span>
-      <span class="audio-text">{{ sound.audioUnlocked() ? 'Alertas OK' : 'Activar Alertas' }}</span>
-    </button>
-
-    <!-- Theme Switcher Button -->
-    <button
-      type="button"
-      class="btn-theme-toggle"
-      (click)="onToggleTheme()"
-      [title]="currentTheme === 'light' ? 'Cambiar a Modo Oscuro' : 'Cambiar a Modo Claro'"
-    >
-      <span class="theme-icon">{{ currentTheme === 'light' ? '🌙' : '☀️' }}</span>
-      <span class="theme-text">{{ currentTheme === 'light' ? 'Oscuro' : 'Claro' }}</span>
-    </button>
-
-    @if (authService.userRole() === 'ADMIN' || authService.userRole() === 'MONITOR') {
-      <a routerLink="/admin" class="btn-admin-link" title="Volver al Panel Administrativo">
-        <svg viewBox="0 0 24 24" fill="none" class="link-icon"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" stroke-width="2"/><polyline points="9 22 9 12 15 12 15 22" stroke="currentColor" stroke-width="2"/></svg>
-        <span>Panel Admin</span>
-      </a>
-    }
-
-    <div class="ws-badge" [class.ws-badge--connected]="isConnected" [attr.title]="isConnected ? 'WebSocket conectado' : 'Desconectado'">
-      <span class="ws-dot"></span>
-      <span>{{ isConnected ? 'En Vivo' : 'Offline' }}</span>
-    </div>
-
-    <button type="button" class="logout-btn" (click)="onLogout()" title="Cerrar Sesión">
-      <svg viewBox="0 0 24 24" fill="none"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke="currentColor" stroke-width="2"/><polyline points="16 17 21 12 16 7" stroke="currentColor" stroke-width="2"/><line x1="21" y1="12" x2="9" y2="12" stroke="currentColor" stroke-width="2"/></svg>
-    </button>
   </div>
 </header>

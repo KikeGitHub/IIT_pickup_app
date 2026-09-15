@@ -154,6 +154,10 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
     }
   }
 
+  onAvatarError(student: TeacherStudent): void {
+    student.avatarUrl = undefined;
+  }
+
   studentSearchQuery = '';
 
   // Cascading filters for GROUPS tab
