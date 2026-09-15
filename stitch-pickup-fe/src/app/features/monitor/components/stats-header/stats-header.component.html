@@ -77,8 +77,20 @@
     </div>
   </div>
 
-  <!-- Connection status + Theme Toggle + logout -->
+  <!-- Connection status + Theme Toggle + Audio Test + logout -->
   <div class="header-right">
+
+    <!-- Sound & Vibration Test Button for Mobile / Tablet -->
+    <button
+      type="button"
+      class="btn-audio-test"
+      (click)="onTestAlerts()"
+      [class.btn-audio-test--ready]="sound.audioUnlocked()"
+      [title]="sound.audioUnlocked() ? 'Alertas y vibración listos. Toca para probar.' : 'Toca para activar y probar alertas sonoras y vibración'"
+    >
+      <span class="audio-icon">{{ sound.audioUnlocked() ? '🔊' : '🔇' }}</span>
+      <span class="audio-text">{{ sound.audioUnlocked() ? 'Alertas OK' : 'Activar Alertas' }}</span>
+    </button>
 
     <!-- Theme Switcher Button -->
     <button

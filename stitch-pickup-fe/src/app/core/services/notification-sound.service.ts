@@ -2,36 +2,56 @@ import { Injectable, signal, PLATFORM_ID, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 
 /**
- * NotificationSoundService — Generates notification sounds and haptic feedback.
+ * NotificationSoundService — Genera sonidos de notificación, vibración háptica
+ * y notificaciones del sistema para móviles (iOS Safari, Android Chrome, tablets).
  *
- * Implements mobile AudioContext unlocking (iOS Safari / Android Chrome)
- * and haptic vibration for instant teacher awareness.
+ * Implementa estrategia híbrida:
+ * 1. Web Audio API con osciladores afinados.
+ * 2. Elemento HTML5 Audio precargado y pre-desbloqueado con Data URI generado localmente.
+ * 3. Vibración háptica con la API navigator.vibrate.
+ * 4. Notificaciones del sistema con Web Notifications API para alertar con pantalla bloqueada o app en segundo plano.
  */
 @Injectable({ providedIn: 'root' })
 export class NotificationSoundService {
   private readonly platformId = inject(PLATFORM_ID);
   private audioContext: AudioContext | null = null;
+  private htmlAudioAlert: HTMLAudioElement | null = null;
+  private htmlAudioUrgent: HTMLAudioElement | null = null;
   private isUnlocked = false;
 
   readonly soundEnabled = signal<boolean>(true);
+  readonly audioUnlocked = signal<boolean>(false);
+  readonly notificationsAllowed = signal<boolean>(false);
 
   constructor() {
     if (isPlatformBrowser(this.platformId)) {
+      this.initHtmlAudioFallbacks();
       this.setupGlobalUnlockListeners();
+      this.checkNotificationPermission();
+    }
+  }
+
+  private initHtmlAudioFallbacks(): void {
+    try {
+      const alertWav = generateChimeWavDataUri(523.25, 659.25, 0.45);
+      this.htmlAudioAlert = new Audio(alertWav);
+      this.htmlAudioAlert.preload = 'auto';
+
+      const urgentWav = generateChimeWavDataUri(880, 698.46, 0.55);
+      this.htmlAudioUrgent = new Audio(urgentWav);
+      this.htmlAudioUrgent.preload = 'auto';
+    } catch (e) {
+      console.warn('[Sound] Fallback HTML Audio initialization error:', e);
     }
   }
 
   /**
-   * Sets up touch/click listeners to permanently unlock AudioContext
-   * on the first user interaction (standard iOS Safari / Chrome policy).
+   * Listeners globales en la primera interacción (touch / click) para desbloquear
+   * permanentemente la tubería de audio en iOS y Android.
    */
   private setupGlobalUnlockListeners(): void {
     const unlockHandler = () => {
       this.unlockAudio();
-      window.removeEventListener('touchstart', unlockHandler);
-      window.removeEventListener('touchend', unlockHandler);
-      window.removeEventListener('click', unlockHandler);
-      window.removeEventListener('keydown', unlockHandler);
     };
 
     window.addEventListener('touchstart', unlockHandler, { passive: true });
@@ -41,7 +61,7 @@ export class NotificationSoundService {
   }
 
   public unlockAudio(): void {
-    if (this.isUnlocked) return;
+    if (!isPlatformBrowser(this.platformId)) return;
 
     try {
       const ctx = this.getContext();
@@ -49,15 +69,44 @@ export class NotificationSoundService {
         ctx.resume();
       }
 
-      // Play a tiny silent buffer to warm up iOS Audio pipeline
+      // Reproducir buffer silencioso en Web Audio
       const buffer = ctx.createBuffer(1, 1, 22050);
       const source = ctx.createBufferSource();
       source.buffer = buffer;
       source.connect(ctx.destination);
       source.start(0);
 
+      // Pre-activar elementos HTML5 Audio con play/pause inmediato
+      if (this.htmlAudioAlert) {
+        this.htmlAudioAlert.volume = 0.01;
+        this.htmlAudioAlert
+          .play()
+          .then(() => {
+            this.htmlAudioAlert?.pause();
+            if (this.htmlAudioAlert) {
+              this.htmlAudioAlert.currentTime = 0;
+              this.htmlAudioAlert.volume = 1.0;
+            }
+          })
+          .catch(() => {});
+      }
+
+      if (this.htmlAudioUrgent) {
+        this.htmlAudioUrgent.volume = 0.01;
+        this.htmlAudioUrgent
+          .play()
+          .then(() => {
+            this.htmlAudioUrgent?.pause();
+            if (this.htmlAudioUrgent) {
+              this.htmlAudioUrgent.currentTime = 0;
+              this.htmlAudioUrgent.volume = 1.0;
+            }
+          })
+          .catch(() => {});
+      }
+
       this.isUnlocked = true;
-      console.info('[Sound] 🔊 AudioContext desbloqueado para móvil exitosamente.');
+      this.audioUnlocked.set(true);
     } catch (e) {
       console.warn('[Sound] Error al desbloquear AudioContext:', e);
     }
@@ -65,21 +114,24 @@ export class NotificationSoundService {
 
   private getContext(): AudioContext {
     if (!this.audioContext) {
-      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      const AudioCtx =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       this.audioContext = new AudioCtx();
     }
     return this.audioContext;
   }
 
   /**
-   * Plays a pleasant notification chime (two rising tones) and vibrates.
-   * Used for normal alerts: TEN_MIN, FIVE_MIN, EN_FILA.
+   * Reproduce el sonido de alerta normal (dos tonos ascendentes) y hace vibrar el dispositivo.
    */
   playAlertSound(): void {
     if (!this.soundEnabled()) return;
 
-    this.triggerHaptic([120, 60, 120]);
+    // 1. Vibración háptica
+    this.triggerHaptic([150, 80, 150]);
 
+    // 2. Web Audio API
     try {
       const ctx = this.getContext();
       if (ctx.state === 'suspended') {
@@ -88,19 +140,31 @@ export class NotificationSoundService {
         this.triggerAlertTones(ctx);
       }
     } catch (e) {
-      console.warn('[Sound] Could not play alert sound:', e);
+      console.warn('[Sound] Web Audio failed, trying HTML5 audio fallback:', e);
+    }
+
+    // 3. Fallback HTML5 Audio (especialmente para móviles cuando Web Audio esté pausado)
+    if (this.htmlAudioAlert) {
+      try {
+        this.htmlAudioAlert.currentTime = 0;
+        this.htmlAudioAlert.volume = 1.0;
+        this.htmlAudioAlert.play().catch(() => {});
+      } catch (err) {
+        // Ignorar si el navegador bloquea
+      }
     }
   }
 
   /**
-   * Plays an urgent alarm sound (four rapid loud tones) and strong vibration.
-   * Used for URGENTE alerts to grab teacher attention.
+   * Reproduce el sonido urgente (cuatro tonos de alarma rápidos) y vibración intensa.
    */
   playUrgentSound(): void {
     if (!this.soundEnabled()) return;
 
-    this.triggerHaptic([200, 100, 200, 100, 300]);
+    // 1. Vibración háptica intensa
+    this.triggerHaptic([300, 100, 300, 100, 500]);
 
+    // 2. Web Audio API
     try {
       const ctx = this.getContext();
       if (ctx.state === 'suspended') {
@@ -109,46 +173,115 @@ export class NotificationSoundService {
         this.triggerUrgentTones(ctx);
       }
     } catch (e) {
-      console.warn('[Sound] Could not play urgent sound:', e);
+      console.warn('[Sound] Web Audio urgent tones failed:', e);
+    }
+
+    // 3. Fallback HTML5 Audio
+    if (this.htmlAudioUrgent) {
+      try {
+        this.htmlAudioUrgent.currentTime = 0;
+        this.htmlAudioUrgent.volume = 1.0;
+        this.htmlAudioUrgent.play().catch(() => {});
+      } catch (err) {
+        // Ignorar si el navegador bloquea
+      }
     }
   }
 
   /**
-   * User-triggered test sound to verify mobile audio and vibration.
+   * Solicita permisos y emite una notificación del sistema operativo con sonido y vibración.
+   * Muy útil cuando el maestro o padre tiene el teléfono con la app en segundo plano.
    */
-  testSound(): void {
+  async notifyWithVibration(title: string, body: string, tag?: string): Promise<void> {
+    if (!isPlatformBrowser(this.platformId)) return;
+
+    // Vibrar y sonar localmente
+    this.playAlertSound();
+
+    if ('Notification' in window) {
+      if (Notification.permission === 'default') {
+        try {
+          const res = await Notification.requestPermission();
+          this.notificationsAllowed.set(res === 'granted');
+        } catch {
+          // Ignorar
+        }
+      }
+
+      if (Notification.permission === 'granted') {
+        try {
+          new Notification(title, {
+            body,
+            icon: '/logo_IIT.jpg',
+            tag: tag || 'iit-pickup-alert',
+            ...({ vibrate: [300, 100, 300, 100, 500] } as any)
+          });
+        } catch (err) {
+          console.warn('[Notification] Could not show native notification:', err);
+        }
+      }
+    }
+  }
+
+  private checkNotificationPermission(): void {
+    if ('Notification' in window) {
+      this.notificationsAllowed.set(Notification.permission === 'granted');
+    }
+  }
+
+  /**
+   * Prueba de sonido iniciada explícitamente por el usuario para validar celular/tablet.
+   */
+  async testSound(): Promise<void> {
     this.unlockAudio();
     this.playAlertSound();
+
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      if (Notification.permission === 'default') {
+        try {
+          const res = await Notification.requestPermission();
+          this.notificationsAllowed.set(res === 'granted');
+        } catch {
+          // Ignorar
+        }
+      }
+
+      if (Notification.permission === 'granted') {
+        try {
+          new Notification('🔊 IIT Pickup — Prueba de Alerta', {
+            body: '¡Sonido, vibración y notificaciones listos en tu dispositivo!',
+            icon: '/logo_IIT.jpg',
+            tag: 'test-sound'
+          });
+        } catch {
+          // Ignorar
+        }
+      }
+    }
   }
 
   private triggerHaptic(pattern: number[]): void {
     if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
       try {
         navigator.vibrate(pattern);
-      } catch (err) {
-        // Ignore vibration errors on non-supported platforms
+      } catch {
+        // Ignorar si el dispositivo no soporta vibración
       }
     }
   }
 
   private triggerAlertTones(ctx: AudioContext): void {
-    // First tone - C5
-    this.playTone(ctx, 523.25, 0, 0.15, 0.3);
-    // Second tone - E5 (higher, pleasant resolution)
-    this.playTone(ctx, 659.25, 0.15, 0.2, 0.25);
+    this.playTone(ctx, 523.25, 0, 0.15, 0.35); // C5
+    this.playTone(ctx, 659.25, 0.14, 0.22, 0.3); // E5
   }
 
   private triggerUrgentTones(ctx: AudioContext): void {
-    // Four rapid urgent tones - alternating high/mid
-    this.playTone(ctx, 880, 0, 0.12, 0.5);      // A5
-    this.playTone(ctx, 698.46, 0.15, 0.12, 0.5); // F5
+    this.playTone(ctx, 880, 0, 0.12, 0.5);       // A5
+    this.playTone(ctx, 698.46, 0.15, 0.12, 0.5);  // F5
     this.playTone(ctx, 880, 0.30, 0.12, 0.5);    // A5
-    this.playTone(ctx, 698.46, 0.45, 0.12, 0.5); // F5
+    this.playTone(ctx, 698.46, 0.45, 0.12, 0.5);  // F5
   }
 
-  /**
-   * Generates a single sine wave tone at the given frequency.
-   */
   private playTone(
     ctx: AudioContext,
     frequency: number,
@@ -167,14 +300,62 @@ export class NotificationSoundService {
     const startTime = ctx.currentTime + startDelay;
     const endTime = startTime + duration;
 
-    // Fade in
     gainNode.gain.setValueAtTime(0, startTime);
     gainNode.gain.linearRampToValueAtTime(volume, startTime + 0.02);
-
-    // Fade out (prevents click)
     gainNode.gain.linearRampToValueAtTime(0, endTime);
 
     oscillator.start(startTime);
     oscillator.stop(endTime + 0.01);
+  }
+}
+
+/**
+ * Genera un Data URI base64 con un archivo WAV PCM real de 16 bits en mono.
+ */
+function generateChimeWavDataUri(freq1: number, freq2: number, duration: number): string {
+  const sampleRate = 22050;
+  const numSamples = Math.floor(sampleRate * duration);
+  const buffer = new ArrayBuffer(44 + numSamples * 2);
+  const view = new DataView(buffer);
+
+  writeString(view, 0, 'RIFF');
+  view.setUint32(4, 36 + numSamples * 2, true);
+  writeString(view, 8, 'WAVE');
+  writeString(view, 12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true); // PCM format
+  view.setUint16(22, 1, true); // Mono
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true); // 16 bits
+  writeString(view, 36, 'data');
+  view.setUint32(40, numSamples * 2, true);
+
+  const splitT = duration * 0.4;
+  for (let i = 0; i < numSamples; i++) {
+    const t = i / sampleRate;
+    let sample = 0;
+    if (t < splitT) {
+      sample = Math.sin(2 * Math.PI * freq1 * t) * (1 - t / splitT) * 0.55;
+    } else {
+      const t2 = t - splitT;
+      sample = Math.sin(2 * Math.PI * freq2 * t2) * Math.exp(-t2 * 5) * 0.75;
+    }
+    const intSample = Math.max(-32768, Math.min(32767, Math.floor(sample * 32767)));
+    view.setInt16(44 + i * 2, intSample, true);
+  }
+
+  let binary = '';
+  const bytes = new Uint8Array(buffer);
+  for (let i = 0; i < bytes.byteLength; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return 'data:audio/wav;base64,' + btoa(binary);
+}
+
+function writeString(view: DataView, offset: number, str: string): void {
+  for (let i = 0; i < str.length; i++) {
+    view.setUint8(offset + i, str.charCodeAt(i));
   }
 }

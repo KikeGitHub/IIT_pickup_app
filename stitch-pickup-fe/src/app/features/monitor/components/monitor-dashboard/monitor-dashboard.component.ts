@@ -45,6 +45,13 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
 
   readonly activeTab = signal<'MONITOR' | 'GROUPS'>('MONITOR');
 
+  // Mobile drawer state for delivered students history
+  readonly isMobileDeliveriesOpen = signal<boolean>(false);
+
+  toggleMobileDeliveries(): void {
+    this.isMobileDeliveriesOpen.update(v => !v);
+  }
+
   // Student Edit Modal for Teacher
   readonly showEditModal = signal<boolean>(false);
   readonly editingStudent = signal<TeacherStudent | null>(null);

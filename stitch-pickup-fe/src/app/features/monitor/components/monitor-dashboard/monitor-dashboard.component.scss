@@ -151,6 +151,32 @@
     }
   }
 
+  .mobile-level-pills .pill-btn {
+    background: #131c2e;
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #cbd5e1;
+
+    &:hover { background: #1e293b; }
+
+    &--active {
+      background: #2563eb;
+      border-color: #2563eb;
+      color: white;
+    }
+  }
+
+  .mobile-deliveries-section {
+    .btn-toggle-deliveries {
+      background: #131c2e;
+      border-color: rgba(255, 255, 255, 0.1);
+      .toggle-left .d-text { color: white; }
+    }
+    .mobile-deliveries-content {
+      background: #131c2e;
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+  }
+
   .roster-table-card {
     background: #131c2e;
     border-color: rgba(255, 255, 255, 0.08);
@@ -240,6 +266,10 @@
   display: flex;
   flex-direction: column;
   gap: v.$space-md;
+
+  @media (max-width: 900px) {
+    display: none;
+  }
 }
 
 .layout-content {
@@ -247,6 +277,111 @@
   flex-direction: column;
   gap: v.$space-md;
   min-width: 0;
+}
+
+// Mobile Horizontal Level Pills (< 900px)
+.mobile-level-pills {
+  display: none;
+
+  @media (max-width: 900px) {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 2px 2px 6px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    &::-webkit-scrollbar { display: none; }
+
+    .pill-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border-radius: v.$radius-full;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      background: white;
+      color: #334155;
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      transition: all 0.2s ease;
+
+      &:hover {
+        background: #f1f5f9;
+      }
+
+      &--active {
+        background: #2563eb;
+        color: white;
+        border-color: #2563eb;
+        box-shadow: 0 3px 10px rgba(37, 99, 235, 0.35);
+      }
+    }
+  }
+}
+
+// Mobile Deliveries Drawer / Toggle (< 900px)
+.mobile-deliveries-section {
+  display: none;
+
+  @media (max-width: 900px) {
+    display: block;
+    margin-top: v.$space-sm;
+
+    .btn-toggle-deliveries {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: v.$radius-xl;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      .toggle-left {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        .d-icon { font-size: 16px; }
+        .d-text { font-size: 14px; font-weight: 700; color: #0f172a; }
+        .d-badge {
+          padding: 2px 8px;
+          background: #dcfce7;
+          color: #15803d;
+          border-radius: 12px;
+          font-size: 12px;
+          font-weight: 800;
+        }
+      }
+
+      .d-arrow {
+        font-size: 16px;
+        color: #64748b;
+        transition: transform 0.2s ease;
+
+        &--open {
+          transform: rotate(180deg);
+        }
+      }
+    }
+
+    .mobile-deliveries-content {
+      margin-top: 8px;
+      background: white;
+      border-radius: v.$radius-xl;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+      padding: 12px;
+    }
+  }
 }
 
 .content-header {

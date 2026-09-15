@@ -46,13 +46,49 @@
           [compact]="true"
         ></app-pwa-install-banner>
 
+        <!-- Mobile/Tablet Horizontal Level Filter Pills -->
+        <div class="mobile-level-pills" role="tablist" aria-label="Filtro por nivel escolar">
+          <button
+            type="button"
+            class="pill-btn"
+            [class.pill-btn--active]="monitorService.selectedLevel() === 'ALL'"
+            (click)="onFilterChange('ALL')"
+          >
+            <span>🏢 Todos ({{ monitorService.totalActive() }})</span>
+          </button>
+          <button
+            type="button"
+            class="pill-btn"
+            [class.pill-btn--active]="monitorService.selectedLevel() === 'KINDER'"
+            (click)="onFilterChange('KINDER')"
+          >
+            <span>🌱 Kinder</span>
+          </button>
+          <button
+            type="button"
+            class="pill-btn"
+            [class.pill-btn--active]="monitorService.selectedLevel() === 'PRIMARIA'"
+            (click)="onFilterChange('PRIMARIA')"
+          >
+            <span>📚 Primaria</span>
+          </button>
+          <button
+            type="button"
+            class="pill-btn"
+            [class.pill-btn--active]="monitorService.selectedLevel() === 'SECUNDARIA'"
+            (click)="onFilterChange('SECUNDARIA')"
+          >
+            <span>🎓 Secundaria</span>
+          </button>
+        </div>
+
         <header class="content-header">
           <div class="header-titles">
             <h2 class="section-title">
-              <span>Alertas Activas</span>
+              <span>Alumnos en Espera</span>
               <span class="active-badge">{{ monitorService.filteredAlerts().length }}</span>
             </h2>
-            <p class="section-sub">Tarjetas actualizadas en tiempo real mediante WebSocket</p>
+            <p class="section-sub">Actualización en tiempo real vía WebSocket</p>
           </div>
         </header>
 
@@ -72,6 +108,33 @@
             </div>
           }
         </div>
+
+        <!-- Mobile Deliveries Accordion / History -->
+        <div class="mobile-deliveries-section">
+          <button
+            type="button"
+            class="btn-toggle-deliveries"
+            (click)="toggleMobileDeliveries()"
+          >
+            <div class="toggle-left">
+              <span class="d-icon">📋</span>
+              <span class="d-text">Entregados Hoy</span>
+              <span class="d-badge">{{ monitorService.dispatchedCount() }}</span>
+            </div>
+            <span class="d-arrow" [class.d-arrow--open]="isMobileDeliveriesOpen()">▾</span>
+          </button>
+
+          @if (isMobileDeliveriesOpen()) {
+            <div class="mobile-deliveries-content">
+              <app-dispatch-confirmation
+                [deliveries]="monitorService.deliveries()"
+                [revertingDeliveryId]="monitorService.revertingDeliveryId()"
+                (revert)="onRevertDelivery($event)"
+              ></app-dispatch-confirmation>
+            </div>
+          }
+        </div>
+
       </section>
 
     </main>

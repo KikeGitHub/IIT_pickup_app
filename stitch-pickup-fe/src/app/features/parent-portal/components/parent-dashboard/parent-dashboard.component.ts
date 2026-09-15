@@ -45,17 +45,22 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
   readonly authService = inject(AuthService);
   readonly connectivity = inject(ConnectivityService);
   readonly ws = inject(WebSocketService);
-  private readonly sound = inject(NotificationSoundService);
+  readonly sound = inject(NotificationSoundService);
   private readonly notification = inject(NotificationService);
   private readonly imageUpload = inject(ImageUploadService);
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
 
   private readonly apiUrl = environment.apiUrl;
-  private wsSubscription?: Subscription;
+  private subscriptions = new Subscription();
+  private visibilityHandler?: () => void;
+  private pollInterval?: number;
 
   // Real-time daily history map per student
   readonly historyMap = signal<Record<string, HistoryEvent[]>>({});
+
+  // Accordion state for Day History on mobile
+  readonly isHistoryOpen = signal<boolean>(false);
 
   // Bi-directional Delivery Confirmation State
   readonly pendingDelivery = signal<DeliveryDispatchedEvent | null>(null);
@@ -76,37 +81,124 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
       this.ws.connect(token);
     }
 
+    // Consulta inicial de entregas pendientes en puerta
+    this.checkPendingDeliveries();
+
     this.studentService.loadMyStudents().subscribe({
       next: (students) => {
         students.forEach(s => this.loadHistoryForStudent(s.id));
+        this.checkPendingDeliveries();
       }
     });
 
-    // Subscribe to delivery events for bi-directional confirmation
-    this.wsSubscription = this.ws.onDeliveryEvent().subscribe(event => {
-      const myStudents = this.studentService.students();
-      const isMyChild = myStudents.some(s => s.id === event.studentId);
+    // Sincronizar entregas pendientes cada vez que el WebSocket reconecte
+    this.subscriptions.add(
+      this.ws.isConnected$.subscribe(connected => {
+        if (connected) {
+          this.checkPendingDeliveries();
+        }
+      })
+    );
 
-      if (isMyChild && event.status === 'ENTREGADO_ESCUELA') {
-        this.pendingDelivery.set(event);
-        this.showRejectConfirm.set(false);
-        this.sound.playAlertSound();
-        this.notification.info(`🚗 ${event.teacherName || 'El docente'} ha entregado a ${event.studentName} en la puerta.`);
+    // Cuando el teléfono se desbloquea o la app regresa al primer plano (pantalla encendida)
+    if (typeof document !== 'undefined') {
+      this.visibilityHandler = () => {
+        if (document.visibilityState === 'visible') {
+          this.sound.unlockAudio();
+          this.checkPendingDeliveries();
+          const curr = this.currentStudentId;
+          if (curr) this.loadHistoryForStudent(curr);
+        }
+      };
+      document.addEventListener('visibilitychange', this.visibilityHandler);
+    }
 
-        this.loadHistoryForStudent(event.studentId);
+    // Sondeo periódico ligero de respaldo (cada 15s) cuando hay alerta activa o entrega pendiente
+    this.pollInterval = window.setInterval(() => {
+      if (this.currentAlertStatus.state !== 'IDLE' || this.pendingDelivery()) {
+        this.checkPendingDeliveries();
+      }
+    }, 15000);
+
+    // Suscribirse a eventos de entrega en tiempo real
+    this.subscriptions.add(
+      this.ws.onDeliveryEvent().subscribe(event => {
+        const normalize = (id?: string) => (id || '').trim().toLowerCase();
+        const eventStudentId = normalize(event.studentId);
+
+        const myStudents = this.studentService.students();
+        const tokenStudentIds = this.authService.currentUser()?.studentIds || [];
+
+        const isMyChild =
+          myStudents.some(s => normalize(s.id) === eventStudentId) ||
+          tokenStudentIds.some(id => normalize(id) === eventStudentId);
+
+        if (isMyChild && event.status === 'ENTREGADO_ESCUELA') {
+          this.pendingDelivery.set(event);
+          this.showRejectConfirm.set(false);
+          this.sound.playAlertSound();
+          this.sound.notifyWithVibration(
+            '🚗 ¡Tu hijo/a está en la puerta!',
+            `${event.studentName} ha sido entregado/a en puerta por ${event.teacherName || 'el docente'}.`,
+            'delivery-' + event.id
+          );
+          this.notification.info(`🚗 ${event.teacherName || 'El docente'} ha entregado a ${event.studentName} en la puerta.`);
+
+          this.loadHistoryForStudent(event.studentId);
+        }
+      })
+    );
+
+    // Cuando docente/admin revierte la entrega → cerrar modal de entrega automáticamente
+    this.subscriptions.add(
+      this.ws.onDeliveryReverted().subscribe(event => {
+        const pending = this.pendingDelivery();
+        if (pending && pending.studentId === event.studentId) {
+          this.pendingDelivery.set(null);
+          this.showRejectConfirm.set(false);
+          this.notification.info(`ℹ️ La entrega de ${event.studentName} fue corregida por el docente.`);
+          this.loadHistoryForStudent(event.studentId);
+        }
+      })
+    );
+  }
+
+  /**
+   * Consulta al backend si hay entregas pendientes de confirmación hoy para los alumnos del padre.
+   */
+  checkPendingDeliveries(): void {
+    this.http.get<DeliveryDispatchedEvent[]>(`${this.apiUrl}/deliveries/my-pending`).subscribe({
+      next: (deliveries) => {
+        if (deliveries && deliveries.length > 0) {
+          const first = deliveries[0];
+          if (!this.pendingDelivery() || this.pendingDelivery()?.id !== first.id) {
+            this.pendingDelivery.set(first);
+            this.showRejectConfirm.set(false);
+            this.sound.playAlertSound();
+            this.sound.notifyWithVibration(
+              '🚗 ¡Tu hijo/a está en la puerta!',
+              `${first.studentName} ha sido entregado/a en puerta por ${first.teacherName || 'el docente'}.`,
+              'delivery-' + first.id
+            );
+            this.notification.info(`🚗 ${first.teacherName || 'El docente'} ha entregado a ${first.studentName} en la puerta.`);
+            this.loadHistoryForStudent(first.studentId);
+          }
+        } else if (this.pendingDelivery()) {
+          this.pendingDelivery.set(null);
+        }
+      },
+      error: (err) => {
+        console.warn('[ParentDashboard] Error al consultar entregas pendientes:', err);
       }
     });
+  }
 
-    // When docente/admin reverts the delivery → close pending modal automatically
-    this.ws.onDeliveryReverted().subscribe(event => {
-      const pending = this.pendingDelivery();
-      if (pending && pending.studentId === event.studentId) {
-        this.pendingDelivery.set(null);
-        this.showRejectConfirm.set(false);
-        this.notification.info(`ℹ️ La entrega de ${event.studentName} fue corregida por el docente.`);
-        this.loadHistoryForStudent(event.studentId);
-      }
-    });
+  toggleHistory(): void {
+    this.isHistoryOpen.update(v => !v);
+  }
+
+  testAudio(): void {
+    this.sound.testSound();
   }
 
   loadHistoryForStudent(studentId: string): void {
@@ -125,7 +217,13 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.wsSubscription?.unsubscribe();
+    this.subscriptions.unsubscribe();
+    if (this.visibilityHandler && typeof document !== 'undefined') {
+      document.removeEventListener('visibilitychange', this.visibilityHandler);
+    }
+    if (this.pollInterval) {
+      clearInterval(this.pollInterval);
+    }
   }
 
   get currentStudentId(): string | null {

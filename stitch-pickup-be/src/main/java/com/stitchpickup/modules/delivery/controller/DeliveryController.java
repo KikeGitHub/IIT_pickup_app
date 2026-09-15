@@ -47,6 +47,20 @@ public class DeliveryController {
         return ResponseEntity.ok(deliveryService.getTodayDeliveries());
     }
 
+    @GetMapping("/my-pending")
+    @PreAuthorize("hasRole('PARENT')")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(
+        summary = "Obtener entregas pendientes de confirmación del padre",
+        description = "Devuelve las entregas de hoy que están en estado ENTREGADO_ESCUELA esperando confirmación del padre."
+    )
+    public ResponseEntity<List<DeliveryLogResponse>> getMyPendingDeliveries(HttpServletRequest request) {
+        String token = request.getHeader("Authorization").substring(7);
+        UUID parentId = UUID.fromString(tokenProvider.getUserIdFromToken(token));
+
+        return ResponseEntity.ok(deliveryService.getPendingDeliveriesForParent(parentId));
+    }
+
     @PostMapping("/{alertId}/dispatch")
     @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN', 'MONITOR')")
     @SecurityRequirement(name = "bearerAuth")

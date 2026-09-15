@@ -248,11 +248,32 @@ export class WebSocketService implements OnDestroy {
 
   private getUserIdFromToken(): string | null {
     try {
+      const rawUser = localStorage.getItem('sp_user');
+      if (rawUser) {
+        const u = JSON.parse(rawUser);
+        if (u?.userId) return u.userId;
+      }
+
       const token = localStorage.getItem('sp_jwt');
       if (!token) return null;
-      const payload = JSON.parse(atob(token.split('.')[1]));
+      const parts = token.split('.');
+      if (parts.length < 2) return null;
+
+      // Handle base64url format properly (replace '-' with '+', '_' with '/')
+      let base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+      while (base64.length % 4) {
+        base64 += '=';
+      }
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      );
+      const payload = JSON.parse(jsonPayload);
       return payload.userId ?? null;
-    } catch {
+    } catch (e) {
+      console.warn('[WebSocket] Could not extract userId from token:', e);
       return null;
     }
   }
