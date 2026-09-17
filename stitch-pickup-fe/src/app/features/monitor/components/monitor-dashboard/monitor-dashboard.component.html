@@ -115,11 +115,12 @@
         <div class="status-filter-pills" role="tablist" aria-label="Filtro por estado de alerta">
           <button
             type="button"
-            class="status-pill-btn"
+            class="status-pill-btn status-pill-btn--all"
             [class.status-pill-btn--active]="monitorService.selectedStatus() === 'ALL'"
             (click)="onStatusFilterChange('ALL')"
           >
-            <span>Todos ({{ monitorService.totalActive() }})</span>
+            <span class="pill-label">Todos</span>
+            <span class="pill-count-badge">{{ monitorService.totalActive() }}</span>
           </button>
 
           <button
@@ -129,7 +130,8 @@
             [class.status-pill-btn--pulse]="monitorService.urgentCount() > 0"
             (click)="onStatusFilterChange('URGENTE')"
           >
-            <span>🚨 Urgentes ({{ monitorService.urgentCount() }})</span>
+            <span class="pill-label">🚨 Urgentes</span>
+            <span class="pill-count-badge" [class.pill-count-badge--alert]="monitorService.urgentCount() > 0">{{ monitorService.urgentCount() }}</span>
           </button>
 
           <button
@@ -138,7 +140,8 @@
             [class.status-pill-btn--active]="monitorService.selectedStatus() === 'EN_FILA'"
             (click)="onStatusFilterChange('EN_FILA')"
           >
-            <span>🚗 En Fila ({{ monitorService.enFilaCount() }})</span>
+            <span class="pill-label">🚗 En Fila</span>
+            <span class="pill-count-badge" [class.pill-count-badge--alert]="monitorService.enFilaCount() > 0">{{ monitorService.enFilaCount() }}</span>
           </button>
 
           <button
@@ -147,7 +150,8 @@
             [class.status-pill-btn--active]="monitorService.selectedStatus() === 'FIVE_MIN'"
             (click)="onStatusFilterChange('FIVE_MIN')"
           >
-            <span>⏱ 5 Min ({{ monitorService.fiveMinCount() }})</span>
+            <span class="pill-label">⏱ 5 min</span>
+            <span class="pill-count-badge" [class.pill-count-badge--alert]="monitorService.fiveMinCount() > 0">{{ monitorService.fiveMinCount() }}</span>
           </button>
 
           <button
@@ -156,7 +160,8 @@
             [class.status-pill-btn--active]="monitorService.selectedStatus() === 'TEN_MIN'"
             (click)="onStatusFilterChange('TEN_MIN')"
           >
-            <span>🕐 10 Min ({{ monitorService.tenMinCount() }})</span>
+            <span class="pill-label">🕐 10 min</span>
+            <span class="pill-count-badge" [class.pill-count-badge--alert]="monitorService.tenMinCount() > 0">{{ monitorService.tenMinCount() }}</span>
           </button>
         </div>
 
