@@ -165,6 +165,57 @@
     }
   }
 
+  .btn-refresh-monitor {
+    background: #131c2e;
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #f1f5f9;
+
+    &:hover:not(:disabled) {
+      background: #1e293b;
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+  }
+
+  .status-filter-pills .status-pill-btn {
+    background: #131c2e;
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #cbd5e1;
+
+    &:hover {
+      background: #1e293b;
+    }
+
+    &--active {
+      background: #3b82f6;
+      border-color: #3b82f6;
+      color: #ffffff;
+    }
+
+    &--urgent.status-pill-btn--active {
+      background: #ef4444;
+      border-color: #ef4444;
+      color: #ffffff;
+    }
+
+    &--enfila.status-pill-btn--active {
+      background: #3b82f6;
+      border-color: #3b82f6;
+      color: #ffffff;
+    }
+
+    &--fivemin.status-pill-btn--active {
+      background: #f59e0b;
+      border-color: #f59e0b;
+      color: #ffffff;
+    }
+
+    &--tenmin.status-pill-btn--active {
+      background: #64748b;
+      border-color: #64748b;
+      color: #ffffff;
+    }
+  }
+
   .mobile-deliveries-section {
     .btn-toggle-deliveries {
       background: #131c2e;
@@ -385,6 +436,11 @@
 }
 
 .content-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: v.$space-sm;
+
   .section-title {
     display: flex;
     align-items: center;
@@ -411,7 +467,141 @@
   .section-sub {
     margin: 2px 0 0 0;
     font-size: 13px;
+    color: #64748b;
   }
+
+  .btn-refresh-monitor {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: v.$radius-lg;
+    color: #1e293b;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+    white-space: nowrap;
+
+    &:hover:not(:disabled) {
+      background: #f8fafc;
+      border-color: #cbd5e1;
+      transform: translateY(-1px);
+    }
+
+    &:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .refresh-icon {
+      display: inline-block;
+      font-size: 14px;
+      transition: transform 0.3s ease;
+
+      &--spinning {
+        animation: spin 1s linear infinite;
+      }
+    }
+  }
+}
+
+// Barra de Filtros por Estado (Todos, Urgente, En Fila, 5 min, 10 min)
+.status-filter-pills {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 2px 2px 8px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+
+  .status-pill-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 13px;
+    border-radius: v.$radius-full;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    color: #475569;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: #f8fafc;
+      border-color: #cbd5e1;
+    }
+
+    &--active {
+      background: #1e293b;
+      color: #ffffff;
+      border-color: #1e293b;
+      box-shadow: 0 2px 8px rgba(30, 41, 59, 0.25);
+    }
+
+    &--urgent {
+      &.status-pill-btn--active {
+        background: #dc2626;
+        color: #ffffff;
+        border-color: #dc2626;
+        box-shadow: 0 2px 8px rgba(220, 38, 38, 0.35);
+      }
+    }
+
+    &--pulse {
+      animation: pulse-urgent 1.8s ease infinite;
+    }
+
+    &--enfila {
+      &.status-pill-btn--active {
+        background: #2563eb;
+        color: #ffffff;
+        border-color: #2563eb;
+        box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+      }
+    }
+
+    &--fivemin {
+      &.status-pill-btn--active {
+        background: #d97706;
+        color: #ffffff;
+        border-color: #d97706;
+        box-shadow: 0 2px 8px rgba(217, 119, 6, 0.35);
+      }
+    }
+
+    &--tenmin {
+      &.status-pill-btn--active {
+        background: #475569;
+        color: #ffffff;
+        border-color: #475569;
+        box-shadow: 0 2px 8px rgba(71, 85, 105, 0.35);
+      }
+    }
+  }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse-urgent {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
 }
 
 .alerts-grid {

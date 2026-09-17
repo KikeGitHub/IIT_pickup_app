@@ -2,7 +2,7 @@ import { Component, inject, OnInit, OnDestroy, ChangeDetectionStrategy, signal }
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { MonitorService, LevelFilter } from '../../services/monitor.service';
+import { MonitorService, LevelFilter, AlertStatusFilter } from '../../services/monitor.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { WebSocketService } from '../../../../core/services/websocket.service';
 import { TeacherService, TeacherGroup, TeacherStudent, FamilyMemberDto, TeacherStudentUpdatePayload, TeacherParentAccount, TeacherStudentCreatePayload, TeacherParentAccountInput } from '../../../../core/services/teacher.service';
@@ -131,6 +131,7 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.ws.disconnect();
+    this.monitorService.destroy();
   }
 
   get teacherName(): string {
@@ -608,6 +609,14 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
 
   onFilterChange(level: LevelFilter): void {
     this.monitorService.setLevelFilter(level);
+  }
+
+  onStatusFilterChange(status: AlertStatusFilter): void {
+    this.monitorService.setStatusFilter(status);
+  }
+
+  onRefreshMonitor(): void {
+    this.monitorService.refresh();
   }
 
   onDispatch(alertId: string): void {

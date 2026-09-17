@@ -27,10 +27,13 @@ import java.util.UUID;
 @Slf4j
 public class AlertService {
 
+    private static final ZoneId MEXICO_ZONE = ZoneId.of("America/Mexico_City");
+
     private final AlertRepository alertRepository;
     private final ParentUserRepository parentUserRepository;
     private final StudentRepository studentRepository;
     private final TeacherUserRepository teacherUserRepository;
+    private final com.stitchpickup.modules.student.repository.SchoolGroupRepository schoolGroupRepository;
     private final NotificationPublisher publisher;
 
     @Transactional
@@ -83,9 +86,8 @@ public class AlertService {
 
     @Transactional(readOnly = true)
     public List<AlertResponse> getTodayAlerts() {
-        ZoneId zone = ZoneId.systemDefault();
-        Instant startOfDay = LocalDate.now().atStartOfDay(zone).toInstant();
-        Instant endOfDay = LocalDate.now().plusDays(1).atStartOfDay(zone).toInstant();
+        Instant startOfDay = LocalDate.now(MEXICO_ZONE).atStartOfDay(MEXICO_ZONE).toInstant();
+        Instant endOfDay = LocalDate.now(MEXICO_ZONE).plusDays(1).atStartOfDay(MEXICO_ZONE).toInstant();
 
         return alertRepository.findTodayAlerts(startOfDay, endOfDay)
                 .stream().map(this::mapToResponse).toList();
@@ -96,9 +98,8 @@ public class AlertService {
      */
     @Transactional(readOnly = true)
     public List<AlertResponse> getTodayAlertsGrouped() {
-        ZoneId zone = ZoneId.systemDefault();
-        Instant startOfDay = LocalDate.now().atStartOfDay(zone).toInstant();
-        Instant endOfDay = LocalDate.now().plusDays(1).atStartOfDay(zone).toInstant();
+        Instant startOfDay = LocalDate.now(MEXICO_ZONE).atStartOfDay(MEXICO_ZONE).toInstant();
+        Instant endOfDay = LocalDate.now(MEXICO_ZONE).plusDays(1).atStartOfDay(MEXICO_ZONE).toInstant();
 
         return alertRepository.findLatestAlertPerStudentToday(startOfDay, endOfDay)
                 .stream().map(this::mapToResponse).toList();
@@ -106,25 +107,41 @@ public class AlertService {
 
     /**
      * Devuelve la última alerta por alumno del día filtrada por los grupos
-     * asignados al maestro (TEACHER — solo ve alumnos de sus grupos).
+     * asignados al maestro (TEACHER — solo ve alumnos de sus grupos o de su nivel educativo).
      */
     @Transactional(readOnly = true)
     public List<AlertResponse> getTodayAlertsGroupedForTeacher(UUID teacherId) {
         TeacherUser teacher = teacherUserRepository.findByIdWithGroups(teacherId)
                 .orElseThrow(() -> new IllegalArgumentException("Maestro no encontrado"));
 
-        List<UUID> groupIds = teacher.getGroups().stream()
-                .map(g -> g.getId())
-                .toList();
+        List<UUID> groupIds = teacher.getGroups() != null
+                ? teacher.getGroups().stream().map(com.stitchpickup.modules.student.entity.SchoolGroup::getId).toList()
+                : List.of();
 
-        if (groupIds.isEmpty()) {
-            log.warn("Maestro {} no tiene grupos asignados", teacher.getEmail());
-            return List.of();
+        if (groupIds.isEmpty() && teacher.getLevel() != null) {
+            // Si el maestro no tiene salones específicos asignados en teacher_groups (ej. profesores de Secundaria,
+            // talleres o materias rotativas), cargar automáticamente todos los grupos pertenecientes a su nivel escolar.
+            try {
+                Student.SchoolLevel studentLevel = Student.SchoolLevel.valueOf(teacher.getLevel().name());
+                groupIds = schoolGroupRepository.findByLevel(studentLevel).stream()
+                        .map(com.stitchpickup.modules.student.entity.SchoolGroup::getId)
+                        .toList();
+                log.info("Maestro {} sin grupos asignados; usando {} grupos del nivel {}",
+                        teacher.getEmail(), groupIds.size(), teacher.getLevel());
+            } catch (Exception e) {
+                log.warn("Error resolviendo grupos para nivel {}: {}", teacher.getLevel(), e.getMessage());
+            }
         }
 
-        ZoneId zone = ZoneId.systemDefault();
-        Instant startOfDay = LocalDate.now().atStartOfDay(zone).toInstant();
-        Instant endOfDay = LocalDate.now().plusDays(1).atStartOfDay(zone).toInstant();
+        Instant startOfDay = LocalDate.now(MEXICO_ZONE).atStartOfDay(MEXICO_ZONE).toInstant();
+        Instant endOfDay = LocalDate.now(MEXICO_ZONE).plusDays(1).atStartOfDay(MEXICO_ZONE).toInstant();
+
+        if (groupIds.isEmpty()) {
+            // Fallback total: si no tiene grupos ni nivel específico, ver todas las alertas del colegio (monitor general)
+            log.info("Maestro {} usando fallback global de alertas del día", teacher.getEmail());
+            return alertRepository.findLatestAlertPerStudentToday(startOfDay, endOfDay)
+                    .stream().map(this::mapToResponse).toList();
+        }
 
         return alertRepository.findLatestAlertPerStudentTodayByGroups(startOfDay, endOfDay, groupIds)
                 .stream().map(this::mapToResponse).toList();
