@@ -5,7 +5,10 @@
     <div class="header-brand">
       <img src="/logo_IIT.png" alt="IIT" class="brand-logo" />
       <div>
-        <h1 class="portal-title">IIT Pickup Admin</h1>
+        <div class="title-with-badge">
+          <h1 class="portal-title">IIT Pickup Admin</h1>
+          <span class="app-version-badge" title="Versión desplegada">{{ appVersion }}</span>
+        </div>
         <p class="portal-sub">Panel de Control & Gestión Escolar — IIT</p>
       </div>
     </div>
@@ -135,6 +138,12 @@
         <app-csv-import></app-csv-import>
       }
     }
+
+    <!-- Footer discreto con versión desplegada -->
+    <footer class="admin-bottom-footer">
+      <span>Colegio IIT • Panel de Control & Administración</span>
+      <span class="bottom-version">{{ appVersion }}</span>
+    </footer>
   </main>
 
   <!-- Mobile Bottom Navigation Bar (< 768px) -->

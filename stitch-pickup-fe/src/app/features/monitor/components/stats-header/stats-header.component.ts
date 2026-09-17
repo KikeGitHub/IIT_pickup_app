@@ -4,6 +4,8 @@ import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
 import { NotificationSoundService } from '../../../../core/services/notification-sound.service';
  
+import { environment } from '../../../../../environments/environment';
+
 @Component({
   selector: 'app-stats-header',
   standalone: true,
@@ -15,6 +17,7 @@ import { NotificationSoundService } from '../../../../core/services/notification
 export class StatsHeaderComponent {
   readonly authService = inject(AuthService);
   readonly sound = inject(NotificationSoundService);
+  readonly appVersion = environment.appVersion;
 
   @Input() totalActive: number = 0;
   @Input() urgentCount: number = 0;

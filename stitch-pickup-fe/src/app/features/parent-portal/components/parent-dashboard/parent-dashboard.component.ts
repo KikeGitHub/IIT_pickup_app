@@ -52,6 +52,7 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);
 
   private readonly apiUrl = environment.apiUrl;
+  readonly appVersion = environment.appVersion;
   private subscriptions = new Subscription();
   private visibilityHandler?: () => void;
   private pollInterval?: number;

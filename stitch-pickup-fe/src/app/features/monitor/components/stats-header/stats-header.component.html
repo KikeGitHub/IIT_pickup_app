@@ -9,6 +9,7 @@
           <span class="portal-badge" *ngIf="authService.userRole() === 'TEACHER'">DOCENTE</span>
           <span class="portal-badge portal-badge--admin" *ngIf="authService.userRole() === 'ADMIN'">ADMIN</span>
           <span class="portal-badge portal-badge--monitor" *ngIf="authService.userRole() === 'MONITOR'">MONITOR</span>
+          <span class="app-version-badge" title="Versión desplegada">{{ appVersion }}</span>
 
           @if (teacherGroups.length > 0) {
             <div class="groups-pills">
