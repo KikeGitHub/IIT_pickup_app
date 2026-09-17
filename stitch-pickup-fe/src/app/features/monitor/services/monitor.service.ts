@@ -43,6 +43,7 @@ export interface DeliveryRecord {
 }
 
 export type LevelFilter = 'ALL' | 'KINDER' | 'PRIMARIA' | 'SECUNDARIA';
+export type AlertStatusFilter = 'ALL' | 'URGENTE' | 'EN_FILA' | 'FIVE_MIN' | 'TEN_MIN';
 
 @Injectable({
   providedIn: 'root'
@@ -56,10 +57,15 @@ export class MonitorService {
 
   private readonly apiUrl = environment.apiUrl;
 
+  private pollInterval?: any;
+  private visibilityHandler?: () => void;
+
   // ─── Reactive State ───────────────────────────────────────────────────────
   readonly alerts = signal<MonitorAlert[]>([]);
   readonly deliveries = signal<DeliveryRecord[]>([]);
   readonly selectedLevel = signal<LevelFilter>('ALL');
+  readonly selectedStatus = signal<AlertStatusFilter>('ALL');
+  readonly isRefreshing = signal<boolean>(false);
   readonly dispatchingAlertId = signal<string | null>(null);
   readonly revertingDeliveryId = signal<string | null>(null);
 
@@ -70,6 +76,12 @@ export class MonitorService {
   readonly enFilaCount = computed(() =>
     this.alerts().filter(a => a.status === 'EN_FILA' && !a.isDispatched).length
   );
+  readonly fiveMinCount = computed(() =>
+    this.alerts().filter(a => a.status === 'FIVE_MIN' && !a.isDispatched).length
+  );
+  readonly tenMinCount = computed(() =>
+    this.alerts().filter(a => a.status === 'TEN_MIN' && !a.isDispatched).length
+  );
   readonly dispatchedCount = computed(() =>
     this.deliveries().filter(d => d.status !== 'REVERTIDO_DOCENTE').length
   );
@@ -77,12 +89,41 @@ export class MonitorService {
     this.alerts().filter(a => !a.isDispatched).length
   );
 
-  // ─── Filtered Alerts ─────────────────────────────────────────────────────
+  // ─── Filtered & Strictly Prioritized Alerts ──────────────────────────────
   readonly filteredAlerts = computed(() => {
     const level = this.selectedLevel();
-    const all = this.alerts().filter(a => !a.isDispatched);
-    if (level === 'ALL') return all;
-    return all.filter(a => a.level === level);
+    const status = this.selectedStatus();
+    let list = this.alerts().filter(a => !a.isDispatched);
+
+    if (level !== 'ALL') {
+      list = list.filter(a => a.level === level);
+    }
+    if (status !== 'ALL') {
+      list = list.filter(a => a.status === status);
+    }
+
+    // Prioridades: URGENTE (4) > EN_FILA (3) > FIVE_MIN (2) > TEN_MIN (1)
+    const priorityWeight: Record<string, number> = {
+      URGENTE: 4,
+      EN_FILA: 3,
+      FIVE_MIN: 2,
+      TEN_MIN: 1
+    };
+
+    return [...list].sort((a, b) => {
+      const weightA = priorityWeight[a.status] || 0;
+      const weightB = priorityWeight[b.status] || 0;
+
+      // 1. Mayor urgencia primero
+      if (weightB !== weightA) {
+        return weightB - weightA;
+      }
+
+      // 2. A igual urgencia: orden FIFO (el que lleva más tiempo en espera primero)
+      const timeA = a.sentAt ? new Date(a.sentAt).getTime() : 0;
+      const timeB = b.sentAt ? new Date(b.sentAt).getTime() : 0;
+      return timeA - timeB;
+    });
   });
 
   // ─── Initialization ──────────────────────────────────────────────────────
@@ -90,11 +131,92 @@ export class MonitorService {
     this.loadTodayAlertsGrouped();
     this.loadTodayDeliveries();
     this.subscribeToWebSocket();
+    this.setupResilienceSync();
   }
 
-  // ─── Level Filter ─────────────────────────────────────────────────────────
+  // ─── Filters & Refresh ────────────────────────────────────────────────────
   setLevelFilter(level: LevelFilter): void {
     this.selectedLevel.set(level);
+  }
+
+  setStatusFilter(status: AlertStatusFilter): void {
+    this.selectedStatus.set(status);
+  }
+
+  refresh(): void {
+    this.isRefreshing.set(true);
+    forkJoin({
+      alerts: this.http.get<AlertResponse[]>(`${this.apiUrl}/alerts/today/grouped`).pipe(catchError(() => of([]))),
+      deliveries: this.http.get<DeliveryRecord[]>(`${this.apiUrl}/deliveries/today`).pipe(catchError(() => of([])))
+    }).pipe(
+      tap(({ alerts, deliveries }) => {
+        this.deliveries.set(deliveries);
+        const deliveredStudentIds = new Set(deliveries.map(d => d.studentId));
+
+        const monitorAlerts: MonitorAlert[] = alerts.map(a => ({
+          id: a.id,
+          parentId: a.parentId,
+          parentName: a.parentName,
+          studentId: a.studentId,
+          studentName: a.studentName,
+          level: a.level as MonitorAlert['level'],
+          groupName: a.groupName,
+          status: a.status,
+          pickupMethod: a.pickupMethod,
+          sentAt: a.sentAt,
+          isDispatched: deliveredStudentIds.has(a.studentId),
+          isUpdated: false,
+          isRejectedByParent: false
+        }));
+        this.alerts.set(monitorAlerts);
+        this.isRefreshing.set(false);
+      }),
+      catchError(() => {
+        this.isRefreshing.set(false);
+        return of(null);
+      })
+    ).subscribe();
+  }
+
+  private setupResilienceSync(): void {
+    // 1. Resincronizar cuando el WebSocket reconecte
+    this.ws.isConnected$.subscribe(connected => {
+      if (connected) {
+        console.info('[MonitorService] 🔄 WebSocket reconectado, sincronizando alertas...');
+        this.loadTodayAlertsGrouped();
+      }
+    });
+
+    // 2. Detección de reactivación de pantalla / cambio de app en móviles
+    if (typeof document !== 'undefined' && !this.visibilityHandler) {
+      this.visibilityHandler = () => {
+        if (document.visibilityState === 'visible') {
+          console.info('[MonitorService] 📱 Pantalla visible / desbloqueada, sincronizando alertas...');
+          this.loadTodayAlertsGrouped();
+        }
+      };
+      document.addEventListener('visibilitychange', this.visibilityHandler);
+      window.addEventListener('focus', this.visibilityHandler);
+    }
+
+    // 3. Polling de respaldo cada 15 segundos para tolerar intermitencias de 4G/WiFi
+    if (!this.pollInterval && typeof setInterval !== 'undefined') {
+      this.pollInterval = setInterval(() => {
+        this.loadTodayAlertsGrouped();
+      }, 15000);
+    }
+  }
+
+  destroy(): void {
+    if (this.pollInterval) {
+      clearInterval(this.pollInterval);
+      this.pollInterval = undefined;
+    }
+    if (this.visibilityHandler && typeof document !== 'undefined') {
+      document.removeEventListener('visibilitychange', this.visibilityHandler);
+      window.removeEventListener('focus', this.visibilityHandler);
+      this.visibilityHandler = undefined;
+    }
   }
 
   // ─── Dispatch (Teacher confirms student at gate) ──────────────────────────

@@ -96,7 +96,69 @@
               {{ authService.userRole() === 'TEACHER' ? 'Alertas en vivo de tus grupos asignados' : 'Actualización en tiempo real vía WebSocket' }}
             </p>
           </div>
+
+          <div class="header-actions">
+            <button
+              type="button"
+              class="btn-refresh-monitor"
+              [disabled]="monitorService.isRefreshing()"
+              (click)="onRefreshMonitor()"
+              title="Actualizar lista de espera"
+            >
+              <span class="refresh-icon" [class.refresh-icon--spinning]="monitorService.isRefreshing()">🔄</span>
+              <span class="refresh-text">{{ monitorService.isRefreshing() ? 'Actualizando...' : 'Actualizar' }}</span>
+            </button>
+          </div>
         </header>
+
+        <!-- Status Filter Pills (Todos, Urgente, En Fila, 5 min, 10 min) -->
+        <div class="status-filter-pills" role="tablist" aria-label="Filtro por estado de alerta">
+          <button
+            type="button"
+            class="status-pill-btn"
+            [class.status-pill-btn--active]="monitorService.selectedStatus() === 'ALL'"
+            (click)="onStatusFilterChange('ALL')"
+          >
+            <span>Todos ({{ monitorService.totalActive() }})</span>
+          </button>
+
+          <button
+            type="button"
+            class="status-pill-btn status-pill-btn--urgent"
+            [class.status-pill-btn--active]="monitorService.selectedStatus() === 'URGENTE'"
+            [class.status-pill-btn--pulse]="monitorService.urgentCount() > 0"
+            (click)="onStatusFilterChange('URGENTE')"
+          >
+            <span>🚨 Urgentes ({{ monitorService.urgentCount() }})</span>
+          </button>
+
+          <button
+            type="button"
+            class="status-pill-btn status-pill-btn--enfila"
+            [class.status-pill-btn--active]="monitorService.selectedStatus() === 'EN_FILA'"
+            (click)="onStatusFilterChange('EN_FILA')"
+          >
+            <span>🚗 En Fila ({{ monitorService.enFilaCount() }})</span>
+          </button>
+
+          <button
+            type="button"
+            class="status-pill-btn status-pill-btn--fivemin"
+            [class.status-pill-btn--active]="monitorService.selectedStatus() === 'FIVE_MIN'"
+            (click)="onStatusFilterChange('FIVE_MIN')"
+          >
+            <span>⏱ 5 Min ({{ monitorService.fiveMinCount() }})</span>
+          </button>
+
+          <button
+            type="button"
+            class="status-pill-btn status-pill-btn--tenmin"
+            [class.status-pill-btn--active]="monitorService.selectedStatus() === 'TEN_MIN'"
+            (click)="onStatusFilterChange('TEN_MIN')"
+          >
+            <span>🕐 10 Min ({{ monitorService.tenMinCount() }})</span>
+          </button>
+        </div>
 
         <div class="alerts-grid">
           @for (alert of monitorService.filteredAlerts(); track alert.studentId) {

@@ -52,6 +52,7 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);
 
   private readonly apiUrl = environment.apiUrl;
+  readonly appVersion = environment.appVersion;
   private subscriptions = new Subscription();
   private visibilityHandler?: () => void;
   private pollInterval?: number;
@@ -86,7 +87,10 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
 
     this.studentService.loadMyStudents().subscribe({
       next: (students) => {
-        students.forEach(s => this.loadHistoryForStudent(s.id));
+        students.forEach(s => {
+          this.loadHistoryForStudent(s.id);
+          this.alertService.loadLatestAlertForStudent(s.id).subscribe();
+        });
         this.checkPendingDeliveries();
       }
     });
@@ -96,6 +100,8 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
       this.ws.isConnected$.subscribe(connected => {
         if (connected) {
           this.checkPendingDeliveries();
+          const curr = this.currentStudentId;
+          if (curr) this.alertService.loadLatestAlertForStudent(curr).subscribe();
         }
       })
     );
@@ -107,7 +113,10 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
           this.sound.unlockAudio();
           this.checkPendingDeliveries();
           const curr = this.currentStudentId;
-          if (curr) this.loadHistoryForStudent(curr);
+          if (curr) {
+            this.loadHistoryForStudent(curr);
+            this.alertService.loadLatestAlertForStudent(curr).subscribe();
+          }
         }
       };
       document.addEventListener('visibilitychange', this.visibilityHandler);
@@ -258,6 +267,7 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
   onSelectStudent(studentId: string): void {
     this.studentService.selectStudent(studentId);
     this.loadHistoryForStudent(studentId);
+    this.alertService.loadLatestAlertForStudent(studentId).subscribe();
   }
 
   onPickupMethodChange(method: PickupMethod): void {

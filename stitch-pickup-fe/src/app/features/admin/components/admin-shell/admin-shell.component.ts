@@ -9,6 +9,8 @@ import { TeacherUserCrudComponent } from '../teacher-user-crud/teacher-user-crud
 import { ParentUserCrudComponent } from '../parent-user-crud/parent-user-crud.component';
 import { CsvImportComponent } from '../csv-import/csv-import.component';
 
+import { environment } from '../../../../../environments/environment';
+
 export type AdminTab = 'KPIS' | 'GROUPS' | 'STUDENTS' | 'TEACHERS' | 'PARENTS' | 'CSV';
 
 @Component({
@@ -31,6 +33,7 @@ export type AdminTab = 'KPIS' | 'GROUPS' | 'STUDENTS' | 'TEACHERS' | 'PARENTS' |
 export class AdminShellComponent {
   readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  readonly appVersion = environment.appVersion;
 
   readonly activeTab = signal<AdminTab>('KPIS');
 

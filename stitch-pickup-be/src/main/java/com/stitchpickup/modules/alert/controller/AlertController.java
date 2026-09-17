@@ -80,4 +80,15 @@ public class AlertController {
         // Si es ADMIN o acceso público de monitor general
         return ResponseEntity.ok(alertService.getTodayAlertsGrouped());
     }
+
+    @GetMapping("/student/{studentId}/latest")
+    @Operation(
+        summary = "Obtener la última alerta de hoy para un alumno",
+        description = "Permite a los padres de familia y monitores consultar el estado actual del alumno directamente desde la BD al recargar la página."
+    )
+    public ResponseEntity<AlertResponse> getLatestAlertForStudent(@PathVariable UUID studentId) {
+        return alertService.getLatestTodayAlertForStudent(studentId)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.noContent().build());
+    }
 }

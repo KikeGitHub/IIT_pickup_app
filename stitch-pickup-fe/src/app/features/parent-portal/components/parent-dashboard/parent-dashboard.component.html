@@ -5,7 +5,10 @@
     <div class="header-brand">
       <img src="/logo_IIT.jpg" alt="IIT" class="brand-logo" />
       <div>
-        <h1 class="portal-title">IIT Pickup</h1>
+        <div class="title-with-badge">
+          <h1 class="portal-title">IIT Pickup</h1>
+          <span class="app-version-badge" title="Versión desplegada">{{ appVersion }}</span>
+        </div>
         <p class="portal-subtitle">Portal del Padre de Familia</p>
       </div>
     </div>
@@ -282,5 +285,11 @@
       </div>
     </div>
   }
+
+  <!-- Footer discreto con versión desplegada -->
+  <footer class="portal-bottom-footer">
+    <span>Colegio IIT • IIT Pickup</span>
+    <span class="bottom-version">{{ appVersion }}</span>
+  </footer>
 
 </div>

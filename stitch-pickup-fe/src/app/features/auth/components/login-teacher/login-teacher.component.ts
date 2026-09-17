@@ -23,6 +23,8 @@ type LoginState = 'idle' | 'loading' | 'error';
  *
  * SOLID: S — solo maneja el flujo de login de maestros.
  */
+import { environment } from '../../../../../environments/environment';
+
 @Component({
   selector: 'app-login-teacher',
   standalone: true,
@@ -36,6 +38,7 @@ export class LoginTeacherComponent {
   private readonly notification = inject(NotificationService);
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
+  readonly appVersion = environment.appVersion;
 
   readonly loginForm = this.fb.group({
     email: ['', [Validators.required]],
