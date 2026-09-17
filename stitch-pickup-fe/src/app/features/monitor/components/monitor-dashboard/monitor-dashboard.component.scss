@@ -916,11 +916,17 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: v.$space-md v.$space-lg;
+  padding: 10px 12px;
   background: white;
   border-bottom: 1px solid v.$color-outline-variant;
-  gap: v.$space-md;
-  flex-wrap: wrap;
+  gap: 8px;
+  flex-wrap: nowrap;
+
+  @media (min-width: 768px) {
+    padding: v.$space-md v.$space-lg;
+    gap: v.$space-md;
+    flex-wrap: wrap;
+  }
 
   .search-box {
     display: flex;
@@ -929,18 +935,28 @@
     background: v.$color-surface-container-low;
     border: 1px solid v.$color-outline-variant;
     border-radius: v.$radius-full;
-    padding: 6px 14px;
-    min-width: 260px;
+    padding: 0 12px;
+    height: 38px;
+    min-width: 0;
     flex: 1;
-    max-width: 420px;
 
-    .search-icon { font-size: 14px; opacity: 0.6; }
+    @media (min-width: 768px) {
+      min-width: 260px;
+      max-width: 420px;
+    }
+
+    .search-icon { font-size: 14px; opacity: 0.6; flex-shrink: 0; }
     .search-input {
       border: none;
       background: transparent;
       outline: none;
-      font-size: 13px;
+      font-size: 12.5px;
       width: 100%;
+      min-width: 0;
+
+      @media (min-width: 640px) {
+        font-size: 13px;
+      }
     }
     .btn-clear-search {
       background: none;
@@ -949,6 +965,7 @@
       color: v.$color-on-surface-variant;
       cursor: pointer;
       padding: 0 4px;
+      flex-shrink: 0;
       &:hover { color: v.$color-on-surface; }
     }
   }
@@ -997,27 +1014,39 @@
   }
 
   .roster-toolbar-actions {
-    margin-left: auto;
+    flex-shrink: 0;
+    margin-left: 0;
+
+    @media (min-width: 768px) {
+      margin-left: auto;
+    }
 
     .btn-add-student {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      padding: 7px 16px;
+      gap: 5px;
+      padding: 0 12px;
+      height: 38px;
       background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
       color: white;
       border: none;
-      border-radius: v.$radius-md;
-      font-size: 13px;
+      border-radius: 20px;
+      font-size: 12px;
       font-weight: 700;
       cursor: pointer;
-      box-shadow: 0 2px 4px rgba(22, 163, 74, 0.2);
+      box-shadow: 0 1px 3px rgba(22, 163, 74, 0.25);
       transition: all 0.15s ease;
+      white-space: nowrap;
+
+      @media (min-width: 640px) {
+        font-size: 13px;
+        padding: 0 16px;
+      }
 
       &:hover {
         background: linear-gradient(135deg, #15803d 0%, #166534 100%);
         transform: translateY(-1px);
-        box-shadow: 0 3px 6px rgba(22, 163, 74, 0.3);
+        box-shadow: 0 2px 6px rgba(22, 163, 74, 0.35);
       }
     }
   }
