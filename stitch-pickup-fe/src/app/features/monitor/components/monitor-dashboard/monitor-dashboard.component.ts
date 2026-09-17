@@ -7,6 +7,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { WebSocketService } from '../../../../core/services/websocket.service';
 import { TeacherService, TeacherGroup, TeacherStudent, FamilyMemberDto, TeacherStudentUpdatePayload, TeacherParentAccount, TeacherStudentCreatePayload, TeacherParentAccountInput } from '../../../../core/services/teacher.service';
 import { ImageUploadService } from '../../../../core/services/image-upload.service';
+import { WakeLockService } from '../../../../core/services/wake-lock.service';
 import { StatsHeaderComponent } from '../stats-header/stats-header.component';
 import { LevelFilterSidebarComponent } from '../level-filter-sidebar/level-filter-sidebar.component';
 import { StudentMonitorCardComponent } from '../student-monitor-card/student-monitor-card.component';
@@ -37,6 +38,7 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
   readonly teacherService = inject(TeacherService);
   readonly imageUpload = inject(ImageUploadService);
   readonly ws = inject(WebSocketService);
+  readonly wakeLock = inject(WakeLockService);
   private readonly router = inject(Router);
 
   readonly currentTheme = signal<'light' | 'dark'>(
@@ -119,6 +121,7 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
     }
 
     this.monitorService.initialize();
+    this.wakeLock.requestWakeLock();
 
     if (this.authService.userRole() === 'TEACHER' || this.authService.userRole() === 'ADMIN') {
       this.teacherService.loadMyGroups().subscribe(groups => {
@@ -132,6 +135,7 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.ws.disconnect();
     this.monitorService.destroy();
+    this.wakeLock.releaseWakeLock();
   }
 
   get teacherName(): string {

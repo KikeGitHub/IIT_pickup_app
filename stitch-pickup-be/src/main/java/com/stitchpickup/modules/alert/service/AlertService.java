@@ -20,6 +20,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -145,6 +146,20 @@ public class AlertService {
 
         return alertRepository.findLatestAlertPerStudentTodayByGroups(startOfDay, endOfDay, groupIds)
                 .stream().map(this::mapToResponse).toList();
+    }
+
+    /**
+     * Devuelve la alerta más reciente del día de hoy para un alumno específico.
+     * Permite a los padres de familia recuperar el estado exacto persistido en BD al recargar la página.
+     */
+    @Transactional(readOnly = true)
+    public Optional<AlertResponse> getLatestTodayAlertForStudent(UUID studentId) {
+        Instant startOfDay = LocalDate.now(MEXICO_ZONE).atStartOfDay(MEXICO_ZONE).toInstant();
+        List<Alert> alerts = alertRepository.findLatestTodayAlertForStudent(studentId, startOfDay);
+        if (alerts.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(mapToResponse(alerts.get(0)));
     }
 
     private AlertResponse mapToResponse(Alert alert) {

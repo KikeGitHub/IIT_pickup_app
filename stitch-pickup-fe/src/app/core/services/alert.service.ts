@@ -94,6 +94,27 @@ export class AlertService {
     ).subscribe();
   }
 
+  /**
+   * Consulta el backend para recuperar la última alerta emitida hoy para el alumno.
+   * Esto asegura que al recargar la página o cambiar de hijo, el estado se recupere directamente de la BD.
+   */
+  loadLatestAlertForStudent(studentId: string): Observable<AlertResponse | null> {
+    return this.http.get<AlertResponse>(`${this.apiUrl}/student/${studentId}/latest`).pipe(
+      tap((res) => {
+        if (res && res.status) {
+          this.updateStatus(studentId, {
+            studentId,
+            lastStatus: res.status,
+            pickupMethod: res.pickupMethod,
+            state: 'CONFIRMED',
+            updatedAt: res.sentAt
+          });
+        }
+      }),
+      catchError(() => of(null))
+    );
+  }
+
   getStudentStatus(studentId: string): StudentAlertStatus {
     return this.alertStatuses()[studentId] || {
       studentId,
