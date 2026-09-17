@@ -15,6 +15,8 @@ import { DispatchConfirmationComponent } from '../dispatch-confirmation/dispatch
 import { TableSkeletonComponent } from '../../../../shared/components/table-skeleton/table-skeleton.component';
 import { PwaInstallBannerComponent } from '../../../../shared/components/pwa-install-banner/pwa-install-banner.component';
 
+import { environment } from '../../../../../environments/environment';
+
 @Component({
   selector: 'app-monitor-dashboard',
   standalone: true,
@@ -40,6 +42,7 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
   readonly ws = inject(WebSocketService);
   readonly wakeLock = inject(WakeLockService);
   private readonly router = inject(Router);
+  readonly appVersion = environment.appVersion;
 
   readonly currentTheme = signal<'light' | 'dark'>(
     (localStorage.getItem('monitor_theme') as 'light' | 'dark') || 'light'
