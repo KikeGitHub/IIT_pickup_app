@@ -6,10 +6,8 @@
       <div class="brand-info">
         <div class="brand-user-row">
           <strong class="teacher-name">{{ teacherName || 'Personal IIT' }}</strong>
-          <span class="portal-badge" *ngIf="authService.userRole() === 'TEACHER'">DOCENTE</span>
           <span class="portal-badge portal-badge--admin" *ngIf="authService.userRole() === 'ADMIN'">ADMIN</span>
           <span class="portal-badge portal-badge--monitor" *ngIf="authService.userRole() === 'MONITOR'">MONITOR</span>
-          <span class="app-version-badge" title="Versión desplegada">{{ appVersion }}</span>
 
           @if (teacherGroups.length > 0) {
             <div class="groups-pills">
@@ -48,47 +46,25 @@
     </div>
   </div>
 
-  <!-- Bottom Row: Navigation Tabs & Compact KPIs -->
-  <div class="header-bottom">
-    @if (authService.userRole() === 'TEACHER' || authService.userRole() === 'ADMIN') {
-      <nav class="portal-tabs" aria-label="Navegación del portal">
-        <button
-          type="button"
-          class="tab-btn"
-          [class.tab-btn--active]="activeTab === 'MONITOR'"
-          (click)="setTab('MONITOR')"
-        >
-          <span>🚗 Monitor</span>
-        </button>
-        <button
-          type="button"
-          class="tab-btn"
-          [class.tab-btn--active]="activeTab === 'GROUPS'"
-          (click)="setTab('GROUPS')"
-        >
-          <span>👥 Mis Alumnos</span>
-        </button>
-      </nav>
-    }
-
-    <!-- Ultra-Compact KPI Row -->
-    <div class="kpi-row" *ngIf="activeTab === 'MONITOR'" role="list" aria-label="Estadísticas de alumnos">
-      <div class="kpi-card" role="listitem">
-        <span class="kpi-num">{{ totalActive }}</span>
-        <span class="kpi-lbl">Espera</span>
-      </div>
-      <div class="kpi-card kpi-card--enfila" role="listitem">
-        <span class="kpi-num">{{ enFilaCount }}</span>
-        <span class="kpi-lbl">En fila</span>
-      </div>
-      <div class="kpi-card kpi-card--urgent" role="listitem" [class.kpi-card--pulse]="urgentCount > 0">
-        <span class="kpi-num">{{ urgentCount }}</span>
-        <span class="kpi-lbl">Urgente</span>
-      </div>
-      <div class="kpi-card kpi-card--done" role="listitem">
-        <span class="kpi-num">{{ dispatchedCount }}</span>
-        <span class="kpi-lbl">Entregados</span>
-      </div>
-    </div>
+  <!-- Bottom Row: Navigation Tabs -->
+  <div class="header-bottom" *ngIf="authService.userRole() === 'TEACHER' || authService.userRole() === 'ADMIN'">
+    <nav class="portal-tabs" aria-label="Navegación del portal">
+      <button
+        type="button"
+        class="tab-btn"
+        [class.tab-btn--active]="activeTab === 'MONITOR'"
+        (click)="setTab('MONITOR')"
+      >
+        <span>🚗 Monitor</span>
+      </button>
+      <button
+        type="button"
+        class="tab-btn"
+        [class.tab-btn--active]="activeTab === 'GROUPS'"
+        (click)="setTab('GROUPS')"
+      >
+        <span>👥 Mis Alumnos</span>
+      </button>
+    </nav>
   </div>
 </header>

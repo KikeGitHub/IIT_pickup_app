@@ -15,6 +15,8 @@ import { DispatchConfirmationComponent } from '../dispatch-confirmation/dispatch
 import { TableSkeletonComponent } from '../../../../shared/components/table-skeleton/table-skeleton.component';
 import { PwaInstallBannerComponent } from '../../../../shared/components/pwa-install-banner/pwa-install-banner.component';
 
+import { environment } from '../../../../../environments/environment';
+
 @Component({
   selector: 'app-monitor-dashboard',
   standalone: true,
@@ -40,6 +42,7 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
   readonly ws = inject(WebSocketService);
   readonly wakeLock = inject(WakeLockService);
   private readonly router = inject(Router);
+  readonly appVersion = environment.appVersion;
 
   readonly currentTheme = signal<'light' | 'dark'>(
     (localStorage.getItem('monitor_theme') as 'light' | 'dark') || 'light'
@@ -625,6 +628,14 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
 
   onDispatch(alertId: string): void {
     this.monitorService.dispatch(alertId);
+  }
+
+  onDispatchAll(): void {
+    const count = this.monitorService.totalActive();
+    if (count === 0) return;
+    if (window.confirm(`¿Confirmas que deseas registrar la entrega de los ${count} alumnos pendientes de hoy?`)) {
+      this.monitorService.dispatchAllActive();
+    }
   }
 
   onRevertDelivery(event: { deliveryId: string; studentName: string }): void {

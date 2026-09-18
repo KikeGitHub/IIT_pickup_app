@@ -50,18 +50,28 @@ export class NotificationSoundService {
    * permanentemente la tubería de audio en iOS y Android.
    */
   private setupGlobalUnlockListeners(): void {
+    if (!isPlatformBrowser(this.platformId) || this.isUnlocked) return;
+
     const unlockHandler = () => {
       this.unlockAudio();
+      cleanup();
     };
 
-    window.addEventListener('touchstart', unlockHandler, { passive: true });
-    window.addEventListener('touchend', unlockHandler, { passive: true });
-    window.addEventListener('click', unlockHandler, { passive: true });
-    window.addEventListener('keydown', unlockHandler, { passive: true });
+    const cleanup = () => {
+      window.removeEventListener('touchstart', unlockHandler);
+      window.removeEventListener('touchend', unlockHandler);
+      window.removeEventListener('click', unlockHandler);
+      window.removeEventListener('keydown', unlockHandler);
+    };
+
+    window.addEventListener('touchstart', unlockHandler, { passive: true, once: true });
+    window.addEventListener('touchend', unlockHandler, { passive: true, once: true });
+    window.addEventListener('click', unlockHandler, { passive: true, once: true });
+    window.addEventListener('keydown', unlockHandler, { passive: true, once: true });
   }
 
   public unlockAudio(): void {
-    if (!isPlatformBrowser(this.platformId)) return;
+    if (!isPlatformBrowser(this.platformId) || this.isUnlocked) return;
 
     try {
       const ctx = this.getContext();
@@ -69,41 +79,12 @@ export class NotificationSoundService {
         ctx.resume();
       }
 
-      // Reproducir buffer silencioso en Web Audio
+      // Buffer de 1 muestra completamente silencioso para desbloquear el hardware de audio sin sonido audible
       const buffer = ctx.createBuffer(1, 1, 22050);
       const source = ctx.createBufferSource();
       source.buffer = buffer;
       source.connect(ctx.destination);
       source.start(0);
-
-      // Pre-activar elementos HTML5 Audio con play/pause inmediato
-      if (this.htmlAudioAlert) {
-        this.htmlAudioAlert.volume = 0.01;
-        this.htmlAudioAlert
-          .play()
-          .then(() => {
-            this.htmlAudioAlert?.pause();
-            if (this.htmlAudioAlert) {
-              this.htmlAudioAlert.currentTime = 0;
-              this.htmlAudioAlert.volume = 1.0;
-            }
-          })
-          .catch(() => {});
-      }
-
-      if (this.htmlAudioUrgent) {
-        this.htmlAudioUrgent.volume = 0.01;
-        this.htmlAudioUrgent
-          .play()
-          .then(() => {
-            this.htmlAudioUrgent?.pause();
-            if (this.htmlAudioUrgent) {
-              this.htmlAudioUrgent.currentTime = 0;
-              this.htmlAudioUrgent.volume = 1.0;
-            }
-          })
-          .catch(() => {});
-      }
 
       this.isUnlocked = true;
       this.audioUnlocked.set(true);
@@ -132,19 +113,22 @@ export class NotificationSoundService {
     this.triggerHaptic([150, 80, 150]);
 
     // 2. Web Audio API
+    let webAudioSuccess = false;
     try {
       const ctx = this.getContext();
-      if (ctx.state === 'suspended') {
-        ctx.resume().then(() => this.triggerAlertTones(ctx));
-      } else {
+      if (ctx.state === 'running') {
         this.triggerAlertTones(ctx);
+        webAudioSuccess = true;
+      } else if (ctx.state === 'suspended') {
+        ctx.resume().then(() => this.triggerAlertTones(ctx)).catch(() => {});
+        webAudioSuccess = true;
       }
     } catch (e) {
       console.warn('[Sound] Web Audio failed, trying HTML5 audio fallback:', e);
     }
 
-    // 3. Fallback HTML5 Audio (especialmente para móviles cuando Web Audio esté pausado)
-    if (this.htmlAudioAlert) {
+    // 3. Fallback HTML5 Audio solo si Web Audio falló
+    if (!webAudioSuccess && this.htmlAudioAlert) {
       try {
         this.htmlAudioAlert.currentTime = 0;
         this.htmlAudioAlert.volume = 1.0;
@@ -165,19 +149,22 @@ export class NotificationSoundService {
     this.triggerHaptic([300, 100, 300, 100, 500]);
 
     // 2. Web Audio API
+    let webAudioSuccess = false;
     try {
       const ctx = this.getContext();
-      if (ctx.state === 'suspended') {
-        ctx.resume().then(() => this.triggerUrgentTones(ctx));
-      } else {
+      if (ctx.state === 'running') {
         this.triggerUrgentTones(ctx);
+        webAudioSuccess = true;
+      } else if (ctx.state === 'suspended') {
+        ctx.resume().then(() => this.triggerUrgentTones(ctx)).catch(() => {});
+        webAudioSuccess = true;
       }
     } catch (e) {
       console.warn('[Sound] Web Audio urgent tones failed:', e);
     }
 
-    // 3. Fallback HTML5 Audio
-    if (this.htmlAudioUrgent) {
+    // 3. Fallback HTML5 Audio solo si Web Audio falló
+    if (!webAudioSuccess && this.htmlAudioUrgent) {
       try {
         this.htmlAudioUrgent.currentTime = 0;
         this.htmlAudioUrgent.volume = 1.0;

@@ -46,10 +46,24 @@ public class TeacherPortalService {
         List<TeacherGroupDetailResponse> result = new ArrayList<>();
         List<SchoolGroup> groupsToLoad;
 
-        if (teacherOpt.isEmpty() || "ADMIN".equalsIgnoreCase(teacherOpt.get().getRole()) || teacherOpt.get().getGroups() == null || teacherOpt.get().getGroups().isEmpty()) {
+        if (teacherOpt.isEmpty() || "ADMIN".equalsIgnoreCase(teacherOpt.get().getRole())) {
             groupsToLoad = schoolGroupRepository.findAllByOrderByLevelAscNameAsc();
         } else {
-            groupsToLoad = new ArrayList<>(teacherOpt.get().getGroups());
+            TeacherUser teacher = teacherOpt.get();
+            if (teacher.getGroups() != null && !teacher.getGroups().isEmpty()) {
+                groupsToLoad = new ArrayList<>(teacher.getGroups());
+            } else if (teacher.getLevel() != null) {
+                // Si el docente no tiene salones específicos asignados (ej. secundaria o talleres),
+                // cargar ÚNICAMENTE los grupos correspondientes a su nivel escolar.
+                try {
+                    Student.SchoolLevel studentLevel = Student.SchoolLevel.valueOf(teacher.getLevel().name());
+                    groupsToLoad = schoolGroupRepository.findByLevel(studentLevel);
+                } catch (Exception e) {
+                    groupsToLoad = List.of();
+                }
+            } else {
+                groupsToLoad = List.of();
+            }
         }
 
         for (SchoolGroup group : groupsToLoad) {
