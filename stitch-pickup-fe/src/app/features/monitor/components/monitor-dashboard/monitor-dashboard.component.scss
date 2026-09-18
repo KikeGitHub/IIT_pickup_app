@@ -515,6 +515,44 @@
     flex-shrink: 0;
   }
 
+  .btn-tv-mode {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 13px;
+    height: 34px;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 20px;
+    color: #f8fafc;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+
+    &:hover {
+      background: #334155;
+      border-color: #64748b;
+      transform: translateY(-1px);
+    }
+
+    &:active {
+      transform: scale(0.97);
+    }
+
+    .tv-icon {
+      font-size: 13.5px;
+    }
+
+    @media (max-width: 640px) {
+      padding: 5px 10px;
+      font-size: 11px;
+    }
+  }
+
   .btn-dispatch-all {
     display: inline-flex;
     align-items: center;
@@ -776,6 +814,73 @@
   .empty-icon { font-size: 48px; margin-bottom: v.$space-sm; }
   h3 { margin: 0; font-size: 18px; font-weight: bold; }
   p { margin: 4px 0 0 0; font-size: 13px; }
+}
+
+// ─── Modo TV y Pantallas Grandes (80 Pulgadas / 4K Ultra HD) ───────────────────
+@media (min-width: 1800px) {
+  .monitor-layout {
+    max-width: 100%;
+    padding: 24px 36px;
+    gap: 28px;
+    grid-template-columns: 280px 1fr;
+  }
+
+  .alerts-grid {
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 22px;
+  }
+
+  .content-header {
+    .header-titles {
+      .section-title {
+        font-size: 24px;
+        .active-badge {
+          min-width: 26px;
+          height: 26px;
+          font-size: 14px;
+        }
+      }
+      .section-sub {
+        font-size: 14px;
+      }
+    }
+  }
+}
+
+@media (min-width: 2500px) {
+  .monitor-layout {
+    max-width: 100%;
+    padding: 36px 52px;
+    gap: 36px;
+    grid-template-columns: 340px 1fr;
+  }
+
+  .alerts-grid {
+    grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+    gap: 28px;
+  }
+
+  .content-header {
+    .header-titles {
+      .section-title {
+        font-size: 30px;
+        .active-badge {
+          min-width: 32px;
+          height: 32px;
+          font-size: 16px;
+        }
+      }
+      .section-sub {
+        font-size: 16px;
+      }
+    }
+  }
+}
+
+:fullscreen .monitor-layout,
+:-webkit-full-screen .monitor-layout {
+  max-width: 100%;
+  padding: 24px 36px;
 }
 
 // Teacher Roster View

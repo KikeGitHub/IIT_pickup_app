@@ -98,6 +98,15 @@
           </div>
 
           <div class="header-actions">
+            <button
+              type="button"
+              class="btn-tv-mode"
+              (click)="toggleFullscreen()"
+              [title]="isFullscreen() ? 'Salir de pantalla completa (Esc)' : 'Activar Modo TV / Pantalla Completa para proyector o pantalla de 80 pulgadas'"
+            >
+              <span class="tv-icon">{{ isFullscreen() ? '↙' : '📺' }}</span>
+              <span class="tv-text">{{ isFullscreen() ? 'Salir TV' : 'Modo TV' }}</span>
+            </button>
             @if (monitorService.totalActive() > 0) {
               <button
                 type="button"

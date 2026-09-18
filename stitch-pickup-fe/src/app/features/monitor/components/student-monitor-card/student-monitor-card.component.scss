@@ -269,3 +269,117 @@
   0%, 100% { box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.3); }
   50%       { box-shadow: 0 0 0 5px rgba(220, 38, 38, 0.1); }
 }
+
+// ─── Modo TV y Pantallas Grandes (80 Pulgadas / 4K Ultra HD) ───────────────────
+@media (min-width: 1800px) {
+  .monitor-card {
+    padding: 18px 20px;
+    gap: 12px;
+    border-radius: 14px;
+  }
+
+  .card-status-badge {
+    font-size: 13.5px;
+    padding: 4px 12px;
+  }
+
+  .student-section {
+    gap: 14px;
+
+    .student-avatar {
+      width: 52px;
+      height: 52px;
+      font-size: 22px;
+    }
+
+    .student-info {
+      .student-name {
+        font-size: 19px;
+      }
+      .student-meta {
+        font-size: 13px;
+      }
+    }
+  }
+
+  .parent-section {
+    font-size: 13.5px;
+    .parent-icon, .method-icon {
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  .card-footer {
+    .time-meta {
+      .exact-time {
+        font-size: 12.5px;
+        padding: 3px 8px;
+      }
+      .time-ago {
+        font-size: 12px;
+      }
+    }
+
+    .btn-dispatch {
+      padding: 9px 20px;
+      font-size: 14.5px;
+      border-radius: 10px;
+    }
+  }
+}
+
+@media (min-width: 2500px) {
+  .monitor-card {
+    padding: 22px 26px;
+    gap: 16px;
+    border-radius: 18px;
+    border-left-width: 6px;
+  }
+
+  .card-status-badge {
+    font-size: 15px;
+    padding: 5px 14px;
+  }
+
+  .student-section {
+    gap: 16px;
+
+    .student-avatar {
+      width: 62px;
+      height: 62px;
+      font-size: 26px;
+    }
+
+    .student-info {
+      .student-name {
+        font-size: 23px;
+      }
+      .student-meta {
+        font-size: 15px;
+      }
+    }
+  }
+
+  .parent-section {
+    font-size: 15px;
+  }
+
+  .card-footer {
+    .time-meta {
+      .exact-time {
+        font-size: 14px;
+        padding: 4px 10px;
+      }
+      .time-ago {
+        font-size: 13.5px;
+      }
+    }
+
+    .btn-dispatch {
+      padding: 11px 24px;
+      font-size: 16px;
+      border-radius: 12px;
+    }
+  }
+}
