@@ -1,7 +1,7 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { HttpRequest } from '@angular/common/http';
 import { openDB, IDBPDatabase } from 'idb';
-import { Observable, from, BehaviorSubject } from 'rxjs';
+import { Observable, from, BehaviorSubject, Subject } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 
@@ -41,6 +41,11 @@ export class OfflineQueueService {
   readonly queuedCount$ = this._queuedCount.asObservable();
   readonly queuedCount = signal(0);
 
+  /** Emite el body de cada petición que fue procesada exitosamente de la cola offline.
+   *  Permite a AlertService actualizar el estado visual del alumno a 'CONFIRMED'. */
+  private readonly _queueItemProcessed = new Subject<Record<string, unknown>>();
+  readonly queueItemProcessed$ = this._queueItemProcessed.asObservable();
+
   constructor(private readonly http: HttpClient) {
     this.initDb();
   }
@@ -78,6 +83,8 @@ export class OfflineQueueService {
       try {
         await this.sendItem(item);
         await db.delete(STORE_NAME, item.id);
+        // BLINDAJE 2: Notificar que este ítem fue enviado exitosamente al servidor.
+        this._queueItemProcessed.next(item.body);
       } catch (err) {
         // Increment retry count
         await db.put(STORE_NAME, { ...item, retryCount: item.retryCount + 1 });

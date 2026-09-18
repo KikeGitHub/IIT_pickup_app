@@ -1,6 +1,6 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { tap, catchError, of, forkJoin } from 'rxjs';
+import { tap, catchError, of, forkJoin, EMPTY } from 'rxjs';
 import { WebSocketService } from '../../../core/services/websocket.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { NotificationSoundService } from '../../../core/services/notification-sound.service';
@@ -66,6 +66,8 @@ export class MonitorService {
   readonly selectedLevel = signal<LevelFilter>('ALL');
   readonly selectedStatus = signal<AlertStatusFilter>('ALL');
   readonly isRefreshing = signal<boolean>(false);
+  /** Indica que la última sincronización de fondo falló (red caída/timeout). */
+  readonly syncError = signal<boolean>(false);
   readonly dispatchingAlertId = signal<string | null>(null);
   readonly revertingDeliveryId = signal<string | null>(null);
 
@@ -146,10 +148,20 @@ export class MonitorService {
   refresh(): void {
     this.isRefreshing.set(true);
     forkJoin({
-      alerts: this.http.get<AlertResponse[]>(`${this.apiUrl}/alerts/today/grouped`).pipe(catchError(() => of([]))),
-      deliveries: this.http.get<DeliveryRecord[]>(`${this.apiUrl}/deliveries/today`).pipe(catchError(() => of([])))
+      alerts: this.http.get<AlertResponse[]>(`${this.apiUrl}/alerts/today/grouped`).pipe(catchError(() => of(null as AlertResponse[] | null))),
+      deliveries: this.http.get<DeliveryRecord[]>(`${this.apiUrl}/deliveries/today`).pipe(catchError(() => of(null as DeliveryRecord[] | null)))
     }).pipe(
       tap(({ alerts, deliveries }) => {
+        this.isRefreshing.set(false);
+
+        // BLINDAJE 1: Si alguna petición falló (null sentinel), conservar las cards actuales.
+        if (alerts === null || deliveries === null) {
+          this.syncError.set(true);
+          console.warn('[MonitorService] ⚠️ Refresh parcial: error de red detectado. Cards conservadas.');
+          return;
+        }
+
+        this.syncError.set(false);
         this.deliveries.set(deliveries);
         const deliveredStudentIds = new Set(deliveries.map(d => d.studentId));
 
@@ -169,10 +181,10 @@ export class MonitorService {
           isRejectedByParent: false
         }));
         this.alerts.set(monitorAlerts);
-        this.isRefreshing.set(false);
       }),
       catchError(() => {
         this.isRefreshing.set(false);
+        this.syncError.set(true);
         return of(null);
       })
     ).subscribe();
@@ -293,10 +305,19 @@ export class MonitorService {
   // ─── Private: HTTP Load (Grouped — one alert per student) ────────────────
   private loadTodayAlertsGrouped(): void {
     forkJoin({
-      alerts: this.http.get<AlertResponse[]>(`${this.apiUrl}/alerts/today/grouped`).pipe(catchError(() => of([]))),
-      deliveries: this.http.get<DeliveryRecord[]>(`${this.apiUrl}/deliveries/today`).pipe(catchError(() => of([])))
+      alerts: this.http.get<AlertResponse[]>(`${this.apiUrl}/alerts/today/grouped`).pipe(catchError(() => of(null as AlertResponse[] | null))),
+      deliveries: this.http.get<DeliveryRecord[]>(`${this.apiUrl}/deliveries/today`).pipe(catchError(() => of(null as DeliveryRecord[] | null)))
     }).pipe(
       tap(({ alerts, deliveries }) => {
+        // BLINDAJE 1: Si alguna petición de red falló, NO sobrescribir las cards existentes.
+        // Esto protege al monitor ante microcortes de WiFi o 4G en el patio escolar.
+        if (alerts === null || deliveries === null) {
+          this.syncError.set(true);
+          console.warn('[MonitorService] ⚠️ Sync de fondo: error de red. Cards en pantalla conservadas.');
+          return;
+        }
+
+        this.syncError.set(false);
         this.deliveries.set(deliveries);
         const deliveredStudentIds = new Set(deliveries.map(d => d.studentId));
 
