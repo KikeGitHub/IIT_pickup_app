@@ -508,6 +508,46 @@
     }
   }
 
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .btn-dispatch-all {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 12px;
+    height: 34px;
+    background: #16a34a;
+    border: 1px solid #15803d;
+    border-radius: 20px;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(22, 163, 74, 0.25);
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+
+    &:hover {
+      background: #15803d;
+      box-shadow: 0 2px 6px rgba(22, 163, 74, 0.35);
+    }
+
+    &:active {
+      transform: scale(0.97);
+    }
+
+    @media (max-width: 640px) {
+      padding: 5px 10px;
+      font-size: 11px;
+    }
+  }
+
   .btn-refresh-monitor {
     display: inline-flex;
     align-items: center;

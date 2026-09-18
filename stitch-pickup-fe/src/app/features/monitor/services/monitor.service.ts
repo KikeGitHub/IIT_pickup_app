@@ -243,6 +243,29 @@ export class MonitorService {
   }
 
   /**
+   * Despachar masivamente todas las alertas activas pendientes de hoy.
+   * Ideal para cuando finaliza la jornada escolar y el docente/admin desea limpiar el monitor.
+   */
+  dispatchAllActive(): void {
+    const active = this.alerts().filter(a => !a.isDispatched);
+    if (active.length === 0) return;
+
+    active.forEach(alert => {
+      this.http.post<DeliveryRecord>(`${this.apiUrl}/deliveries/${alert.id}/dispatch`, {}).pipe(
+        catchError(() => of(null))
+      ).subscribe(delivery => {
+        if (delivery) {
+          this.alerts.update(alerts =>
+            alerts.map(a => a.id === alert.id ? { ...a, isDispatched: true } : a)
+          );
+          this.deliveries.update(d => [delivery, ...d.filter(item => item.studentId !== delivery.studentId)]);
+        }
+      });
+    });
+    this.notification.success(`✅ Se registraron como entregados los ${active.length} alumnos pendientes.`);
+  }
+
+  /**
    * revertDelivery — Maestro/Admin deshace una entrega errónea.
    * El alumno regresa al board activo en estado EN_FILA.
    */

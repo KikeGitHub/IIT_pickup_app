@@ -98,6 +98,16 @@
           </div>
 
           <div class="header-actions">
+            @if (monitorService.totalActive() > 0) {
+              <button
+                type="button"
+                class="btn-dispatch-all"
+                (click)="onDispatchAll()"
+                title="Marcar como entregados a todos los alumnos pendientes de hoy"
+              >
+                <span>✓ Entregar Todos ({{ monitorService.totalActive() }})</span>
+              </button>
+            }
             <button
               type="button"
               class="btn-refresh-monitor"

@@ -39,6 +39,8 @@ import java.util.UUID;
 @Slf4j
 public class DeliveryService {
 
+    private static final ZoneId MEXICO_ZONE = ZoneId.of("America/Mexico_City");
+
     private final DeliveryLogRepository deliveryLogRepository;
     private final AlertRepository alertRepository;
     private final ParentUserRepository parentUserRepository;
@@ -50,7 +52,7 @@ public class DeliveryService {
                 .orElseThrow(() -> new IllegalArgumentException("Alerta no encontrada: " + alertId));
 
         UUID studentId = alert.getStudent().getId();
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(MEXICO_ZONE);
 
         // Upsert: si ya existe un registro hoy, actualizarlo
         DeliveryLog log = deliveryLogRepository.findByStudentIdAndLogDate(studentId, today)
@@ -84,7 +86,7 @@ public class DeliveryService {
 
     @Transactional(readOnly = true)
     public List<DeliveryLogResponse> getTodayDeliveries() {
-        return deliveryLogRepository.findByLogDateWithStudent(LocalDate.now())
+        return deliveryLogRepository.findByLogDateWithStudent(LocalDate.now(MEXICO_ZONE))
                 .stream()
                 .filter(d -> d.getStatus() != DeliveryLog.DeliveryStatus.REVERTIDO_DOCENTE)
                 .map(this::mapToResponse).toList();

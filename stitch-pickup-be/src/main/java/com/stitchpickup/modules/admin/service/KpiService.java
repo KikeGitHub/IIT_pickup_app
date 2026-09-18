@@ -33,10 +33,11 @@ public class KpiService {
     /** Período de tiempo para las métricas */
     public enum Period { day, week, month }
 
+    private static final ZoneId MEXICO_ZONE = ZoneId.of("America/Mexico_City");
+
     @Transactional(readOnly = true)
     public KpisResponse getKpis(Period period) {
-        ZoneId zone = ZoneId.systemDefault();
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(MEXICO_ZONE);
 
         LocalDate from = switch (period) {
             case day   -> today;
@@ -44,8 +45,8 @@ public class KpiService {
             case month -> today.minusDays(29);
         };
 
-        Instant startInstant = from.atStartOfDay(zone).toInstant();
-        Instant endInstant   = today.plusDays(1).atStartOfDay(zone).toInstant();
+        Instant startInstant = from.atStartOfDay(MEXICO_ZONE).toInstant();
+        Instant endInstant   = today.plusDays(1).atStartOfDay(MEXICO_ZONE).toInstant();
 
         List<Alert> alerts     = alertRepository.findTodayAlerts(startInstant, endInstant);
         List<DeliveryLog> deliveries = deliveryLogRepository.findByLogDateBetweenWithStudent(from, today);
@@ -84,8 +85,8 @@ public class KpiService {
         String peakHour = deliveries.stream()
                 .filter(d -> d.getTeacherConfirmedAt() != null)
                 .collect(Collectors.groupingBy(d -> {
-                    int hour = d.getTeacherConfirmedAt().atZone(zone).getHour();
-                    int half = d.getTeacherConfirmedAt().atZone(zone).getMinute() < 30 ? 0 : 30;
+                    int hour = d.getTeacherConfirmedAt().atZone(MEXICO_ZONE).getHour();
+                    int half = d.getTeacherConfirmedAt().atZone(MEXICO_ZONE).getMinute() < 30 ? 0 : 30;
                     return String.format("%02d:%02d", hour, half);
                 }, Collectors.counting()))
                 .entrySet().stream()

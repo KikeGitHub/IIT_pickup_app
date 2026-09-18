@@ -70,6 +70,37 @@ export class StudentMonitorCardComponent {
     }
   }
 
+  /**
+   * Hora exacta en que el padre emitió la alerta (formato 12 horas: ej. 03:15 PM)
+   */
+  get exactTime(): string {
+    if (!this.alert?.sentAt) return '';
+
+    let date: Date;
+    if (typeof this.alert.sentAt === 'string' && /^\d{1,2}:\d{2}(:\d{2})?$/.test(this.alert.sentAt.trim())) {
+      const parts = this.alert.sentAt.trim().split(':');
+      const now = new Date();
+      date = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate(),
+        parseInt(parts[0], 10),
+        parseInt(parts[1], 10),
+        parts[2] ? parseInt(parts[2], 10) : 0
+      );
+    } else {
+      date = new Date(this.alert.sentAt);
+    }
+
+    if (isNaN(date.getTime()) || date.getTime() <= 0) return '';
+
+    return date.toLocaleTimeString('es-MX', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  }
+
   get timeAgo(): string {
     if (!this.alert?.sentAt) return 'hace un momento';
 

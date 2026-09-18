@@ -630,6 +630,14 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
     this.monitorService.dispatch(alertId);
   }
 
+  onDispatchAll(): void {
+    const count = this.monitorService.totalActive();
+    if (count === 0) return;
+    if (window.confirm(`¿Confirmas que deseas registrar la entrega de los ${count} alumnos pendientes de hoy?`)) {
+      this.monitorService.dispatchAllActive();
+    }
+  }
+
   onRevertDelivery(event: { deliveryId: string; studentName: string }): void {
     this.monitorService.revertDelivery(event.deliveryId, event.studentName);
   }
