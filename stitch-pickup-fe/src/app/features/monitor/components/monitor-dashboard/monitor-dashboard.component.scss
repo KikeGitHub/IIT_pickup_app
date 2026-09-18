@@ -151,6 +151,47 @@
     }
   }
 
+  .single-group-compact-bar {
+    background: #131c2e;
+    border-color: rgba(37, 99, 235, 0.3);
+    .g-badge { color: #93c5fd; }
+    .g-meta { color: #60a5fa; }
+  }
+
+  .assigned-groups-pills-bar {
+    background: #131c2e;
+    border-color: rgba(255, 255, 255, 0.08);
+
+    .pills-title { color: #94a3b8; }
+
+    .assigned-group-pill {
+      background: rgba(255, 255, 255, 0.04);
+      border-color: rgba(255, 255, 255, 0.1);
+      color: #cbd5e1;
+
+      .pill-badge {
+        background: rgba(255, 255, 255, 0.08);
+        color: #94a3b8;
+      }
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.2);
+      }
+
+      &--active {
+        background: #2563eb;
+        border-color: #2563eb;
+        color: white;
+
+        .pill-badge {
+          background: rgba(255, 255, 255, 0.2);
+          color: white;
+        }
+      }
+    }
+  }
+
   .mobile-level-pills .pill-btn {
     background: #131c2e;
     border-color: rgba(255, 255, 255, 0.1);
@@ -918,19 +959,111 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 12px;
+  padding: 8px 14px;
   background: #f0f7ff;
   border: 1px solid #bfdbfe;
   border-radius: v.$radius-md;
-  font-size: 12px;
+  font-size: 13px;
 
   .g-badge {
-    font-weight: 700;
+    font-weight: 800;
     color: #1e40af;
   }
   .g-meta {
     color: #3b82f6;
-    font-size: 11px;
+    font-size: 12px;
+  }
+}
+
+// ─── Pastillas de Selección Rápida para Salones del Docente ─────────────────
+.assigned-groups-pills-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: white;
+  padding: 10px 16px;
+  border-radius: v.$radius-lg;
+  border: 1px solid v.$color-outline-variant;
+  box-shadow: v.$shadow-sm;
+  flex-wrap: wrap;
+
+  @media (max-width: 640px) {
+    padding: 8px 12px;
+    gap: 8px;
+  }
+
+  .pills-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+
+  .pills-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    overflow-x: auto;
+  }
+
+  .assigned-group-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border-radius: v.$radius-full;
+    border: 1px solid #cbd5e1;
+    background: #f8fafc;
+    color: #334155;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+
+    &:hover {
+      background: #f1f5f9;
+      border-color: #94a3b8;
+    }
+
+    &:active {
+      transform: scale(0.97);
+    }
+
+    .pill-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 4px;
+      background: #e2e8f0;
+      color: #475569;
+      text-transform: uppercase;
+    }
+
+    .pill-name {
+      font-weight: 700;
+    }
+
+    .pill-count {
+      font-size: 11px;
+      opacity: 0.75;
+    }
+
+    &--active {
+      background: #2563eb;
+      border-color: #2563eb;
+      color: white;
+      box-shadow: 0 3px 10px rgba(37, 99, 235, 0.3);
+
+      .pill-badge {
+        background: rgba(255, 255, 255, 0.25);
+        color: white;
+      }
+    }
   }
 }
 
