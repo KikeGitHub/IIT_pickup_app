@@ -38,8 +38,6 @@
       <div class="details">
         <h2 class="student-name">{{ student.name }}</h2>
         <p class="student-meta">
-          <span class="meta-grade">{{ student.grade }}</span>
-          <span class="meta-separator">•</span>
           <span class="meta-group">Grupo {{ student.groupName }}</span>
           <span class="meta-separator" *ngIf="student.gender">•</span>
           <span class="meta-gender" *ngIf="student.gender">{{ student.gender === 'M' ? '👦' : '👧' }}</span>
@@ -70,35 +68,57 @@
     <!-- Modal Familiares Autorizados -->
     @if (showMembersModal()) {
       <div class="modal-backdrop" (click)="toggleMembersModal()">
-        <div class="modal-card" (click)="$event.stopPropagation()">
+        <div class="modal-card modal-card--tutors" (click)="$event.stopPropagation()">
           <header class="modal-header">
-            <h3>Familiares & Tutores de {{ student.name }}</h3>
-            <button type="button" class="close-btn" (click)="toggleMembersModal()">&times;</button>
+            <div class="modal-title-group">
+              <h3 class="modal-title">👥 Tutores Autorizados</h3>
+              <span class="modal-student-subtitle">{{ student.name }}</span>
+            </div>
+            <button type="button" class="btn-close" (click)="toggleMembersModal()" aria-label="Cerrar">&times;</button>
           </header>
 
           <div class="modal-body">
             @if (student.curp) {
               <div class="curp-box">
-                <span class="curp-lbl">🏷️ CURP Oficial:</span>
-                <strong>{{ student.curp }}</strong>
+                <span class="curp-lbl">🏷️ CURP:</span>
+                <strong class="curp-val">{{ student.curp }}</strong>
               </div>
             }
 
-            <p class="modal-subtitle">Personas autorizadas para entrega de este alumno:</p>
+            <p class="modal-section-title">Personas autorizadas para entrega de este alumno:</p>
 
-            @for (m of student.familyMembers; track m.id) {
-              <div class="member-row">
-                <div class="member-avatar">{{ m.name.charAt(0) }}</div>
-                <div class="member-info">
-                  <p class="member-name">{{ m.name }}</p>
-                  <p class="member-rel">{{ m.relationship }} • {{ m.phone || 'Sin teléfono' }}</p>
+            <div class="members-list">
+              @for (m of student.familyMembers; track m.id) {
+                <div class="member-item">
+                  <div class="member-avatar">{{ m.name.charAt(0) }}</div>
+                  <div class="member-info">
+                    <p class="member-name">{{ m.name }}</p>
+                    <p class="member-meta">
+                      <span class="rel">{{ m.relationship }}</span>
+                      @if (m.phone) {
+                        <span class="sep">•</span>
+                        <a [href]="'tel:' + m.phone" class="phone" (click)="$event.stopPropagation()">📞 {{ m.phone }}</a>
+                      } @else {
+                        <span class="sep">•</span>
+                        <span class="no-phone">Sin teléfono</span>
+                      }
+                    </p>
+                  </div>
+                  <span class="badge-authorized">Autorizado</span>
                 </div>
-                <span class="badge-authorized">Autorizado</span>
-              </div>
-            } @empty {
-              <p class="empty-msg">Registrado por coordinación escolar.</p>
-            }
+              } @empty {
+                <div class="empty-state">
+                  <p class="empty-msg">Registrado por coordinación escolar.</p>
+                </div>
+              }
+            </div>
           </div>
+
+          <footer class="modal-footer">
+            <button type="button" class="btn-secondary btn-full" (click)="toggleMembersModal()">
+              Cerrar
+            </button>
+          </footer>
         </div>
       </div>
     }

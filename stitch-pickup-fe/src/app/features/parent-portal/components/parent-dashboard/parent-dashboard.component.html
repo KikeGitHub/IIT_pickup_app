@@ -4,37 +4,21 @@
   <header class="portal-header">
     <div class="header-brand">
       <img src="/logo_IIT.jpg" alt="IIT" class="brand-logo" />
-      <div>
-        <div class="title-with-badge">
-          <h1 class="portal-title">IIT Pickup</h1>
-          <span class="app-version-badge" title="Versión desplegada">{{ appVersion }}</span>
-        </div>
-        <p class="portal-subtitle">Portal del Padre de Familia</p>
+      <div class="brand-title-inline">
+        <h1 class="portal-title">IIT Pickup</h1>
+        <span class="app-version-badge">{{ appVersion }}</span>
+        <span class="portal-role-pill">Padres</span>
       </div>
     </div>
 
     <div class="header-actions">
-      <!-- Sound & Notifications Test Button -->
-      <button
-        type="button"
-        class="btn-audio-toggle"
-        (click)="testAudio()"
-        [class.btn-audio-toggle--ready]="sound.audioUnlocked()"
-        [title]="sound.audioUnlocked() ? 'Sonido y vibración listos. Toca para probar.' : 'Toca para activar y probar sonido en tu celular'"
-      >
-        <span class="audio-icon">{{ sound.audioUnlocked() ? '🔊' : '🔇' }}</span>
-        <span class="audio-text">{{ sound.audioUnlocked() ? 'Sonido OK' : 'Activar Sonido' }}</span>
-      </button>
-
-      <!-- Connectivity Indicator -->
-      <div
-        class="online-badge"
-        [class.online-badge--offline]="!connectivity.isOnline()"
-        [title]="connectivity.isOnline() ? 'Conectado a Internet' : 'Sin conexión — Modo Offline activo'"
-      >
-        <span class="dot"></span>
-        <span class="label">{{ connectivity.isOnline() ? 'En Línea' : 'Offline' }}</span>
-      </div>
+      <!-- Offline-only indicator (hidden when online) -->
+      @if (!connectivity.isOnline()) {
+        <div class="offline-badge" title="Sin conexión — Modo Offline activo">
+          <span class="dot"></span>
+          <span class="label">Offline</span>
+        </div>
+      }
 
       <!-- Logout -->
       <button type="button" class="btn-logout" (click)="logout()" title="Cerrar Sesión">
@@ -46,6 +30,7 @@
       </button>
     </div>
   </header>
+
 
   <!-- Main Container -->
   <main class="portal-main">
@@ -220,10 +205,13 @@
   <!-- Modal: Subir / Cambiar Fotografía del Alumno -->
   @if (showEditModal()) {
     <div class="modal-backdrop" (click)="closeEditModal()">
-      <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-card modal-card--photo" (click)="$event.stopPropagation()">
         <header class="modal-header">
-          <h3>📷 Fotografía de {{ editingStudent()?.name }}</h3>
-          <button type="button" class="btn-close" (click)="closeEditModal()">&times;</button>
+          <div class="modal-title-group">
+            <h3 class="modal-title">📷 Fotografía del Alumno</h3>
+            <span class="modal-student-subtitle">{{ editingStudent()?.name }}</span>
+          </div>
+          <button type="button" class="btn-close" (click)="closeEditModal()" aria-label="Cerrar">&times;</button>
         </header>
 
         <div class="modal-body">
@@ -231,39 +219,37 @@
             <div class="alert-error">{{ editError }}</div>
           }
 
-          <div class="form-group">
-            <label>Selecciona una foto clara del rostro del alumno</label>
-            <div class="photo-upload-box">
-              <div class="photo-preview-wrap">
-                @if (editAvatarUrl) {
-                  <img [src]="editAvatarUrl" alt="Foto alumno" class="photo-preview-img" />
-                } @else {
-                  <div class="photo-placeholder-icon">👤</div>
-                }
-              </div>
+          <div class="photo-upload-card">
+            <div class="photo-preview-wrap">
+              @if (editAvatarUrl) {
+                <img [src]="editAvatarUrl" alt="Foto alumno" class="photo-preview-img" />
+              } @else {
+                <div class="photo-placeholder-icon">👤</div>
+              }
+            </div>
 
-              <div class="photo-upload-controls">
-                <label for="parentPhotoFile" class="btn-select-file">
-                  📁 Seleccionar desde mi celular / galería
-                </label>
-                <input
-                  id="parentPhotoFile"
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp,image/jpg"
-                  (change)="onPhotoFileSelected($event)"
-                  class="file-input-hidden"
-                />
+            <div class="photo-upload-actions">
+              <label for="parentPhotoFile" class="btn-select-file">
+                📁 Elegir foto de galería
+              </label>
+              <input
+                id="parentPhotoFile"
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/jpg"
+                (change)="onPhotoFileSelected($event)"
+                class="file-input-hidden"
+              />
 
+              @if (editAvatarUrl) {
                 <button
                   type="button"
-                  *ngIf="editAvatarUrl"
                   class="btn-clear-photo"
                   (click)="clearPhoto()"
                 >
-                  Quitar foto
+                  🗑️ Quitar foto actual
                 </button>
-                <small class="photo-hint">Formatos: JPG, PNG, WEBP (Máx 2MB)</small>
-              </div>
+              }
+              <small class="photo-hint">Formatos: JPG, PNG o WEBP (máx. 2 MB)</small>
             </div>
           </div>
 
@@ -271,7 +257,7 @@
             <span class="notice-icon">ℹ️</span>
             <div class="notice-text">
               <strong>Control Institucional de Datos</strong>
-              <p>Los datos escolares, grado, grupo, fecha de nacimiento y tutores autorizados son registrados y validados por la Dirección del plantel.</p>
+              <p>Los datos escolares, grado, grupo, CURP y tutores autorizados son registrados y validados por la Dirección del plantel.</p>
             </div>
           </div>
         </div>
