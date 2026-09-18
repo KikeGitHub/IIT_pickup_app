@@ -243,10 +243,39 @@
         </div>
       </div>
 
-      <!-- Selector de Grupos si tiene más de 1 grupo -->
-      @if (teacherService.myGroups().length > 1) {
+      <!-- Caso 1: Solo 1 grupo asignado (docente titular típico) -->
+      @if (teacherService.myGroups().length === 1 && currentGroup) {
+        <div class="single-group-compact-bar">
+          <span class="g-badge">🏫 Salón Asignado: {{ currentGroup.name }}</span>
+          <span class="g-meta">{{ currentGroup.level }} · {{ currentGroup.students.length }} alumnos</span>
+        </div>
+      }
+
+      <!-- Caso 2: Docente con 2 o más grupos asignados (o pocos salones) -> Pastillas directas sin dropdowns ni filtros por grado -->
+      @else if (teacherService.myGroups().length > 1 && (authService.userRole() === 'TEACHER' || teacherService.myGroups().length <= 4)) {
+        <div class="assigned-groups-pills-bar">
+          <span class="pills-title">🏫 Tus Salones Asignados:</span>
+          <div class="pills-container">
+            @for (g of teacherService.myGroups(); track g.id) {
+              <button
+                type="button"
+                class="assigned-group-pill"
+                [class.assigned-group-pill--active]="selectedGroupId() === g.id"
+                (click)="selectGroup(g.id)"
+              >
+                <span class="pill-badge">{{ g.level }}</span>
+                <span class="pill-name">Grupo {{ g.name }}</span>
+                <span class="pill-count">({{ g.students.length }} alumnos)</span>
+              </button>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Caso 3: Administrador general con catálogo completo de salones (> 4 grupos) -->
+      @else if (teacherService.myGroups().length > 4 && authService.userRole() !== 'TEACHER') {
         <div class="roster-filter-card">
-          <!-- 1. Level Switcher Tabs (if multiple levels exist) -->
+          <!-- Level Switcher Tabs (if multiple levels exist) -->
           <div class="level-tabs-bar" *ngIf="availableLevels.length > 1">
             @for (lvl of availableLevels; track lvl.level) {
               <button
@@ -261,24 +290,8 @@
             }
           </div>
 
-          <!-- 2. Cascading Grade & Group Selectors Row -->
+          <!-- Selector de Salón para el Administrador -->
           <div class="selectors-row">
-            <!-- Grade Filter Dropdown -->
-            <div class="select-field" *ngIf="availableGradesInLevel.length > 1">
-              <label class="field-label">📖 Filtrar por Grado:</label>
-              <select
-                [ngModel]="selectedGradeFilter()"
-                (ngModelChange)="setGradeFilter($event)"
-                class="form-select-premium"
-              >
-                <option value="ALL">Todos los Grados ({{ availableGradesInLevel.length }})</option>
-                @for (gr of availableGradesInLevel; track gr) {
-                  <option [value]="gr">{{ gr }}</option>
-                }
-              </select>
-            </div>
-
-            <!-- Hero Classroom / Group Selector Dropdown with Quick Steppers -->
             <div class="select-field select-field--hero">
               <label class="field-label">🏫 Salón / Grupo Activo:</label>
               <div class="hero-selector-wrapper">
@@ -316,12 +329,6 @@
               </div>
             </div>
           </div>
-        </div>
-      } @else if (teacherService.myGroups().length === 1 && currentGroup) {
-        <!-- Subtítulo compacto de grupo asignado (no ocupa espacio) -->
-        <div class="single-group-compact-bar">
-          <span class="g-badge">🏫 Grupo {{ currentGroup.name }}</span>
-          <span class="g-meta">{{ currentGroup.level }} · {{ currentGroup.students.length }} alumnos</span>
         </div>
       } @else if (teacherService.myGroups().length === 0 && !teacherService.isLoading()) {
         <div class="no-groups-notice">
