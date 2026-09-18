@@ -119,19 +119,9 @@ public class AlertService {
                 ? teacher.getGroups().stream().map(com.stitchpickup.modules.student.entity.SchoolGroup::getId).toList()
                 : List.of();
 
-        if (groupIds.isEmpty() && teacher.getLevel() != null) {
-            // Si el maestro no tiene salones específicos asignados en teacher_groups (ej. profesores de Secundaria,
-            // talleres o materias rotativas), cargar automáticamente todos los grupos pertenecientes a su nivel escolar.
-            try {
-                Student.SchoolLevel studentLevel = Student.SchoolLevel.valueOf(teacher.getLevel().name());
-                groupIds = schoolGroupRepository.findByLevel(studentLevel).stream()
-                        .map(com.stitchpickup.modules.student.entity.SchoolGroup::getId)
-                        .toList();
-                log.info("Maestro {} sin grupos asignados; usando {} grupos del nivel {}",
-                        teacher.getEmail(), groupIds.size(), teacher.getLevel());
-            } catch (Exception e) {
-                log.warn("Error resolviendo grupos para nivel {}: {}", teacher.getLevel(), e.getMessage());
-            }
+        if (groupIds.isEmpty()) {
+            log.info("Maestro {} no cuenta con grupos asignados. Retornando 0 alertas.", teacher.getEmail());
+            return List.of();
         }
 
         Instant startOfDay = LocalDate.now(MEXICO_ZONE).atStartOfDay(MEXICO_ZONE).toInstant();

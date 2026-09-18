@@ -368,13 +368,9 @@ export class MonitorService {
             console.info(`[MonitorService] ⏭️ Alerta ignorada: grupo '${event.groupName}' no pertenece a los salones asignados del docente.`, teacherGroups);
             return;
           }
-        } else if (teacherLevel) {
-          // El docente no tiene salones específicos asignados pero tiene nivel educativo definido (caso docentes de Secundaria o materias rotativas).
-          // Ya se validó previamente que el nivel coincide (teacherLevel === eventLevel).
-          console.info(`[MonitorService] ✅ Alerta aceptada para docente de nivel ${teacherLevel}.`);
         } else {
-          // Docente sin nivel ni grupos asignados: descartar para evitar que vea alertas de todo el colegio por error
-          console.warn('[MonitorService] ⚠️ Alerta ignorada: docente sin salones ni nivel escolar asignado.');
+          // Docente sin salones asignados: descartar para evitar que vea alertas de otros salones
+          console.warn('[MonitorService] ⚠️ Alerta ignorada: el docente aún no cuenta con grupo asignado.');
           return;
         }
       }
