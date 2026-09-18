@@ -21,6 +21,34 @@ export class AlertService {
   // Reactive state map: studentId -> StudentAlertStatus
   readonly alertStatuses = signal<Record<string, StudentAlertStatus>>({});
 
+  constructor() {
+    // BLINDAJE 2: Cuando la cola offline envía exitosamente una alerta al servidor,
+    // actualizar automáticamente el estado visual del alumno a 'CONFIRMED'.
+    this.offlineQueue.queueItemProcessed$.subscribe((body) => {
+      const studentId = body['studentId'] as string | undefined;
+      const status = body['status'] as AlertStatus | undefined;
+      const pickupMethod = body['pickupMethod'] as PickupMethod | undefined;
+
+      if (studentId && status) {
+        this.updateStatus(studentId, {
+          studentId,
+          lastStatus: status,
+          pickupMethod: pickupMethod || 'CAR',
+          state: 'CONFIRMED',
+          updatedAt: new Date().toISOString()
+        });
+
+        const statusLabels: Record<string, string> = {
+          TEN_MIN: '10 Minutos', FIVE_MIN: '5 Minutos',
+          EN_FILA: 'En Fila', URGENTE: 'Urgente'
+        };
+        this.notification.success(
+          `✅ Alerta "${statusLabels[status] || status}" enviada exitosamente tras recuperar señal.`
+        );
+      }
+    });
+  }
+
   sendAlert(studentId: string, status: AlertStatus, pickupMethod: PickupMethod): void {
     const clientId = crypto.randomUUID();
     const payload: CreateAlertDto = {

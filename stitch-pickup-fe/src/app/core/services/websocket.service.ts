@@ -60,14 +60,22 @@ export class WebSocketService implements OnDestroy {
       return;
     }
 
-    const headers: Record<string, string> = {};
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-
     this.stompClient = new Client({
       webSocketFactory: () => new SockJS(`${environment.wsUrl}`),
-      connectHeaders: headers,
+      // BLINDAJE 3: beforeConnect se ejecuta en CADA intento de conexión/reconexión.
+      // Lee el token vigente de localStorage para que, si el JWT fue renovado o
+      // el original expiró mientras el docente estaba en el patio sin señal,
+      // la reconexión use credenciales frescas en lugar de las obsoletas.
+      beforeConnect: (client) => {
+        const freshToken = localStorage.getItem('sp_jwt') || token;
+        if (freshToken) {
+          client.connectHeaders = {
+            ...client.connectHeaders,
+            Authorization: `Bearer ${freshToken}`,
+          };
+        }
+      },
+      connectHeaders: token ? { Authorization: `Bearer ${token}` } : {},
       debug: (msg: string) => {
         if (!environment.production) console.debug('[STOMP]', msg);
       },
@@ -93,6 +101,7 @@ export class WebSocketService implements OnDestroy {
 
     this.stompClient.activate();
   }
+
 
   disconnect(): void {
     this.subscriptions.forEach((sub) => sub.unsubscribe());
