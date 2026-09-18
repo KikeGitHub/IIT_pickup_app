@@ -151,8 +151,10 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
 
     if (this.authService.userRole() === 'TEACHER' || this.authService.userRole() === 'ADMIN') {
       this.teacherService.loadMyGroups().subscribe(groups => {
-        if (groups.length > 0 && !this.selectedGroupId()) {
+        if (groups.length === 1) {
           this.selectedGroupId.set(groups[0].id);
+        } else if (groups.length > 1 && (!this.selectedGroupId() || this.selectedGroupId() === 'ALL')) {
+          this.selectedGroupId.set('ALL');
         }
       });
     }
@@ -181,8 +183,10 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
     this.activeTab.set(tab);
     if (tab === 'GROUPS') {
       this.teacherService.loadMyGroups().subscribe(groups => {
-        if (groups.length > 0 && !this.selectedGroupId()) {
+        if (groups.length === 1) {
           this.selectedGroupId.set(groups[0].id);
+        } else if (groups.length > 1 && (!this.selectedGroupId() || this.selectedGroupId() === 'ALL')) {
+          this.selectedGroupId.set('ALL');
         }
       });
     }
@@ -299,9 +303,30 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
     }
   }
 
+  get totalAllStudentsCount(): number {
+    return this.teacherService.myGroups().reduce((acc, g) => acc + (g.students?.length || 0), 0);
+  }
+
   get currentGroup(): TeacherGroup | undefined {
     const gid = this.selectedGroupId();
-    return this.teacherService.myGroups().find(g => g.id === gid) || this.teacherService.myGroups()[0];
+    const groups = this.teacherService.myGroups();
+    if (groups.length === 0) return undefined;
+    if (gid === 'ALL' || !gid) {
+      if (groups.length === 1) return groups[0];
+      const allStudents: TeacherStudent[] = [];
+      groups.forEach(g => {
+        (g.students || []).forEach(s => {
+          allStudents.push({ ...s, groupName: s.groupName || g.name });
+        });
+      });
+      return {
+        id: 'ALL',
+        name: 'Todos tus Salones',
+        level: groups.map(g => g.level).filter((v, i, a) => a.indexOf(v) === i).join(', '),
+        students: allStudents
+      };
+    }
+    return groups.find(g => g.id === gid) || groups[0];
   }
 
   setActiveFilter(filter: 'ALL' | 'ACTIVE' | 'INACTIVE'): void {

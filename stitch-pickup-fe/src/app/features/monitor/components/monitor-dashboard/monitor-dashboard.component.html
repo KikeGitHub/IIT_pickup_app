@@ -243,96 +243,59 @@
         </div>
       </div>
 
-      <!-- Caso 1: Solo 1 grupo asignado (docente titular típico) -->
+      <!-- Caso 1: Solo 1 grupo asignado (docente titular típico) -> Una sola línea garantizada -->
       @if (teacherService.myGroups().length === 1 && currentGroup) {
         <div class="single-group-compact-bar">
-          <span class="g-badge">🏫 Salón Asignado: {{ currentGroup.name }}</span>
-          <span class="g-meta">{{ currentGroup.level }} · {{ currentGroup.students.length }} alumnos</span>
+          <div class="single-group-content">
+            <span class="g-icon">🏫</span>
+            <span class="g-label">Salón Asignado:</span>
+            <span class="g-name">{{ currentGroup.name }}</span>
+            <span class="g-sep">•</span>
+            <span class="g-level-badge">{{ currentGroup.level }}</span>
+            <span class="g-sep">•</span>
+            <span class="g-count">{{ currentGroup.students.length }} alumnos</span>
+          </div>
         </div>
       }
 
-      <!-- Caso 2: Docente con 2 o más grupos asignados (o pocos salones) -> Pastillas directas sin dropdowns ni filtros por grado -->
-      @else if (teacherService.myGroups().length > 1 && (authService.userRole() === 'TEACHER' || teacherService.myGroups().length <= 4)) {
-        <div class="assigned-groups-pills-bar">
-          <span class="pills-title">🏫 Tus Salones Asignados:</span>
-          <div class="pills-container">
+      <!-- Caso 2: Más de 1 grupo asignado -> Filtro responsivo con "Todos" o cada grupo -->
+      @else if (teacherService.myGroups().length > 1) {
+        <div class="assigned-groups-filter-bar">
+          <span class="filter-bar-title">Filtrar Salón:</span>
+          <div class="groups-pills-scroll" role="tablist" aria-label="Seleccionar salón o todos">
+            <button
+              type="button"
+              class="group-filter-pill group-filter-pill--all"
+              [class.group-filter-pill--active]="selectedGroupId() === 'ALL'"
+              (click)="selectGroup('ALL')"
+            >
+              <span class="pill-icon">🏢</span>
+              <span class="pill-label">Todos</span>
+              <span class="pill-badge">{{ totalAllStudentsCount }}</span>
+            </button>
+
             @for (g of teacherService.myGroups(); track g.id) {
               <button
                 type="button"
-                class="assigned-group-pill"
-                [class.assigned-group-pill--active]="selectedGroupId() === g.id"
+                class="group-filter-pill"
+                [class.group-filter-pill--active]="selectedGroupId() === g.id"
                 (click)="selectGroup(g.id)"
               >
-                <span class="pill-badge">{{ g.level }}</span>
-                <span class="pill-name">Grupo {{ g.name }}</span>
-                <span class="pill-count">({{ g.students.length }} alumnos)</span>
+                <span class="pill-level-tag">{{ g.level }}</span>
+                <span class="pill-label">Grupo {{ g.name }}</span>
+                <span class="pill-badge">{{ g.students.length }}</span>
               </button>
             }
           </div>
         </div>
       }
 
-      <!-- Caso 3: Administrador general con catálogo completo de salones (> 4 grupos) -->
-      @else if (teacherService.myGroups().length > 4 && authService.userRole() !== 'TEACHER') {
-        <div class="roster-filter-card">
-          <!-- Level Switcher Tabs (if multiple levels exist) -->
-          <div class="level-tabs-bar" *ngIf="availableLevels.length > 1">
-            @for (lvl of availableLevels; track lvl.level) {
-              <button
-                type="button"
-                class="level-filter-btn"
-                [class.level-filter-btn--active]="selectedGroupLevel() === lvl.level"
-                (click)="setGroupLevel(lvl.level)"
-              >
-                <span class="l-label">{{ lvl.label }}</span>
-                <span class="l-count">{{ lvl.count }}</span>
-              </button>
-            }
-          </div>
-
-          <!-- Selector de Salón para el Administrador -->
-          <div class="selectors-row">
-            <div class="select-field select-field--hero">
-              <label class="field-label">🏫 Salón / Grupo Activo:</label>
-              <div class="hero-selector-wrapper">
-                <button
-                  type="button"
-                  class="btn-stepper"
-                  [disabled]="filteredGroupsDropdown.length <= 1"
-                  (click)="goToPreviousGroup()"
-                  title="Salón anterior"
-                >
-                  ◀
-                </button>
-
-                <select
-                  [ngModel]="selectedGroupId()"
-                  (ngModelChange)="selectGroup($event)"
-                  class="form-select-hero"
-                >
-                  @for (g of filteredGroupsDropdown; track g.id) {
-                    <option [value]="g.id">
-                      {{ g.level }} · Grupo {{ g.name }} ({{ g.students.length }} alumnos)
-                    </option>
-                  }
-                </select>
-
-                <button
-                  type="button"
-                  class="btn-stepper"
-                  [disabled]="filteredGroupsDropdown.length <= 1"
-                  (click)="goToNextGroup()"
-                  title="Salón siguiente"
-                >
-                  ▶
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      } @else if (teacherService.myGroups().length === 0 && !teacherService.isLoading()) {
-        <div class="no-groups-notice">
-          No tienes grupos escolares asignados actualmente.
+      <!-- Caso 0: Docente sin grupo escolar asignado -->
+      @else if (teacherService.myGroups().length === 0 && !teacherService.isLoading()) {
+        <div class="no-assigned-groups-card">
+          <div class="empty-icon">🏫</div>
+          <h3 class="empty-title">Aún no cuenta con grupo asignado</h3>
+          <p class="empty-desc">Comunícate con el Administrador del colegio para que te asigne a tu salón correspondiente.</p>
         </div>
       }
 
