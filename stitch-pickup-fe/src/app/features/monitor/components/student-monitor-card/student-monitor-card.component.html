@@ -51,7 +51,12 @@
 
   <!-- Footer -->
   <div class="card-footer">
-    <span class="time-ago">{{ timeAgo }}</span>
+    <div class="time-meta">
+      @if (exactTime) {
+        <span class="exact-time" title="Hora exacta en que el padre emitió la alerta">🕒 {{ exactTime }}</span>
+      }
+      <span class="time-ago">{{ timeAgo }}</span>
+    </div>
 
     <button
       type="button"

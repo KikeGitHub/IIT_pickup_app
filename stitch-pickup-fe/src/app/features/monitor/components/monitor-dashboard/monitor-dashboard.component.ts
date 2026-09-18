@@ -15,6 +15,8 @@ import { DispatchConfirmationComponent } from '../dispatch-confirmation/dispatch
 import { TableSkeletonComponent } from '../../../../shared/components/table-skeleton/table-skeleton.component';
 import { PwaInstallBannerComponent } from '../../../../shared/components/pwa-install-banner/pwa-install-banner.component';
 
+import { environment } from '../../../../../environments/environment';
+
 @Component({
   selector: 'app-monitor-dashboard',
   standalone: true,
@@ -40,12 +42,31 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
   readonly ws = inject(WebSocketService);
   readonly wakeLock = inject(WakeLockService);
   private readonly router = inject(Router);
+  readonly appVersion = environment.appVersion;
 
   readonly currentTheme = signal<'light' | 'dark'>(
     (localStorage.getItem('monitor_theme') as 'light' | 'dark') || 'light'
   );
 
   readonly activeTab = signal<'MONITOR' | 'GROUPS'>('MONITOR');
+
+  // Fullscreen / TV Mode (80 inch screens)
+  readonly isFullscreen = signal<boolean>(false);
+  private onFullscreenChange?: () => void;
+
+  toggleFullscreen(): void {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(err => {
+        console.warn('Error al activar pantalla completa:', err);
+      });
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen().catch(err => {
+          console.warn('Error al salir de pantalla completa:', err);
+        });
+      }
+    }
+  }
 
   // Mobile drawer state for delivered students history
   readonly isMobileDeliveriesOpen = signal<boolean>(false);
@@ -123,6 +144,11 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
     this.monitorService.initialize();
     this.wakeLock.requestWakeLock();
 
+    this.onFullscreenChange = () => {
+      this.isFullscreen.set(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', this.onFullscreenChange);
+
     if (this.authService.userRole() === 'TEACHER' || this.authService.userRole() === 'ADMIN') {
       this.teacherService.loadMyGroups().subscribe(groups => {
         if (groups.length > 0 && !this.selectedGroupId()) {
@@ -136,6 +162,9 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
     this.ws.disconnect();
     this.monitorService.destroy();
     this.wakeLock.releaseWakeLock();
+    if (this.onFullscreenChange) {
+      document.removeEventListener('fullscreenchange', this.onFullscreenChange);
+    }
   }
 
   get teacherName(): string {
@@ -625,6 +654,14 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
 
   onDispatch(alertId: string): void {
     this.monitorService.dispatch(alertId);
+  }
+
+  onDispatchAll(): void {
+    const count = this.monitorService.totalActive();
+    if (count === 0) return;
+    if (window.confirm(`¿Confirmas que deseas registrar la entrega de los ${count} alumnos pendientes de hoy?`)) {
+      this.monitorService.dispatchAllActive();
+    }
   }
 
   onRevertDelivery(event: { deliveryId: string; studentName: string }): void {

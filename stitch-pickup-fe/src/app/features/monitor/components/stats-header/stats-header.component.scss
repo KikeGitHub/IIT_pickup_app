@@ -101,22 +101,6 @@
       }
     }
 
-    .app-version-badge {
-      display: inline-flex;
-      align-items: center;
-      padding: 1px 5px;
-      background: rgba(255, 255, 255, 0.12);
-      border: 1px solid rgba(255, 255, 255, 0.22);
-      color: rgba(255, 255, 255, 0.7);
-      border-radius: 4px;
-      font-size: 8.5px;
-      font-weight: 700;
-      letter-spacing: 0.03em;
-      font-family: monospace;
-      flex-shrink: 0;
-      user-select: none;
-    }
-
     .groups-pills {
       display: flex;
       align-items: center;
@@ -291,60 +275,43 @@
 .header-bottom {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 6px;
   width: 100%;
-
-  @media (max-width: 680px) {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 5px;
-  }
 
   @media (min-width: 1024px) {
     width: auto;
-    gap: 14px;
   }
 }
 
 .portal-tabs {
   display: flex;
-  background: rgba(0, 0, 0, 0.28);
-  padding: 2px;
-  border-radius: v.$radius-full;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  gap: 2px;
-  flex-shrink: 0;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 3px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  gap: 4px;
+  width: 100%;
 
-  @media (max-width: 680px) {
-    width: 100%;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    border-radius: 8px;
-    padding: 2px;
+  @media (min-width: 1024px) {
+    width: 280px;
   }
 
   .tab-btn {
-    padding: 3px 10px;
-    height: 24px;
+    flex: 1;
+    height: 32px;
+    padding: 4px 10px;
     background: transparent;
     border: none;
-    border-radius: v.$radius-full;
-    font-size: 11px;
+    border-radius: 7px;
+    font-size: 12px;
     font-weight: 700;
-    color: rgba(255, 255, 255, 0.82);
+    color: rgba(255, 255, 255, 0.8);
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: all 0.2s ease;
     white-space: nowrap;
     display: flex;
     align-items: center;
     justify-content: center;
-
-    @media (max-width: 680px) {
-      border-radius: 6px;
-      font-size: 11px;
-      padding: 3px 4px;
-    }
+    gap: 6px;
 
     &:hover {
       color: #ffffff;
@@ -354,81 +321,8 @@
     &--active {
       background: #b6171e;
       color: #ffffff;
-      box-shadow: 0 1px 6px rgba(182, 23, 30, 0.4);
+      box-shadow: 0 1px 6px rgba(182, 23, 30, 0.45);
     }
-  }
-}
-
-// ─── Micro KPI Row (Ultra-compact) ──────────────────────────────────────────
-.kpi-row {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 4px;
-  align-items: center;
-  flex: 1;
-
-  @media (min-width: 1024px) {
-    display: flex;
-    flex: 0 0 auto;
-    gap: 5px;
-  }
-}
-
-.kpi-card {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  padding: 2px 6px;
-  height: 25px;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 6px;
-  backdrop-filter: blur(6px);
-  transition: all 0.2s ease;
-  min-width: 0;
-
-  .kpi-num {
-    font-size: 13px;
-    font-weight: 800;
-    color: #ffffff;
-    line-height: 1;
-  }
-
-  .kpi-lbl {
-    font-size: 8.5px;
-    color: rgba(255, 255, 255, 0.85);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    font-weight: 700;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  &--enfila {
-    border-color: #60a5fa;
-    background: rgba(37, 99, 235, 0.28);
-    .kpi-num { color: #ffffff; }
-    .kpi-lbl { color: #bfdbfe; }
-  }
-
-  &--urgent {
-    border-color: #f87171;
-    background: rgba(182, 23, 30, 0.35);
-    .kpi-num { color: #ffffff; }
-    .kpi-lbl { color: #fecaca; }
-  }
-
-  &--pulse {
-    animation: urgentPulse 1.5s ease-in-out infinite;
-  }
-
-  &--done {
-    border-color: #4ade80;
-    background: rgba(22, 163, 74, 0.28);
-    .kpi-num { color: #ffffff; }
-    .kpi-lbl { color: #bbf7d0; }
   }
 }
 

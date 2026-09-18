@@ -243,6 +243,29 @@ export class MonitorService {
   }
 
   /**
+   * Despachar masivamente todas las alertas activas pendientes de hoy.
+   * Ideal para cuando finaliza la jornada escolar y el docente/admin desea limpiar el monitor.
+   */
+  dispatchAllActive(): void {
+    const active = this.alerts().filter(a => !a.isDispatched);
+    if (active.length === 0) return;
+
+    active.forEach(alert => {
+      this.http.post<DeliveryRecord>(`${this.apiUrl}/deliveries/${alert.id}/dispatch`, {}).pipe(
+        catchError(() => of(null))
+      ).subscribe(delivery => {
+        if (delivery) {
+          this.alerts.update(alerts =>
+            alerts.map(a => a.id === alert.id ? { ...a, isDispatched: true } : a)
+          );
+          this.deliveries.update(d => [delivery, ...d.filter(item => item.studentId !== delivery.studentId)]);
+        }
+      });
+    });
+    this.notification.success(`✅ Se registraron como entregados los ${active.length} alumnos pendientes.`);
+  }
+
+  /**
    * revertDelivery — Maestro/Admin deshace una entrega errónea.
    * El alumno regresa al board activo en estado EN_FILA.
    */
@@ -310,24 +333,48 @@ export class MonitorService {
       console.info('[MonitorService] 🔔 Evaluando alerta en monitor:', event);
       const currentUser = this.auth.currentUser();
 
-      // STRICT TEACHER GROUP FILTERING:
+      // STRICT TEACHER GROUP AND LEVEL FILTERING:
       if (currentUser && currentUser.role === 'TEACHER') {
+        const teacherLevel = (currentUser.level || '').trim().toUpperCase();
+        const eventLevel = (event.level || '').trim().toUpperCase();
+
+        // 1. REGLA DE ORO DE NIVEL: Si el docente tiene nivel asignado (ej. SECUNDARIA o PRIMARIA),
+        // NUNCA debe recibir alertas de otro nivel educativo.
+        if (teacherLevel && eventLevel && teacherLevel !== eventLevel) {
+          console.info(`[MonitorService] ⏭️ Alerta ignorada: nivel de la alerta '${eventLevel}' no coincide con el nivel del docente '${teacherLevel}'.`);
+          return;
+        }
+
+        // 2. REGLA ESTRICTA DE GRUPO ASIGNADO:
         const teacherGroups: string[] = currentUser.groups || [];
         const eventGroup = (event.groupName || '').trim().toLowerCase();
         const eventLevelGroup = `${event.level}-${event.groupName}`.trim().toLowerCase();
 
-        const matchesGroup = teacherGroups.length === 0 || teacherGroups.some(g => {
-          const gNorm = g.trim().toLowerCase();
-          return (
-            gNorm === eventGroup ||
-            gNorm === eventLevelGroup ||
-            gNorm.endsWith(`-${eventGroup}`) ||
-            gNorm.includes(eventGroup)
-          );
-        }) || (currentUser.level && currentUser.level.toUpperCase() === event.level.toUpperCase());
+        if (teacherGroups.length > 0) {
+          // El docente tiene salones específicos asignados (ej. 1A, 2B, 4C, etc.).
+          // Únicamente se acepta la alerta si coincide con uno de sus salones asignados.
+          const matchesGroup = teacherGroups.some(g => {
+            const gNorm = g.trim().toLowerCase();
+            return (
+              gNorm === eventGroup ||
+              gNorm === eventLevelGroup ||
+              gNorm.endsWith(`-${eventGroup}`) ||
+              gNorm.includes(eventGroup) ||
+              eventGroup.includes(gNorm)
+            );
+          });
 
-        if (!matchesGroup) {
-          console.info('[MonitorService] ⏭️ Alerta ignorada (no pertenece a los grupos de este maestro).');
+          if (!matchesGroup) {
+            console.info(`[MonitorService] ⏭️ Alerta ignorada: grupo '${event.groupName}' no pertenece a los salones asignados del docente.`, teacherGroups);
+            return;
+          }
+        } else if (teacherLevel) {
+          // El docente no tiene salones específicos asignados pero tiene nivel educativo definido (caso docentes de Secundaria o materias rotativas).
+          // Ya se validó previamente que el nivel coincide (teacherLevel === eventLevel).
+          console.info(`[MonitorService] ✅ Alerta aceptada para docente de nivel ${teacherLevel}.`);
+        } else {
+          // Docente sin nivel ni grupos asignados: descartar para evitar que vea alertas de todo el colegio por error
+          console.warn('[MonitorService] ⚠️ Alerta ignorada: docente sin salones ni nivel escolar asignado.');
           return;
         }
       }
