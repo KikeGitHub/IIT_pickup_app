@@ -89,6 +89,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/deliveries/*/revert").hasAnyRole("TEACHER", "ADMIN", "MONITOR")
                 .requestMatchers(HttpMethod.GET, "/api/v1/deliveries/student/*/today-events").hasAnyRole("PARENT", "TEACHER", "ADMIN", "MONITOR")
                 .requestMatchers("/api/v1/teacher/**").hasAnyRole("TEACHER", "ADMIN")
+                // Simulación de alertas para pruebas (TEACHER, ADMIN, MONITOR)
+                .requestMatchers(HttpMethod.POST, "/api/v1/alerts/simulate").hasAnyRole("TEACHER", "ADMIN", "MONITOR")
                 // Solo PARENT — envío de alertas, consulta y confirmación de entregas
                 .requestMatchers(HttpMethod.POST, "/api/v1/alerts").hasRole("PARENT")
                 .requestMatchers(HttpMethod.GET, "/api/v1/students/my-students").hasRole("PARENT")

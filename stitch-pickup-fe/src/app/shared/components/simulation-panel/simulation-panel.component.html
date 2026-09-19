@@ -1,0 +1,307 @@
+<!-- ─── FLOATING ACTIVE SIMULATION BADGE (Visible when mode != normal) ─── -->
+@if (connectivity.simulationMode() !== 'normal') {
+  <div
+    class="floating-sim-badge"
+    [class.floating-sim-badge--low]="connectivity.simulationMode() === 'low_signal'"
+    [class.floating-sim-badge--offline]="connectivity.simulationMode() === 'offline'"
+  >
+    <div class="sim-badge-info" (click)="sim.openPanel()">
+      <span class="sim-badge-icon">
+        {{ connectivity.simulationMode() === 'low_signal' ? '🟡' : '🔴' }}
+      </span>
+      <span class="sim-badge-text">
+        {{ connectivity.simulationMode() === 'low_signal' ? 'Señal Baja (+2.5s)' : 'Sin Señal (Offline)' }}
+      </span>
+    </div>
+    <button
+      type="button"
+      class="btn-badge-reset"
+      (click)="resetNetwork()"
+      title="Restablecer red a normal"
+    >
+      ✕ Restablecer
+    </button>
+  </div>
+}
+
+<!-- ─── MODAL DIALOG ─── -->
+@if (sim.isPanelOpen()) {
+  <div class="sim-modal-backdrop" (click)="close()">
+    <div class="sim-modal" (click)="$event.stopPropagation()">
+      
+      <!-- Modal Header -->
+      <div class="sim-header">
+        <div class="sim-header-title">
+          <span class="sim-header-icon">🧪</span>
+          <div>
+            <div class="sim-header-line">
+              <h3>Simulador & Pruebas Locales</h3>
+              <span class="sim-live-counter" title="Total de tarjetas activas en tu monitor">
+                📋 En espera: <strong>{{ monitor.totalActive() }}</strong>
+              </span>
+            </div>
+            <p>Entorno de prueba sin límite de tarjetas (25, 50, 100+ alumnos)</p>
+          </div>
+        </div>
+        <button type="button" class="btn-close" (click)="close()" title="Cerrar">✕</button>
+      </div>
+
+      <div class="sim-body">
+
+        <!-- ─── SECTION 1: NETWORK & SIGNAL SIMULATION ─── -->
+        <div class="sim-card sim-card--network">
+          <div class="sim-card-title">
+            <span>📶 Simulación de Conexión & Señal</span>
+            <span class="badge-status-dot" [class.badge-status-dot--active]="connectivity.isOnline()"></span>
+          </div>
+          <p class="sim-hint">Prueba cómo responde la app ante baja cobertura de celular en el patio o desconexión total.</p>
+
+          <div class="network-options">
+            <button
+              type="button"
+              class="btn-net-option"
+              [class.btn-net-option--active]="connectivity.simulationMode() === 'normal'"
+              (click)="setNetwork('normal')"
+            >
+              <span class="net-icon">🟢</span>
+              <span class="net-label">Normal</span>
+              <span class="net-desc">Alta velocidad</span>
+            </button>
+
+            <button
+              type="button"
+              class="btn-net-option btn-net-option--low"
+              [class.btn-net-option--active]="connectivity.simulationMode() === 'low_signal'"
+              (click)="setNetwork('low_signal')"
+            >
+              <span class="net-icon">🟡</span>
+              <span class="net-label">Señal Baja</span>
+              <span class="net-desc">+2.5s latencia</span>
+            </button>
+
+            <button
+              type="button"
+              class="btn-net-option btn-net-option--offline"
+              [class.btn-net-option--active]="connectivity.simulationMode() === 'offline'"
+              (click)="setNetwork('offline')"
+            >
+              <span class="net-icon">🔴</span>
+              <span class="net-label">Sin Señal</span>
+              <span class="net-desc">Modo Offline</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- ─── SECTION 2: BATCH / MULTI-STUDENT SIMULATION (NO LIMIT) ─── -->
+        <div class="sim-card sim-card--batch">
+          <div class="sim-card-title">
+            <span>⚡ Simulación Masiva (Sin Límite de Alumnos)</span>
+            <span class="badge-unlimited">25, 50, 100+</span>
+          </div>
+          <p class="sim-hint">Genera ráfagas de alumnos con tiempos y prioridades distribuidas (Urgente, En Fila, 5 Min) para probar alto volumen en tu pantalla.</p>
+
+          <!-- Quick Presets Grid -->
+          <div class="batch-presets-grid">
+            <button
+              type="button"
+              class="btn-batch-preset"
+              [disabled]="sim.isSimulating()"
+              (click)="sendBurst(5)"
+              title="Simula 5 alumnos"
+            >
+              <span class="preset-icon">⚡</span>
+              <span class="preset-qty">+5</span>
+              <span class="preset-label">Alumnos</span>
+            </button>
+
+            <button
+              type="button"
+              class="btn-batch-preset"
+              [disabled]="sim.isSimulating()"
+              (click)="sendBurst(10)"
+              title="Simula 10 alumnos"
+            >
+              <span class="preset-icon">🚀</span>
+              <span class="preset-qty">+10</span>
+              <span class="preset-label">Alumnos</span>
+            </button>
+
+            <button
+              type="button"
+              class="btn-batch-preset btn-batch-preset--high"
+              [disabled]="sim.isSimulating()"
+              (click)="sendBurst(25)"
+              title="Simula 25 alumnos"
+            >
+              <span class="preset-icon">🔥</span>
+              <span class="preset-qty">+25</span>
+              <span class="preset-label">Alumnos</span>
+            </button>
+
+            <button
+              type="button"
+              class="btn-batch-preset btn-batch-preset--max"
+              [disabled]="sim.isSimulating()"
+              (click)="sendBurst(50)"
+              title="Simula 50 alumnos"
+            >
+              <span class="preset-icon">💯</span>
+              <span class="preset-qty">+50</span>
+              <span class="preset-label">Alumnos</span>
+            </button>
+          </div>
+
+          <!-- Custom Quantity Stepper -->
+          <div class="custom-batch-row">
+            <div class="custom-batch-input-wrap">
+              <label for="customBatchInput">Cantidad exacta:</label>
+              <div class="input-with-controls">
+                <input
+                  id="customBatchInput"
+                  type="number"
+                  class="sim-input-qty"
+                  [(ngModel)]="customBatchCount"
+                  min="1"
+                  max="100"
+                  placeholder="Ej. 30"
+                />
+                <span class="input-unit">alumnos</span>
+              </div>
+            </div>
+            <button
+              type="button"
+              class="btn-custom-batch-submit"
+              [disabled]="sim.isSimulating()"
+              (click)="sendCustomBatch()"
+            >
+              @if (sim.isSimulating()) {
+                <span class="spinner"></span> Generando...
+              } @else {
+                <span>⚡ Generar Lote</span>
+              }
+            </button>
+          </div>
+        </div>
+
+        <!-- ─── SECTION 3: INDIVIDUAL STUDENT ARRIVAL SIMULATION ─── -->
+        <div class="sim-card sim-card--student">
+          <div class="sim-card-title">
+            <span>🚗 Simular 1 Alumno Individual</span>
+          </div>
+
+          <!-- Student picker -->
+          <div class="form-group">
+            <label for="simStudentSelect">Alumno a simular:</label>
+            <select id="simStudentSelect" class="sim-select" [(ngModel)]="selectedStudentId">
+              <option value="RANDOM">🎲 Alumno aleatorio (nuevo cada vez)</option>
+              @for (st of students; track st.id) {
+                <option [value]="st.id">{{ st.name }} — {{ st.groupName }}</option>
+              }
+            </select>
+          </div>
+
+          <!-- Status picker -->
+          <div class="form-group">
+            <label>Estado / Prioridad:</label>
+            <div class="segmented-control">
+              <button
+                type="button"
+                class="segment-btn"
+                [class.segment-btn--active]="selectedStatus === 'TEN_MIN'"
+                (click)="selectedStatus = 'TEN_MIN'"
+              >
+                10 MIN
+              </button>
+              <button
+                type="button"
+                class="segment-btn"
+                [class.segment-btn--active]="selectedStatus === 'FIVE_MIN'"
+                (click)="selectedStatus = 'FIVE_MIN'"
+              >
+                5 MIN
+              </button>
+              <button
+                type="button"
+                class="segment-btn segment-btn--enfila"
+                [class.segment-btn--active]="selectedStatus === 'EN_FILA'"
+                (click)="selectedStatus = 'EN_FILA'"
+              >
+                EN FILA
+              </button>
+              <button
+                type="button"
+                class="segment-btn segment-btn--urgente"
+                [class.segment-btn--active]="selectedStatus === 'URGENTE'"
+                (click)="selectedStatus = 'URGENTE'"
+              >
+                🚨 URGENTE
+              </button>
+            </div>
+          </div>
+
+          <!-- Method & Elapsed minutes in row -->
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label>Modalidad:</label>
+              <div class="segmented-control">
+                <button
+                  type="button"
+                  class="segment-btn"
+                  [class.segment-btn--active]="selectedPickupMethod === 'CAR'"
+                  (click)="selectedPickupMethod = 'CAR'"
+                >
+                  🚗 Auto
+                </button>
+                <button
+                  type="button"
+                  class="segment-btn"
+                  [class.segment-btn--active]="selectedPickupMethod === 'WALK'"
+                  (click)="selectedPickupMethod = 'WALK'"
+                >
+                  🚶 Pie
+                </button>
+              </div>
+            </div>
+
+            <div class="form-group flex-1">
+              <label>Tiempo transcurrido:</label>
+              <select class="sim-select" [(ngModel)]="selectedMinutesAgo">
+                <option [value]="0">⏱️ 0 min (Recién llegado)</option>
+                <option [value]="3">⏱️ 3 min (Ámbar / En espera)</option>
+                <option [value]="7">⏱️ 7 min (Rojo / Crítico)</option>
+                <option [value]="12">⏱️ 12 min (Máxima prioridad)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Simulation Actions -->
+          <div class="sim-actions">
+            <button
+              type="button"
+              class="btn-sim-primary"
+              [disabled]="sim.isSimulating()"
+              (click)="sendSimulatedAlert()"
+            >
+              @if (sim.isSimulating()) {
+                <span class="spinner"></span> Enviando...
+              } @else {
+                <span>🚀 Simular Entrada de Alumno</span>
+              }
+            </button>
+          </div>
+        </div>
+
+        <!-- ─── SECTION 4: QUICK CLEANUP ─── -->
+        <div class="sim-footer-tools">
+          <button type="button" class="btn-tool" (click)="refreshMonitor()">
+            🔄 Sincronizar Monitor
+          </button>
+          <button type="button" class="btn-tool btn-tool--danger" (click)="dispatchAll()" title="Despacha todos los alumnos para limpiar la pantalla">
+            🧹 Despachar Todo (Limpiar Monitor)
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+}

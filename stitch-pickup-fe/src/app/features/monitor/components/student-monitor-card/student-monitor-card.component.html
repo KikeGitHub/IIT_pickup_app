@@ -3,11 +3,27 @@
   [class.monitor-card--urgent]="alert.status === 'URGENTE'"
   [class.monitor-card--updated]="isUpdated"
   [class.monitor-card--rejected]="alert.isRejectedByParent"
+  [class.monitor-card--tier-critical]="priorityConfig.tier === 'critical'"
+  [class.monitor-card--tier-warning]="priorityConfig.tier === 'warning'"
   [style.border-left-color]="statusConfig.borderColor"
 >
-  <!-- Status Badge -->
-  <div class="card-status-badge" [style.background]="statusConfig.bgColor" [style.color]="statusConfig.color">
-    {{ statusConfig.label }}
+  <!-- Card Header Bar: Píldora de Estado + Hora + Píldora del Tiempo Corriendo en UNA SOLA LÍNEA -->
+  <div class="card-top-bar">
+    <span class="card-status-badge" [style.background]="statusConfig.bgColor" [style.color]="statusConfig.color">
+      {{ statusConfig.label }}
+    </span>
+
+    @if (exactTime) {
+      <span class="exact-time-chip" title="Hora exacta de la alerta">
+        <span class="chip-icon">🕒</span>
+        <span class="chip-val">{{ exactTime }}</span>
+      </span>
+    }
+
+    <span class="live-stopwatch-chip" [class]="priorityConfig.badgeClass" title="Tiempo transcurrido en espera">
+      <span class="stopwatch-icon">{{ priorityConfig.icon }}</span>
+      <span class="stopwatch-val">{{ elapsedFormatted }}</span>
+    </span>
   </div>
 
   <!-- Rejected by Parent Alert Banner -->
@@ -20,58 +36,55 @@
   <!-- Student & Parent Info -->
   <div class="card-body">
     <div class="student-section">
-      <div class="student-avatar">{{ alert.studentName.charAt(0) }}</div>
+      <div class="student-avatar" [class.student-avatar--urgent]="priorityConfig.tier === 'critical'">
+        {{ alert.studentName.charAt(0) }}
+      </div>
       <div class="student-info">
         <p class="student-name">{{ alert.studentName }}</p>
         <p class="student-meta">
-          <span>{{ levelBadge }}</span>
+          <span class="meta-level">{{ levelBadge }}</span>
           <span class="sep">·</span>
-          <span>Grupo {{ alert.groupName }}</span>
+          <span class="meta-group">Grupo {{ alert.groupName }}</span>
         </p>
       </div>
     </div>
 
     <div class="parent-section">
-      <svg viewBox="0 0 24 24" fill="none" class="parent-icon">
-        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2"/>
-        <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
-      </svg>
-      <span class="parent-name">{{ alert.parentName }}</span>
-      <span class="sep">·</span>
-      <svg viewBox="0 0 24 24" fill="none" class="method-icon">
-        @if (alert.pickupMethod === 'CAR') {
-          <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9C2.1 11.1 2 11.5 2 12v4c0 .6.4 1 1 1h2" stroke="currentColor" stroke-width="2"/><circle cx="7" cy="17" r="2" stroke="currentColor" stroke-width="2"/><circle cx="17" cy="17" r="2" stroke="currentColor" stroke-width="2"/>
-        } @else {
-          <circle cx="13" cy="4" r="2" stroke="currentColor" stroke-width="2"/><path d="M11 20l-1-5 3-3 2 4M8 12l2-3 4 1 3 3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        }
-      </svg>
-      <span class="method-label">{{ alert.pickupMethod === 'CAR' ? 'En Auto' : 'A Pie' }}</span>
+      <div class="parent-info-line">
+        <svg viewBox="0 0 24 24" fill="none" class="parent-icon">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2"/>
+          <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+        </svg>
+        <span class="parent-name">{{ alert.parentName }}</span>
+        <span class="sep">·</span>
+        <span class="method-badge" [class.method-badge--car]="alert.pickupMethod === 'CAR'">
+          @if (alert.pickupMethod === 'CAR') {
+            🚗 En Auto
+          } @else {
+            🚶 A Pie
+          }
+        </span>
+      </div>
     </div>
   </div>
 
-  <!-- Footer -->
+  <!-- Card Action Footer -->
   <div class="card-footer">
-    <div class="time-meta">
-      @if (exactTime) {
-        <span class="exact-time" title="Hora exacta en que el padre emitió la alerta">🕒 {{ exactTime }}</span>
-      }
-      <span class="time-ago">{{ timeAgo }}</span>
-    </div>
-
     <button
       type="button"
       class="btn-dispatch"
       [disabled]="isDispatching"
       (click)="onDispatch()"
+      aria-label="Registrar entrega de alumno"
     >
       @if (isDispatching) {
         <span class="dispatch-spinner"></span>
-        <span>Despachando...</span>
+        <span>Entregando...</span>
       } @else {
         <svg viewBox="0 0 24 24" fill="none" class="dispatch-icon">
-          <polyline points="20 6 9 17 4 12" stroke="currentColor" stroke-width="2"/>
+          <polyline points="20 6 9 17 4 12" stroke="currentColor" stroke-width="2.5"/>
         </svg>
-        <span>Despachar</span>
+        <span>Entregar Alumno</span>
       }
     </button>
   </div>
