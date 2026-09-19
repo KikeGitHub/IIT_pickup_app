@@ -1,8 +1,9 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { getPreferredPortal } from '../portal-preference';
 
-export const authGuard: CanActivateFn = () => {
+export const authGuard: CanActivateFn = (route, state) => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
@@ -10,7 +11,18 @@ export const authGuard: CanActivateFn = () => {
     return true;
   }
 
-  // Redirect to parent login by default (can be customized)
-  router.navigate(['/auth/login']);
+  const targetUrl = state.url || '';
+  const isTeacherTarget =
+    targetUrl.includes('/monitor') ||
+    targetUrl.includes('/teacher') ||
+    targetUrl.includes('/admin') ||
+    targetUrl.includes('maestro');
+  const preferred = getPreferredPortal();
+
+  if (isTeacherTarget || preferred === 'teacher') {
+    router.navigate(['/auth/maestros']);
+  } else {
+    router.navigate(['/auth/login']);
+  }
   return false;
 };

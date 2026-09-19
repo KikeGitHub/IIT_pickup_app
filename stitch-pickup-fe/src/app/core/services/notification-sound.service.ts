@@ -2,14 +2,14 @@ import { Injectable, signal, PLATFORM_ID, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 
 /**
- * NotificationSoundService — Genera sonidos de notificación, vibración háptica
- * y notificaciones del sistema para móviles (iOS Safari, Android Chrome, tablets).
+ * NotificationSoundService — Motor de audio acústico profesional para IIT Pickup.
  *
- * Implementa estrategia híbrida:
- * 1. Web Audio API con osciladores afinados.
- * 2. Elemento HTML5 Audio precargado y pre-desbloqueado con Data URI generado localmente.
- * 3. Vibración háptica con la API navigator.vibrate.
- * 4. Notificaciones del sistema con Web Notifications API para alertar con pantalla bloqueada o app en segundo plano.
+ * Características de audio de alta fidelidad:
+ * 1. Acústica armónica: síntesis con armónico cálido secundario y filtro pasa-bajos (cálido, similar a chimes de Apple / iOS / macOS).
+ * 2. Cero pops / clics: envolventes de ataque suave (12ms) y decaimiento exponencial natural sin cortes abruptos.
+ * 3. Prevención de colisiones: reproducción exclusiva (no solapa Web Audio con HTML5 Audio).
+ * 4. Respaldo HTML5 en alta calidad (44.1 kHz, 16-bit PCM WAV) para navegadores que bloquean Web Audio.
+ * 5. Vibración háptica sincronizada en dispositivos móviles.
  */
 @Injectable({ providedIn: 'root' })
 export class NotificationSoundService {
@@ -18,6 +18,7 @@ export class NotificationSoundService {
   private htmlAudioAlert: HTMLAudioElement | null = null;
   private htmlAudioUrgent: HTMLAudioElement | null = null;
   private isUnlocked = false;
+  private lastPlayTimestamp = 0;
 
   readonly soundEnabled = signal<boolean>(true);
   readonly audioUnlocked = signal<boolean>(false);
@@ -33,11 +34,11 @@ export class NotificationSoundService {
 
   private initHtmlAudioFallbacks(): void {
     try {
-      const alertWav = generateChimeWavDataUri(523.25, 659.25, 0.45);
+      const alertWav = generateChimeWavDataUri('alert');
       this.htmlAudioAlert = new Audio(alertWav);
       this.htmlAudioAlert.preload = 'auto';
 
-      const urgentWav = generateChimeWavDataUri(880, 698.46, 0.55);
+      const urgentWav = generateChimeWavDataUri('urgent');
       this.htmlAudioUrgent = new Audio(urgentWav);
       this.htmlAudioUrgent.preload = 'auto';
     } catch (e) {
@@ -47,7 +48,7 @@ export class NotificationSoundService {
 
   /**
    * Listeners globales en la primera interacción (touch / click) para desbloquear
-   * permanentemente la tubería de audio en iOS y Android.
+   * la tubería de audio en iOS Safari y Android.
    */
   private setupGlobalUnlockListeners(): void {
     if (!isPlatformBrowser(this.platformId) || this.isUnlocked) return;
@@ -71,20 +72,34 @@ export class NotificationSoundService {
   }
 
   public unlockAudio(): void {
-    if (!isPlatformBrowser(this.platformId) || this.isUnlocked) return;
+    if (!isPlatformBrowser(this.platformId)) return;
 
     try {
       const ctx = this.getContext();
       if (ctx.state === 'suspended') {
-        ctx.resume();
+        ctx.resume().catch(() => {});
       }
 
-      // Buffer de 1 muestra completamente silencioso para desbloquear el hardware de audio sin sonido audible
+      // Micro-buffer silencioso para despertar el hardware de audio
       const buffer = ctx.createBuffer(1, 1, 22050);
       const source = ctx.createBufferSource();
       source.buffer = buffer;
       source.connect(ctx.destination);
       source.start(0);
+
+      // Desbloquear elementos HTML5 Audio durante el gesto de usuario (requerido por iOS)
+      if (this.htmlAudioAlert) {
+        this.htmlAudioAlert.play().then(() => {
+          this.htmlAudioAlert?.pause();
+          if (this.htmlAudioAlert) this.htmlAudioAlert.currentTime = 0;
+        }).catch(() => {});
+      }
+      if (this.htmlAudioUrgent) {
+        this.htmlAudioUrgent.play().then(() => {
+          this.htmlAudioUrgent?.pause();
+          if (this.htmlAudioUrgent) this.htmlAudioUrgent.currentTime = 0;
+        }).catch(() => {});
+      }
 
       this.isUnlocked = true;
       this.audioUnlocked.set(true);
@@ -104,95 +119,105 @@ export class NotificationSoundService {
   }
 
   /**
-   * Reproduce el sonido de alerta normal (dos tonos ascendentes) y hace vibrar el dispositivo.
+   * Reproduce el sonido de alerta normal (Chime profesional suave ascendente: G5 -> C6).
    */
   playAlertSound(): void {
     if (!this.soundEnabled()) return;
 
-    // 1. Vibración háptica
-    this.triggerHaptic([150, 80, 150]);
+    // Debounce ligero para evitar sonidos empalmados si llegan 2 alertas en el mismo milisegundo
+    const now = Date.now();
+    if (now - this.lastPlayTimestamp < 180) return;
+    this.lastPlayTimestamp = now;
 
-    // 2. Web Audio API
-    let webAudioSuccess = false;
+    // Vibración háptica suave
+    this.triggerHaptic([100, 50, 100]);
+
+    // Intentar Web Audio API
     try {
       const ctx = this.getContext();
       if (ctx.state === 'running') {
         this.triggerAlertTones(ctx);
-        webAudioSuccess = true;
+        return;
       } else if (ctx.state === 'suspended') {
-        ctx.resume().then(() => this.triggerAlertTones(ctx)).catch(() => {});
-        webAudioSuccess = true;
+        ctx.resume().then(() => {
+          if (ctx.state === 'running') {
+            this.triggerAlertTones(ctx);
+          } else {
+            this.playHtmlAudio(this.htmlAudioAlert);
+          }
+        }).catch(() => {
+          this.playHtmlAudio(this.htmlAudioAlert);
+        });
+        return;
       }
     } catch (e) {
-      console.warn('[Sound] Web Audio failed, trying HTML5 audio fallback:', e);
+      console.warn('[Sound] Web Audio failed, falling back to HTML5 audio:', e);
     }
 
-    // 3. Fallback HTML5 Audio solo si Web Audio falló
-    if (!webAudioSuccess && this.htmlAudioAlert) {
-      try {
-        this.htmlAudioAlert.currentTime = 0;
-        this.htmlAudioAlert.volume = 1.0;
-        this.htmlAudioAlert.play().catch(() => {});
-      } catch (err) {
-        // Ignorar si el navegador bloquea
-      }
-    }
+    // Fallback HTML5 Audio exclusivo si Web Audio no estaba disponible
+    this.playHtmlAudio(this.htmlAudioAlert);
   }
 
   /**
-   * Reproduce el sonido urgente (cuatro tonos de alarma rápidos) y vibración intensa.
+   * Reproduce el sonido urgente (Arpegio mayor enérgico pero suave: A5 -> C#6 -> E6).
    */
   playUrgentSound(): void {
     if (!this.soundEnabled()) return;
 
-    // 1. Vibración háptica intensa
-    this.triggerHaptic([300, 100, 300, 100, 500]);
+    const now = Date.now();
+    if (now - this.lastPlayTimestamp < 180) return;
+    this.lastPlayTimestamp = now;
 
-    // 2. Web Audio API
-    let webAudioSuccess = false;
+    // Vibración háptica de prioridad
+    this.triggerHaptic([200, 80, 200, 80, 350]);
+
     try {
       const ctx = this.getContext();
       if (ctx.state === 'running') {
         this.triggerUrgentTones(ctx);
-        webAudioSuccess = true;
+        return;
       } else if (ctx.state === 'suspended') {
-        ctx.resume().then(() => this.triggerUrgentTones(ctx)).catch(() => {});
-        webAudioSuccess = true;
+        ctx.resume().then(() => {
+          if (ctx.state === 'running') {
+            this.triggerUrgentTones(ctx);
+          } else {
+            this.playHtmlAudio(this.htmlAudioUrgent);
+          }
+        }).catch(() => {
+          this.playHtmlAudio(this.htmlAudioUrgent);
+        });
+        return;
       }
     } catch (e) {
-      console.warn('[Sound] Web Audio urgent tones failed:', e);
+      console.warn('[Sound] Web Audio urgent failed, falling back to HTML5 audio:', e);
     }
 
-    // 3. Fallback HTML5 Audio solo si Web Audio falló
-    if (!webAudioSuccess && this.htmlAudioUrgent) {
-      try {
-        this.htmlAudioUrgent.currentTime = 0;
-        this.htmlAudioUrgent.volume = 1.0;
-        this.htmlAudioUrgent.play().catch(() => {});
-      } catch (err) {
-        // Ignorar si el navegador bloquea
-      }
-    }
+    this.playHtmlAudio(this.htmlAudioUrgent);
+  }
+
+  private playHtmlAudio(audioEl: HTMLAudioElement | null): void {
+    if (!audioEl) return;
+    try {
+      audioEl.currentTime = 0;
+      audioEl.volume = 1.0;
+      audioEl.play().catch((err) => {
+        console.warn('[Sound] HTML Audio play error:', err);
+      });
+    } catch (err) {}
   }
 
   /**
-   * Solicita permisos y emite una notificación del sistema operativo con sonido y vibración.
-   * Muy útil cuando el maestro o padre tiene el teléfono con la app en segundo plano.
+   * Emite una notificación nativa del sistema operativo y vibración (sin duplicar sonido de audio).
    */
   async notifyWithVibration(title: string, body: string, tag?: string): Promise<void> {
     if (!isPlatformBrowser(this.platformId)) return;
-
-    // Vibrar y sonar localmente
-    this.playAlertSound();
 
     if ('Notification' in window) {
       if (Notification.permission === 'default') {
         try {
           const res = await Notification.requestPermission();
           this.notificationsAllowed.set(res === 'granted');
-        } catch {
-          // Ignorar
-        }
+        } catch {}
       }
 
       if (Notification.permission === 'granted') {
@@ -201,7 +226,7 @@ export class NotificationSoundService {
             body,
             icon: '/logo_IIT.jpg',
             tag: tag || 'iit-pickup-alert',
-            ...({ vibrate: [300, 100, 300, 100, 500] } as any)
+            ...({ vibrate: [200, 80, 200] } as any)
           });
         } catch (err) {
           console.warn('[Notification] Could not show native notification:', err);
@@ -228,21 +253,17 @@ export class NotificationSoundService {
         try {
           const res = await Notification.requestPermission();
           this.notificationsAllowed.set(res === 'granted');
-        } catch {
-          // Ignorar
-        }
+        } catch {}
       }
 
       if (Notification.permission === 'granted') {
         try {
           new Notification('🔊 IIT Pickup — Prueba de Alerta', {
-            body: '¡Sonido, vibración y notificaciones listos en tu dispositivo!',
+            body: '¡Sonido profesional, vibración y notificaciones listos en tu dispositivo!',
             icon: '/logo_IIT.jpg',
             tag: 'test-sound'
           });
-        } catch {
-          // Ignorar
-        }
+        } catch {}
       }
     }
   }
@@ -251,56 +272,93 @@ export class NotificationSoundService {
     if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
       try {
         navigator.vibrate(pattern);
-      } catch {
-        // Ignorar si el dispositivo no soporta vibración
-      }
+      } catch {}
     }
   }
 
+  /**
+   * Alerta Normal: Chime armónico de 2 notas (G5: 783.99 Hz -> C6: 1046.50 Hz)
+   * Timbre cristalino, suave, profesional y sin asperezas.
+   */
   private triggerAlertTones(ctx: AudioContext): void {
-    this.playTone(ctx, 523.25, 0, 0.15, 0.35); // C5
-    this.playTone(ctx, 659.25, 0.14, 0.22, 0.3); // E5
+    const now = ctx.currentTime;
+    // Nota 1: G5 cálido
+    this.playHarmonicChime(ctx, 783.99, now, 0.35, 0.35);
+    // Nota 2: C6 brillante (inicia a los 120ms para un arpegio fluido)
+    this.playHarmonicChime(ctx, 1046.50, now + 0.12, 0.45, 0.42);
   }
 
+  /**
+   * Alerta Urgente: Arpegio mayor ascendente de 3 notas (A5 -> C#6 -> E6 + eco de brillo)
+   * Notable y de alta prioridad pero musical, pulido y agradable.
+   */
   private triggerUrgentTones(ctx: AudioContext): void {
-    this.playTone(ctx, 880, 0, 0.12, 0.5);       // A5
-    this.playTone(ctx, 698.46, 0.15, 0.12, 0.5);  // F5
-    this.playTone(ctx, 880, 0.30, 0.12, 0.5);    // A5
-    this.playTone(ctx, 698.46, 0.45, 0.12, 0.5);  // F5
+    const now = ctx.currentTime;
+    this.playHarmonicChime(ctx, 880.00, now, 0.20, 0.35);
+    this.playHarmonicChime(ctx, 1108.73, now + 0.11, 0.20, 0.38);
+    this.playHarmonicChime(ctx, 1318.51, now + 0.22, 0.38, 0.45);
+    this.playHarmonicChime(ctx, 1318.51, now + 0.38, 0.30, 0.38);
   }
 
-  private playTone(
+  /**
+   * Síntesis acústica armónica en Web Audio API:
+   * - Oscilador fundamental senoidal puro
+   * - Armónico secundario (2x frecuencia) al 18% para calidez
+   * - Filtro pasa-bajos analógico para eliminar estridencias
+   * - Envolvente exponencial sin chasquidos / clics
+   */
+  private playHarmonicChime(
     ctx: AudioContext,
     frequency: number,
-    startDelay: number,
+    startTime: number,
     duration: number,
-    volume: number
+    peakVolume: number
   ): void {
-    const oscillator = ctx.createOscillator();
-    const gainNode = ctx.createGain();
+    try {
+      const osc1 = ctx.createOscillator();
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(frequency, startTime);
 
-    oscillator.type = 'sine';
-    oscillator.frequency.setValueAtTime(frequency, ctx.currentTime);
-    oscillator.connect(gainNode);
-    gainNode.connect(ctx.destination);
+      const osc2 = ctx.createOscillator();
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(frequency * 2, startTime);
 
-    const startTime = ctx.currentTime + startDelay;
-    const endTime = startTime + duration;
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(Math.min(frequency * 3.5, 4200), startTime);
 
-    gainNode.gain.setValueAtTime(0, startTime);
-    gainNode.gain.linearRampToValueAtTime(volume, startTime + 0.02);
-    gainNode.gain.linearRampToValueAtTime(0, endTime);
+      const masterGain = ctx.createGain();
+      const overtoneGain = ctx.createGain();
+      overtoneGain.gain.setValueAtTime(0.18, startTime);
 
-    oscillator.start(startTime);
-    oscillator.stop(endTime + 0.01);
+      // Envolvente de volumen: ataque suave de 12ms y decaimiento exponencial natural
+      masterGain.gain.setValueAtTime(0.0001, startTime);
+      masterGain.gain.exponentialRampToValueAtTime(peakVolume, startTime + 0.012);
+      masterGain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+
+      osc1.connect(masterGain);
+      osc2.connect(overtoneGain);
+      overtoneGain.connect(masterGain);
+      masterGain.connect(filter);
+      filter.connect(ctx.destination);
+
+      osc1.start(startTime);
+      osc2.start(startTime);
+      osc1.stop(startTime + duration + 0.05);
+      osc2.stop(startTime + duration + 0.05);
+    } catch (e) {
+      console.warn('[Sound] Error in playHarmonicChime:', e);
+    }
   }
 }
 
 /**
- * Genera un Data URI base64 con un archivo WAV PCM real de 16 bits en mono.
+ * Genera un Data URI base64 con un archivo WAV PCM real de 16 bits a 44,100 Hz (Calidad CD).
+ * Totalmente continuo, sin saltos de fase y con envolventes armónicas orgánicas.
  */
-function generateChimeWavDataUri(freq1: number, freq2: number, duration: number): string {
-  const sampleRate = 22050;
+function generateChimeWavDataUri(type: 'alert' | 'urgent'): string {
+  const sampleRate = 44100;
+  const duration = type === 'urgent' ? 0.75 : 0.55;
   const numSamples = Math.floor(sampleRate * duration);
   const buffer = new ArrayBuffer(44 + numSamples * 2);
   const view = new DataView(buffer);
@@ -319,23 +377,57 @@ function generateChimeWavDataUri(freq1: number, freq2: number, duration: number)
   writeString(view, 36, 'data');
   view.setUint32(40, numSamples * 2, true);
 
-  const splitT = duration * 0.4;
-  for (let i = 0; i < numSamples; i++) {
-    const t = i / sampleRate;
-    let sample = 0;
-    if (t < splitT) {
-      sample = Math.sin(2 * Math.PI * freq1 * t) * (1 - t / splitT) * 0.55;
-    } else {
-      const t2 = t - splitT;
-      sample = Math.sin(2 * Math.PI * freq2 * t2) * Math.exp(-t2 * 5) * 0.75;
+  if (type === 'alert') {
+    // Chime armónico de 2 notas (G5: 783.99 Hz -> C6: 1046.50 Hz)
+    const n1Start = 0;
+    const n2Start = 0.12;
+    for (let i = 0; i < numSamples; i++) {
+      const t = i / sampleRate;
+      let sample = 0;
+
+      if (t >= n1Start) {
+        const dt1 = t - n1Start;
+        const env1 = Math.min(dt1 / 0.012, 1) * Math.exp(-dt1 * 8.0);
+        sample += (Math.sin(2 * Math.PI * 783.99 * dt1) + 0.18 * Math.sin(2 * Math.PI * 1567.98 * dt1)) * env1 * 0.40;
+      }
+
+      if (t >= n2Start) {
+        const dt2 = t - n2Start;
+        const env2 = Math.min(dt2 / 0.012, 1) * Math.exp(-dt2 * 5.5);
+        sample += (Math.sin(2 * Math.PI * 1046.50 * dt2) + 0.16 * Math.sin(2 * Math.PI * 2093.00 * dt2)) * env2 * 0.50;
+      }
+
+      const intSample = Math.max(-32768, Math.min(32767, Math.floor(sample * 32767)));
+      view.setInt16(44 + i * 2, intSample, true);
     }
-    const intSample = Math.max(-32768, Math.min(32767, Math.floor(sample * 32767)));
-    view.setInt16(44 + i * 2, intSample, true);
+  } else {
+    // Alerta urgente: Arpegio mayor dinámico (A5: 880Hz, C#6: 1108.7Hz, E6: 1318.5Hz)
+    const notes = [
+      { start: 0.00, freq: 880.00, decay: 9.5, vol: 0.35 },
+      { start: 0.11, freq: 1108.73, decay: 9.5, vol: 0.38 },
+      { start: 0.22, freq: 1318.51, decay: 7.0, vol: 0.45 },
+      { start: 0.38, freq: 1318.51, decay: 6.0, vol: 0.40 }
+    ];
+
+    for (let i = 0; i < numSamples; i++) {
+      const t = i / sampleRate;
+      let sample = 0;
+      for (const n of notes) {
+        if (t >= n.start) {
+          const dt = t - n.start;
+          const env = Math.min(dt / 0.012, 1) * Math.exp(-dt * n.decay);
+          sample += (Math.sin(2 * Math.PI * n.freq * dt) + 0.18 * Math.sin(2 * Math.PI * (n.freq * 2) * dt)) * env * n.vol;
+        }
+      }
+      const intSample = Math.max(-32768, Math.min(32767, Math.floor(sample * 32767)));
+      view.setInt16(44 + i * 2, intSample, true);
+    }
   }
 
   let binary = '';
   const bytes = new Uint8Array(buffer);
-  for (let i = 0; i < bytes.byteLength; i++) {
+  const len = bytes.byteLength;
+  for (let i = 0; i < len; i++) {
     binary += String.fromCharCode(bytes[i]);
   }
   return 'data:audio/wav;base64,' + btoa(binary);

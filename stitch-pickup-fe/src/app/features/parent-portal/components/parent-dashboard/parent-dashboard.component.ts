@@ -170,6 +170,60 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
         }
       })
     );
+
+    // Suscribirse a eventos de alerta de sus hijos en tiempo real (cuando se emite o actualiza alerta)
+    this.subscriptions.add(
+      this.ws.onParentAlert().subscribe(event => {
+        const normalize = (id?: string) => (id || '').trim().toLowerCase();
+        const eventStudentId = normalize(event.studentId);
+
+        const myStudents = this.studentService.students();
+        const tokenStudentIds = this.authService.currentUser()?.studentIds || [];
+
+        const isMyChild =
+          myStudents.some(s => normalize(s.id) === eventStudentId) ||
+          tokenStudentIds.some(id => normalize(id) === eventStudentId);
+
+        if (isMyChild) {
+          console.info('[ParentDashboard] 🔔 Alerta recibida para hijo/a:', event);
+          this.alertService.updateStudentStatusFromEvent(event.studentId, event.status, event.pickupMethod);
+
+          const statusLabels: Record<string, string> = {
+            TEN_MIN: '10 MIN',
+            FIVE_MIN: '5 MIN',
+            EN_FILA: 'En Fila',
+            URGENTE: 'Urgente'
+          };
+          const statusText = statusLabels[event.status] || event.status;
+          const timeStr = event.sentAt
+            ? new Date(event.sentAt).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false })
+            : new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false });
+
+          this.addHistoryEvent(event.studentId, {
+            time: timeStr,
+            title: `Alerta Actualizada (${statusText})`,
+            description: `Modalidad ${event.pickupMethod === 'CAR' ? 'En Auto' : 'A Pie'} por ${event.parentName || 'Tutor'}`,
+            type: 'ALERT'
+          });
+
+          if (event.status === 'URGENTE') {
+            this.sound.playUrgentSound();
+            this.sound.notifyWithVibration(
+              `🚨 ¡Alerta Urgente: ${event.studentName}!`,
+              `Prioridad máxima registrada en puerta.`,
+              'parent-alert-' + event.id
+            );
+          } else {
+            this.sound.playAlertSound();
+            this.sound.notifyWithVibration(
+              `🔔 Alerta ${statusText}: ${event.studentName}`,
+              `Estatus actualizado a ${statusText}.`,
+              'parent-alert-' + event.id
+            );
+          }
+        }
+      })
+    );
   }
 
   /**
@@ -208,6 +262,7 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
 
   testAudio(): void {
     this.sound.testSound();
+    this.notification.info('🔊 Prueba de sonido ejecutada. Si no escuchas nada en tu iPhone, revisa que el switch lateral de silencio esté desactivado.');
   }
 
   loadHistoryForStudent(studentId: string): void {
@@ -280,6 +335,14 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
   onSendAlert(status: AlertStatus): void {
     const id = this.currentStudentId;
     if (!id) return;
+
+    // Feedback sonoro y háptico inmediato en el dispositivo móvil del padre
+    if (status === 'URGENTE') {
+      this.sound.playUrgentSound();
+    } else {
+      this.sound.playAlertSound();
+    }
+
     const method = this.currentAlertStatus.pickupMethod || 'CAR';
     this.alertService.sendAlert(id, status, method);
 
