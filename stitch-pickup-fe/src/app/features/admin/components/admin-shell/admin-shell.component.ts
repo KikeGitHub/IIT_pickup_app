@@ -8,6 +8,8 @@ import { StudentCrudComponent } from '../student-crud/student-crud.component';
 import { TeacherUserCrudComponent } from '../teacher-user-crud/teacher-user-crud.component';
 import { ParentUserCrudComponent } from '../parent-user-crud/parent-user-crud.component';
 import { CsvImportComponent } from '../csv-import/csv-import.component';
+import { SimulationPanelComponent } from '../../../../shared/components/simulation-panel/simulation-panel.component';
+import { SimulationService } from '../../../../core/services/simulation.service';
 
 import { environment } from '../../../../../environments/environment';
 
@@ -24,7 +26,8 @@ export type AdminTab = 'KPIS' | 'GROUPS' | 'STUDENTS' | 'TEACHERS' | 'PARENTS' |
     StudentCrudComponent,
     TeacherUserCrudComponent,
     ParentUserCrudComponent,
-    CsvImportComponent
+    CsvImportComponent,
+    SimulationPanelComponent
   ],
   templateUrl: './admin-shell.component.html',
   styleUrl: './admin-shell.component.scss',
@@ -32,6 +35,7 @@ export type AdminTab = 'KPIS' | 'GROUPS' | 'STUDENTS' | 'TEACHERS' | 'PARENTS' |
 })
 export class AdminShellComponent {
   readonly authService = inject(AuthService);
+  readonly simulationService = inject(SimulationService);
   private readonly router = inject(Router);
   readonly appVersion = environment.appVersion;
 

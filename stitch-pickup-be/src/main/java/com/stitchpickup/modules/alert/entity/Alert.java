@@ -48,12 +48,21 @@ public class Alert {
     @Column(name = "client_id", unique = true)
     private UUID clientId;
 
-    @CreationTimestamp
     @Column(name = "sent_at", nullable = false, updatable = false)
     private Instant sentAt;
 
     @Column(name = "received_at")
     private Instant receivedAt;
+
+    @PrePersist
+    public void prePersist() {
+        if (this.sentAt == null) {
+            this.sentAt = Instant.now();
+        }
+        if (this.receivedAt == null) {
+            this.receivedAt = Instant.now();
+        }
+    }
 
     public enum AlertStatus {
         TEN_MIN, FIVE_MIN, EN_FILA, URGENTE

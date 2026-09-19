@@ -1,6 +1,7 @@
 package com.stitchpickup.modules.alert.service;
 
 import com.stitchpickup.modules.alert.dto.CreateAlertRequest;
+import com.stitchpickup.modules.alert.dto.SimulateAlertRequest;
 import com.stitchpickup.modules.alert.dto.AlertResponse;
 import com.stitchpickup.modules.alert.entity.Alert;
 import com.stitchpickup.modules.alert.repository.AlertRepository;
@@ -150,6 +151,99 @@ public class AlertService {
             return Optional.empty();
         }
         return Optional.of(mapToResponse(alerts.get(0)));
+    }
+
+    /**
+     * Simula la llegada de un alumno para pruebas en vivo (Maestros, Admin y Monitores).
+     * Permite probar notificaciones WebSocket, ordenamiento de tarjetas, cronómetro y cambio de color.
+     */
+    @Transactional
+    public AlertResponse simulateAlert(SimulateAlertRequest request, UUID requestingUserId, String role) {
+        Student student = null;
+        if (request != null && request.studentId() != null && !request.studentId().isBlank()) {
+            try {
+                student = studentRepository.findById(UUID.fromString(request.studentId())).orElse(null);
+            } catch (Exception ignored) {}
+        }
+
+        // Si no se especificó alumno o no existe, intentar tomar uno de los salones del maestro
+        if (student == null && "TEACHER".equals(role) && requestingUserId != null) {
+            TeacherUser teacher = teacherUserRepository.findByIdWithGroups(requestingUserId).orElse(null);
+            if (teacher != null && teacher.getGroups() != null && !teacher.getGroups().isEmpty()) {
+                List<UUID> groupIds = teacher.getGroups().stream().map(com.stitchpickup.modules.student.entity.SchoolGroup::getId).toList();
+                for (UUID gid : groupIds) {
+                    List<Student> groupStudents = studentRepository.findByGroupId(gid);
+                    if (!groupStudents.isEmpty()) {
+                        student = groupStudents.get((int) (Math.random() * groupStudents.size()));
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Si aún no hay alumno (o solicitante es Admin/Monitor), tomar cualquiera activo de la escuela
+        if (student == null) {
+            List<Student> allActive = studentRepository.findAllActiveWithGroup();
+            if (allActive.isEmpty()) {
+                throw new IllegalStateException("No hay alumnos activos registrados en el sistema para simular.");
+            }
+            student = allActive.get((int) (Math.random() * allActive.size()));
+        }
+
+        // Obtener o asignar tutor para la alerta
+        List<ParentUser> parents = parentUserRepository.findByStudentId(student.getId());
+        ParentUser parent = null;
+        if (!parents.isEmpty()) {
+            parent = parents.get(0);
+        } else {
+            parent = parentUserRepository.findAll().stream().findFirst().orElseGet(() -> {
+                ParentUser mockParent = ParentUser.builder()
+                        .nombre("Tutor Simulación")
+                        .email("tutor.simulacion@institutoingles.edu.mx")
+                        .passwordHash("TEST_HASH")
+                        .active(true)
+                        .tempPassword(false)
+                        .build();
+                return parentUserRepository.save(mockParent);
+            });
+        }
+
+        Alert.AlertStatus statusEnum = Alert.AlertStatus.EN_FILA;
+        if (request != null && request.status() != null && !request.status().isBlank()) {
+            try {
+                statusEnum = Alert.AlertStatus.valueOf(request.status());
+            } catch (Exception ignored) {}
+        }
+
+        Alert.PickupMethod methodEnum = Alert.PickupMethod.CAR;
+        if (request != null && request.pickupMethod() != null && !request.pickupMethod().isBlank()) {
+            try {
+                methodEnum = Alert.PickupMethod.valueOf(request.pickupMethod());
+            } catch (Exception ignored) {}
+        }
+
+        int minutesAgo = (request != null && request.minutesAgo() != null) ? Math.max(0, request.minutesAgo()) : 0;
+        Instant sentAt = Instant.now().minus(java.time.Duration.ofMinutes(minutesAgo));
+
+        Alert alert = Alert.builder()
+                .parent(parent)
+                .student(student)
+                .status(statusEnum)
+                .pickupMethod(methodEnum)
+                .sentAt(sentAt)
+                .receivedAt(Instant.now())
+                .build();
+
+        Alert saved = alertRepository.save(alert);
+        AlertResponse response = mapToResponse(saved);
+
+        log.info("[Simulation] 🧪 Simulación de alerta emitida: Alumno={} ({}) Estado={} minAtrás={}",
+                response.studentName(), response.groupName(), response.status(), minutesAgo);
+
+        // Notificar en tiempo real por WebSocket a todos los monitores
+        publisher.publishAlert(response);
+
+        return response;
     }
 
     private AlertResponse mapToResponse(Alert alert) {

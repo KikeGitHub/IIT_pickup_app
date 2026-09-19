@@ -5,6 +5,7 @@ import { WebSocketService } from '../../../core/services/websocket.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { NotificationSoundService } from '../../../core/services/notification-sound.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { TeacherService } from '../../../core/services/teacher.service';
 import { AlertResponse } from '../../../core/models/alert.model';
 import { environment } from '../../../../environments/environment';
 
@@ -54,13 +55,16 @@ export class MonitorService {
   private readonly notification = inject(NotificationService);
   private readonly sound = inject(NotificationSoundService);
   private readonly auth = inject(AuthService);
+  private readonly teacherService = inject(TeacherService);
 
   private readonly apiUrl = environment.apiUrl;
 
   private pollInterval?: any;
+  private clockInterval?: any;
   private visibilityHandler?: () => void;
 
   // ─── Reactive State ───────────────────────────────────────────────────────
+  readonly now = signal<number>(Date.now());
   readonly alerts = signal<MonitorAlert[]>([]);
   readonly deliveries = signal<DeliveryRecord[]>([]);
   readonly selectedLevel = signal<LevelFilter>('ALL');
@@ -94,17 +98,13 @@ export class MonitorService {
   // ─── Filtered & Strictly Prioritized Alerts ──────────────────────────────
   readonly filteredAlerts = computed(() => {
     const level = this.selectedLevel();
-    const status = this.selectedStatus();
     let list = this.alerts().filter(a => !a.isDispatched);
 
     if (level !== 'ALL') {
       list = list.filter(a => a.level === level);
     }
-    if (status !== 'ALL') {
-      list = list.filter(a => a.status === status);
-    }
 
-    // Prioridades: URGENTE (4) > EN_FILA (3) > FIVE_MIN (2) > TEN_MIN (1)
+    // Prioridades estrictas: URGENTE (4) > EN_FILA (3) > FIVE_MIN (2) > TEN_MIN (1)
     const priorityWeight: Record<string, number> = {
       URGENTE: 4,
       EN_FILA: 3,
@@ -191,6 +191,13 @@ export class MonitorService {
   }
 
   private setupResilienceSync(): void {
+    // Reloj reactivo de 1s para cronómetros de tarjetas
+    if (!this.clockInterval && typeof setInterval !== 'undefined') {
+      this.clockInterval = setInterval(() => {
+        this.now.set(Date.now());
+      }, 1000);
+    }
+
     // 1. Resincronizar cuando el WebSocket reconecte
     this.ws.isConnected$.subscribe(connected => {
       if (connected) {
@@ -203,23 +210,32 @@ export class MonitorService {
     if (typeof document !== 'undefined' && !this.visibilityHandler) {
       this.visibilityHandler = () => {
         if (document.visibilityState === 'visible') {
-          console.info('[MonitorService] 📱 Pantalla visible / desbloqueada, sincronizando alertas...');
+          console.info('[MonitorService] 📱 Pantalla visible / desbloqueada, reconectando y sincronizando alertas...');
+          this.ws.ensureConnected();
           this.loadTodayAlertsGrouped();
         }
       };
       document.addEventListener('visibilitychange', this.visibilityHandler);
       window.addEventListener('focus', this.visibilityHandler);
+      window.addEventListener('online', () => {
+        this.ws.ensureConnected();
+        this.loadTodayAlertsGrouped();
+      });
     }
 
-    // 3. Polling de respaldo cada 15 segundos para tolerar intermitencias de 4G/WiFi
+    // 3. Polling de respaldo cada 8 segundos para tolerar microcortes de 4G/WiFi en patio
     if (!this.pollInterval && typeof setInterval !== 'undefined') {
       this.pollInterval = setInterval(() => {
         this.loadTodayAlertsGrouped();
-      }, 15000);
+      }, 8000);
     }
   }
 
   destroy(): void {
+    if (this.clockInterval) {
+      clearInterval(this.clockInterval);
+      this.clockInterval = undefined;
+    }
     if (this.pollInterval) {
       clearInterval(this.pollInterval);
       this.pollInterval = undefined;
@@ -354,46 +370,47 @@ export class MonitorService {
       console.info('[MonitorService] 🔔 Evaluando alerta en monitor:', event);
       const currentUser = this.auth.currentUser();
 
-      // STRICT TEACHER GROUP AND LEVEL FILTERING:
+      // STRICT TEACHER GROUP AND LEVEL FILTERING (Resiliente y Normalizado):
       if (currentUser && currentUser.role === 'TEACHER') {
         const teacherLevel = (currentUser.level || '').trim().toUpperCase();
         const eventLevel = (event.level || '').trim().toUpperCase();
 
-        // 1. REGLA DE ORO DE NIVEL: Si el docente tiene nivel asignado (ej. SECUNDARIA o PRIMARIA),
-        // NUNCA debe recibir alertas de otro nivel educativo.
+        // 1. REGLA DE NIVEL: Si el docente tiene nivel asignado (ej. SECUNDARIA o PRIMARIA),
+        // solo descarta si ambos tienen nivel definido y son claramente distintos.
         if (teacherLevel && eventLevel && teacherLevel !== eventLevel) {
           console.info(`[MonitorService] ⏭️ Alerta ignorada: nivel de la alerta '${eventLevel}' no coincide con el nivel del docente '${teacherLevel}'.`);
           return;
         }
 
-        // 2. REGLA ESTRICTA DE GRUPO ASIGNADO:
-        const teacherGroups: string[] = currentUser.groups || [];
-        const eventGroup = (event.groupName || '').trim().toLowerCase();
-        const eventLevelGroup = `${event.level}-${event.groupName}`.trim().toLowerCase();
+        // 2. OBTENER SALONES ASIGNADOS: Desde currentUser.groups O teacherService.myGroups()
+        const assignedFromToken: string[] = currentUser.groups || [];
+        const assignedFromService: string[] = this.teacherService.myGroups().map(g => g.name);
+        const allAssigned = Array.from(new Set([...assignedFromToken, ...assignedFromService]));
 
-        if (teacherGroups.length > 0) {
-          // El docente tiene salones específicos asignados (ej. 1A, 2B, 4C, etc.).
-          // Únicamente se acepta la alerta si coincide con uno de sus salones asignados.
-          const matchesGroup = teacherGroups.some(g => {
-            const gNorm = g.trim().toLowerCase();
+        if (allAssigned.length > 0) {
+          const clean = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+          const eventClean = clean(event.groupName || '');
+          const eventLevelClean = clean(`${event.level || ''}${event.groupName || ''}`);
+
+          const matchesGroup = allAssigned.some(g => {
+            const gClean = clean(g);
             return (
-              gNorm === eventGroup ||
-              gNorm === eventLevelGroup ||
-              gNorm.endsWith(`-${eventGroup}`) ||
-              gNorm.includes(eventGroup) ||
-              eventGroup.includes(gNorm)
+              gClean === eventClean ||
+              gClean === eventLevelClean ||
+              gClean.endsWith(eventClean) ||
+              eventClean.endsWith(gClean) ||
+              gClean.includes(eventClean) ||
+              eventClean.includes(gClean)
             );
           });
 
           if (!matchesGroup) {
-            console.info(`[MonitorService] ⏭️ Alerta ignorada: grupo '${event.groupName}' no pertenece a los salones asignados del docente.`, teacherGroups);
+            console.info(`[MonitorService] ⏭️ Alerta ignorada: grupo '${event.groupName}' no pertenece a los salones asignados del docente.`, allAssigned);
             return;
           }
-        } else {
-          // Docente sin salones asignados: descartar para evitar que vea alertas de otros salones
-          console.warn('[MonitorService] ⚠️ Alerta ignorada: el docente aún no cuenta con grupo asignado.');
-          return;
         }
+        // Si el docente no tiene grupos específicos asignados en el momento (ej. guardia de patio/apoyo general),
+        // se acepta la alerta conforme al fallback global para que no quede a ciegas.
       }
 
       // Dedup by studentId: if a card for this student already exists, UPDATE it

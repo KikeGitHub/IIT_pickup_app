@@ -1,0 +1,221 @@
+<!-- ─── FLOATING ACTIVE SIMULATION BADGE (Visible when mode != normal) ─── -->
+@if (connectivity.simulationMode() !== 'normal') {
+  <div
+    class="floating-sim-badge"
+    [class.floating-sim-badge--low]="connectivity.simulationMode() === 'low_signal'"
+    [class.floating-sim-badge--offline]="connectivity.simulationMode() === 'offline'"
+  >
+    <div class="sim-badge-info" (click)="sim.openPanel()">
+      <span class="sim-badge-icon">
+        {{ connectivity.simulationMode() === 'low_signal' ? '🟡' : '🔴' }}
+      </span>
+      <span class="sim-badge-text">
+        {{ connectivity.simulationMode() === 'low_signal' ? 'Señal Baja (+2.5s)' : 'Sin Señal (Offline)' }}
+      </span>
+    </div>
+    <button
+      type="button"
+      class="btn-badge-reset"
+      (click)="resetNetwork()"
+      title="Restablecer red a normal"
+    >
+      ✕ Restablecer
+    </button>
+  </div>
+}
+
+<!-- ─── MODAL DIALOG ─── -->
+@if (sim.isPanelOpen()) {
+  <div class="sim-modal-backdrop" (click)="close()">
+    <div class="sim-modal" (click)="$event.stopPropagation()">
+      
+      <!-- Modal Header -->
+      <div class="sim-header">
+        <div class="sim-header-title">
+          <span class="sim-header-icon">🧪</span>
+          <div>
+            <h3>Simulador & Pruebas Locales</h3>
+            <p>Entorno de prueba para llegadas de alumnos y conectividad</p>
+          </div>
+        </div>
+        <button type="button" class="btn-close" (click)="close()" title="Cerrar">✕</button>
+      </div>
+
+      <div class="sim-body">
+
+        <!-- ─── SECTION 1: NETWORK & SIGNAL SIMULATION ─── -->
+        <div class="sim-card sim-card--network">
+          <div class="sim-card-title">
+            <span>📶 Simulación de Conexión & Señal</span>
+            <span class="badge-status-dot" [class.badge-status-dot--active]="connectivity.isOnline()"></span>
+          </div>
+          <p class="sim-hint">Prueba cómo responde la app ante baja cobertura de celular en el patio o desconexión total.</p>
+
+          <div class="network-options">
+            <button
+              type="button"
+              class="btn-net-option"
+              [class.btn-net-option--active]="connectivity.simulationMode() === 'normal'"
+              (click)="setNetwork('normal')"
+            >
+              <span class="net-icon">🟢</span>
+              <span class="net-label">Normal</span>
+              <span class="net-desc">Alta velocidad</span>
+            </button>
+
+            <button
+              type="button"
+              class="btn-net-option btn-net-option--low"
+              [class.btn-net-option--active]="connectivity.simulationMode() === 'low_signal'"
+              (click)="setNetwork('low_signal')"
+            >
+              <span class="net-icon">🟡</span>
+              <span class="net-label">Señal Baja</span>
+              <span class="net-desc">+2.5s latencia</span>
+            </button>
+
+            <button
+              type="button"
+              class="btn-net-option btn-net-option--offline"
+              [class.btn-net-option--active]="connectivity.simulationMode() === 'offline'"
+              (click)="setNetwork('offline')"
+            >
+              <span class="net-icon">🔴</span>
+              <span class="net-label">Sin Señal</span>
+              <span class="net-desc">Modo Offline</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- ─── SECTION 2: STUDENT ARRIVAL SIMULATION ─── -->
+        <div class="sim-card sim-card--student">
+          <div class="sim-card-title">
+            <span>🚗 Simular Entrada de Alumno</span>
+          </div>
+
+          <!-- Student picker -->
+          <div class="form-group">
+            <label for="simStudentSelect">Alumno a simular:</label>
+            <select id="simStudentSelect" class="sim-select" [(ngModel)]="selectedStudentId">
+              <option value="RANDOM">🎲 Alumno aleatorio (automático)</option>
+              @for (st of students; track st.id) {
+                <option [value]="st.id">{{ st.name }} — {{ st.groupName }}</option>
+              }
+            </select>
+          </div>
+
+          <!-- Status picker -->
+          <div class="form-group">
+            <label>Estado / Prioridad:</label>
+            <div class="segmented-control">
+              <button
+                type="button"
+                class="segment-btn"
+                [class.segment-btn--active]="selectedStatus === 'TEN_MIN'"
+                (click)="selectedStatus = 'TEN_MIN'"
+              >
+                10 MIN
+              </button>
+              <button
+                type="button"
+                class="segment-btn"
+                [class.segment-btn--active]="selectedStatus === 'FIVE_MIN'"
+                (click)="selectedStatus = 'FIVE_MIN'"
+              >
+                5 MIN
+              </button>
+              <button
+                type="button"
+                class="segment-btn segment-btn--enfila"
+                [class.segment-btn--active]="selectedStatus === 'EN_FILA'"
+                (click)="selectedStatus = 'EN_FILA'"
+              >
+                EN FILA
+              </button>
+              <button
+                type="button"
+                class="segment-btn segment-btn--urgente"
+                [class.segment-btn--active]="selectedStatus === 'URGENTE'"
+                (click)="selectedStatus = 'URGENTE'"
+              >
+                🚨 URGENTE
+              </button>
+            </div>
+          </div>
+
+          <!-- Method & Elapsed minutes in row -->
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label>Modalidad:</label>
+              <div class="segmented-control">
+                <button
+                  type="button"
+                  class="segment-btn"
+                  [class.segment-btn--active]="selectedPickupMethod === 'CAR'"
+                  (click)="selectedPickupMethod = 'CAR'"
+                >
+                  🚗 Auto
+                </button>
+                <button
+                  type="button"
+                  class="segment-btn"
+                  [class.segment-btn--active]="selectedPickupMethod === 'WALK'"
+                  (click)="selectedPickupMethod = 'WALK'"
+                >
+                  🚶 Pie
+                </button>
+              </div>
+            </div>
+
+            <div class="form-group flex-1">
+              <label>Tiempo transcurrido:</label>
+              <select class="sim-select" [(ngModel)]="selectedMinutesAgo">
+                <option [value]="0">⏱️ 0 min (Recién llegado)</option>
+                <option [value]="3">⏱️ 3 min (Ámbar / En espera)</option>
+                <option [value]="7">⏱️ 7 min (Rojo / Crítico)</option>
+                <option [value]="12">⏱️ 12 min (Máxima prioridad)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Simulation Actions -->
+          <div class="sim-actions">
+            <button
+              type="button"
+              class="btn-sim-primary"
+              [disabled]="sim.isSimulating()"
+              (click)="sendSimulatedAlert()"
+            >
+              @if (sim.isSimulating()) {
+                <span class="spinner"></span> Enviando...
+              } @else {
+                <span>🚀 Simular Entrada de Alumno</span>
+              }
+            </button>
+
+            <button
+              type="button"
+              class="btn-sim-burst"
+              [disabled]="sim.isSimulating()"
+              (click)="sendBurst()"
+              title="Crea 3 alumnos con tiempos 0m, 4m y 8m para probar orden y colores"
+            >
+              <span>⚡ Simular Ráfaga (3 Alumnos)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- ─── SECTION 3: QUICK CLEANUP ─── -->
+        <div class="sim-footer-tools">
+          <button type="button" class="btn-tool" (click)="refreshMonitor()">
+            🔄 Forzar Sincronización
+          </button>
+          <button type="button" class="btn-tool btn-tool--danger" (click)="dispatchAll()">
+            🧹 Despachar Todo (Limpiar Monitor)
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+}

@@ -1,6 +1,7 @@
 package com.stitchpickup.modules.alert.controller;
 
 import com.stitchpickup.modules.alert.dto.CreateAlertRequest;
+import com.stitchpickup.modules.alert.dto.SimulateAlertRequest;
 import com.stitchpickup.modules.alert.dto.AlertResponse;
 import com.stitchpickup.modules.alert.service.AlertService;
 import com.stitchpickup.security.JwtTokenProvider;
@@ -25,6 +26,35 @@ public class AlertController {
 
     private final AlertService alertService;
     private final JwtTokenProvider tokenProvider;
+
+    @PostMapping("/simulate")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN', 'MONITOR')")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(
+        summary = "Simular llegada de alumno (Modo Pruebas)",
+        description = "Permite a maestros y administradores simular entradas de alumnos en tiempo real para verificar tableros, orden de tarjetas y cronómetros."
+    )
+    public ResponseEntity<AlertResponse> simulateAlert(
+            @RequestBody(required = false) SimulateAlertRequest requestDto,
+            HttpServletRequest request) {
+
+        String authHeader = request.getHeader("Authorization");
+        UUID userId = null;
+        String role = null;
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            try {
+                String token = authHeader.substring(7);
+                userId = UUID.fromString(tokenProvider.getUserIdFromToken(token));
+                role = tokenProvider.getRoleFromToken(token);
+            } catch (Exception ignored) {}
+        }
+
+        if (requestDto == null) {
+            requestDto = new SimulateAlertRequest(null, null, "EN_FILA", "CAR", 0);
+        }
+
+        return ResponseEntity.ok(alertService.simulateAlert(requestDto, userId, role));
+    }
 
     @PostMapping
     @PreAuthorize("hasRole('PARENT')")
