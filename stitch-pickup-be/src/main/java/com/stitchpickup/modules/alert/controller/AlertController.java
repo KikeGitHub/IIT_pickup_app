@@ -56,6 +56,31 @@ public class AlertController {
         return ResponseEntity.ok(alertService.simulateAlert(requestDto, userId, role));
     }
 
+    @PostMapping("/simulate/batch")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN', 'MONITOR')")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(
+        summary = "Simular lote masivo de alumnos (5, 10, 25, 50, 100 sin límite)",
+        description = "Genera un lote de alumnos con prioridades y tiempos distribuidos para verificar tableros con alto volumen."
+    )
+    public ResponseEntity<List<AlertResponse>> simulateBatch(
+            @RequestParam(defaultValue = "5") int count,
+            HttpServletRequest request) {
+
+        String authHeader = request.getHeader("Authorization");
+        UUID userId = null;
+        String role = null;
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            try {
+                String token = authHeader.substring(7);
+                userId = UUID.fromString(tokenProvider.getUserIdFromToken(token));
+                role = tokenProvider.getRoleFromToken(token);
+            } catch (Exception ignored) {}
+        }
+
+        return ResponseEntity.ok(alertService.simulateBatch(count, userId, role));
+    }
+
     @PostMapping
     @PreAuthorize("hasRole('PARENT')")
     @SecurityRequirement(name = "bearerAuth")

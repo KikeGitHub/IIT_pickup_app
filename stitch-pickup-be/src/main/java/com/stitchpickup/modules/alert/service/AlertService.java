@@ -157,6 +157,32 @@ public class AlertService {
      * Simula la llegada de un alumno para pruebas en vivo (Maestros, Admin y Monitores).
      * Permite probar notificaciones WebSocket, ordenamiento de tarjetas, cronómetro y cambio de color.
      */
+    private static final String[] SIM_FIRST_NAMES = {
+        "Santiago", "Mateo", "Sebastián", "Leonardo", "Matías", "Emiliano", "Diego", "Daniel",
+        "Alexander", "Sofía", "Valentina", "Isabella", "Camila", "Valeria", "Mariana", "Luciana",
+        "Regina", "Renata", "Victoria", "Natalia", "Alejandro", "Joaquín", "Nicolás", "Samuel",
+        "Gabriel", "Gael", "Ángel", "Ximena", "Fernanda", "Andrea", "Daniela", "Elena", "Clara",
+        "Mauricio", "Rodrigo", "Julieta", "Paula", "Felipe", "Manuel", "Bruno", "Esteban", "Pablo"
+    };
+
+    private static final String[] SIM_LAST_NAMES = {
+        "Hernández", "García", "Martínez", "López", "González", "Pérez", "Rodríguez", "Sánchez",
+        "Ramírez", "Cruz", "Flores", "Gómez", "Morales", "Vázquez", "Jiménez", "Reyes", "Díaz",
+        "Torres", "Gutiérrez", "Ruiz", "Mendoza", "Aguilar", "Ortiz", "Moreno", "Castillo", "Navarro"
+    };
+
+    private String generateDynamicStudentName() {
+        String first = SIM_FIRST_NAMES[(int) (Math.random() * SIM_FIRST_NAMES.length)];
+        String last1 = SIM_LAST_NAMES[(int) (Math.random() * SIM_LAST_NAMES.length)];
+        String last2 = SIM_LAST_NAMES[(int) (Math.random() * SIM_LAST_NAMES.length)];
+        return first + " " + last1 + " " + last2;
+    }
+
+    /**
+     * Simula la llegada de un alumno para pruebas en vivo (Maestros, Admin y Monitores).
+     * Soporta alumnos ilimitados (25, 50, 100+): si los alumnos asignados ya tienen alerta hoy,
+     * genera alumnos de prueba en el grupo del docente con IDs únicos para que cada alerta cree una card nueva.
+     */
     @Transactional
     public AlertResponse simulateAlert(SimulateAlertRequest request, UUID requestingUserId, String role) {
         Student student = null;
@@ -166,28 +192,72 @@ public class AlertService {
             } catch (Exception ignored) {}
         }
 
-        // Si no se especificó alumno o no existe, intentar tomar uno de los salones del maestro
-        if (student == null && "TEACHER".equals(role) && requestingUserId != null) {
+        // Obtener grupos asignados al maestro
+        List<com.stitchpickup.modules.student.entity.SchoolGroup> teacherGroups = new java.util.ArrayList<>();
+        if ("TEACHER".equals(role) && requestingUserId != null) {
             TeacherUser teacher = teacherUserRepository.findByIdWithGroups(requestingUserId).orElse(null);
             if (teacher != null && teacher.getGroups() != null && !teacher.getGroups().isEmpty()) {
-                List<UUID> groupIds = teacher.getGroups().stream().map(com.stitchpickup.modules.student.entity.SchoolGroup::getId).toList();
-                for (UUID gid : groupIds) {
-                    List<Student> groupStudents = studentRepository.findByGroupId(gid);
-                    if (!groupStudents.isEmpty()) {
-                        student = groupStudents.get((int) (Math.random() * groupStudents.size()));
+                teacherGroups.addAll(teacher.getGroups());
+            }
+        }
+
+        // Si no se especificó un alumno específico, priorizar uno del grupo que NO tenga alerta hoy
+        if (student == null) {
+            Instant startOfDay = LocalDate.now(MEXICO_ZONE).atStartOfDay(MEXICO_ZONE).toInstant();
+            Instant endOfDay = LocalDate.now(MEXICO_ZONE).plusDays(1).atStartOfDay(MEXICO_ZONE).toInstant();
+            java.util.Set<UUID> studentsWithAlertToday = alertRepository.findTodayAlerts(startOfDay, endOfDay)
+                    .stream()
+                    .map(a -> a.getStudent().getId())
+                    .collect(java.util.stream.Collectors.toSet());
+
+            if (!teacherGroups.isEmpty()) {
+                for (var group : teacherGroups) {
+                    List<Student> groupStudents = studentRepository.findByGroupId(group.getId());
+                    List<Student> unalerted = groupStudents.stream()
+                            .filter(s -> Boolean.TRUE.equals(s.getActive()) && !studentsWithAlertToday.contains(s.getId()))
+                            .toList();
+                    if (!unalerted.isEmpty()) {
+                        student = unalerted.get((int) (Math.random() * unalerted.size()));
                         break;
                     }
+                }
+            } else if (!"TEACHER".equals(role)) {
+                List<Student> allActive = studentRepository.findAllActiveWithGroup();
+                List<Student> unalerted = allActive.stream()
+                        .filter(s -> !studentsWithAlertToday.contains(s.getId()))
+                        .toList();
+                if (!unalerted.isEmpty()) {
+                    student = unalerted.get((int) (Math.random() * unalerted.size()));
                 }
             }
         }
 
-        // Si aún no hay alumno (o solicitante es Admin/Monitor), tomar cualquiera activo de la escuela
+        // Si todos los alumnos del grupo ya tienen alerta hoy o se solicita simulación masiva (25, 50, 100+):
+        // Crear dinámicamente un alumno en el grupo del maestro para garantizar tarjeta nueva sin colisiones.
         if (student == null) {
-            List<Student> allActive = studentRepository.findAllActiveWithGroup();
-            if (allActive.isEmpty()) {
-                throw new IllegalStateException("No hay alumnos activos registrados en el sistema para simular.");
+            com.stitchpickup.modules.student.entity.SchoolGroup targetGroup = null;
+            if (!teacherGroups.isEmpty()) {
+                targetGroup = teacherGroups.get(0);
+            } else {
+                targetGroup = schoolGroupRepository.findAll().stream().findFirst().orElse(null);
             }
-            student = allActive.get((int) (Math.random() * allActive.size()));
+
+            String customName = (request != null && request.studentName() != null && !request.studentName().isBlank())
+                    ? request.studentName()
+                    : generateDynamicStudentName();
+
+            Student.SchoolLevel level = (targetGroup != null && targetGroup.getLevel() != null)
+                    ? Student.SchoolLevel.valueOf(targetGroup.getLevel().name())
+                    : Student.SchoolLevel.PRIMARIA;
+
+            student = Student.builder()
+                    .name(customName)
+                    .level(level)
+                    .group(targetGroup)
+                    .grade(targetGroup != null ? targetGroup.getName() : "Primaria")
+                    .active(true)
+                    .build();
+            student = studentRepository.save(student);
         }
 
         // Obtener o asignar tutor para la alerta
@@ -244,6 +314,50 @@ public class AlertService {
         publisher.publishAlert(response);
 
         return response;
+    }
+
+    /**
+     * Simula un lote masivo de alumnos (5, 10, 25, 50, 100 sin límite).
+     * Distribuye automáticamente niveles de urgencia y tiempos de llegada reales.
+     */
+    @Transactional
+    public List<AlertResponse> simulateBatch(int count, UUID requestingUserId, String role) {
+        int safeCount = Math.max(1, Math.min(count, 100));
+        List<AlertResponse> responses = new java.util.ArrayList<>(safeCount);
+
+        String[] methods = {"CAR", "WALK"};
+
+        for (int i = 0; i < safeCount; i++) {
+            String status;
+            int minutesAgo;
+
+            // Distribución realista de prioridades:
+            // ~20% URGENTE (7 a 13 min atrás - tarjeta roja)
+            // ~40% EN_FILA (3 a 6 min atrás - tarjeta ámbar)
+            // ~25% FIVE_MIN (1 a 2 min atrás - tarjeta verde)
+            // ~15% TEN_MIN (0 min - tarjeta verde)
+            int mod = i % 10;
+            if (mod < 2) {
+                status = "URGENTE";
+                minutesAgo = 8 + (i % 6);
+            } else if (mod < 6) {
+                status = "EN_FILA";
+                minutesAgo = 3 + (i % 4);
+            } else if (mod < 8) {
+                status = "FIVE_MIN";
+                minutesAgo = 1 + (i % 2);
+            } else {
+                status = "TEN_MIN";
+                minutesAgo = 0;
+            }
+
+            String pickupMethod = methods[i % 2];
+            SimulateAlertRequest req = new SimulateAlertRequest(null, null, status, pickupMethod, minutesAgo);
+            responses.add(simulateAlert(req, requestingUserId, role));
+        }
+
+        log.info("[Simulation] 🚀 Batch masivo de {} alertas simuladas completado", safeCount);
+        return responses;
     }
 
     private AlertResponse mapToResponse(Alert alert) {

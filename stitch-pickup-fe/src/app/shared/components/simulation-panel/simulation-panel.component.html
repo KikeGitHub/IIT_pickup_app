@@ -34,8 +34,13 @@
         <div class="sim-header-title">
           <span class="sim-header-icon">🧪</span>
           <div>
-            <h3>Simulador & Pruebas Locales</h3>
-            <p>Entorno de prueba para llegadas de alumnos y conectividad</p>
+            <div class="sim-header-line">
+              <h3>Simulador & Pruebas Locales</h3>
+              <span class="sim-live-counter" title="Total de tarjetas activas en tu monitor">
+                📋 En espera: <strong>{{ monitor.totalActive() }}</strong>
+              </span>
+            </div>
+            <p>Entorno de prueba sin límite de tarjetas (25, 50, 100+ alumnos)</p>
           </div>
         </div>
         <button type="button" class="btn-close" (click)="close()" title="Cerrar">✕</button>
@@ -87,17 +92,108 @@
           </div>
         </div>
 
-        <!-- ─── SECTION 2: STUDENT ARRIVAL SIMULATION ─── -->
+        <!-- ─── SECTION 2: BATCH / MULTI-STUDENT SIMULATION (NO LIMIT) ─── -->
+        <div class="sim-card sim-card--batch">
+          <div class="sim-card-title">
+            <span>⚡ Simulación Masiva (Sin Límite de Alumnos)</span>
+            <span class="badge-unlimited">25, 50, 100+</span>
+          </div>
+          <p class="sim-hint">Genera ráfagas de alumnos con tiempos y prioridades distribuidas (Urgente, En Fila, 5 Min) para probar alto volumen en tu pantalla.</p>
+
+          <!-- Quick Presets Grid -->
+          <div class="batch-presets-grid">
+            <button
+              type="button"
+              class="btn-batch-preset"
+              [disabled]="sim.isSimulating()"
+              (click)="sendBurst(5)"
+              title="Simula 5 alumnos"
+            >
+              <span class="preset-icon">⚡</span>
+              <span class="preset-qty">+5</span>
+              <span class="preset-label">Alumnos</span>
+            </button>
+
+            <button
+              type="button"
+              class="btn-batch-preset"
+              [disabled]="sim.isSimulating()"
+              (click)="sendBurst(10)"
+              title="Simula 10 alumnos"
+            >
+              <span class="preset-icon">🚀</span>
+              <span class="preset-qty">+10</span>
+              <span class="preset-label">Alumnos</span>
+            </button>
+
+            <button
+              type="button"
+              class="btn-batch-preset btn-batch-preset--high"
+              [disabled]="sim.isSimulating()"
+              (click)="sendBurst(25)"
+              title="Simula 25 alumnos"
+            >
+              <span class="preset-icon">🔥</span>
+              <span class="preset-qty">+25</span>
+              <span class="preset-label">Alumnos</span>
+            </button>
+
+            <button
+              type="button"
+              class="btn-batch-preset btn-batch-preset--max"
+              [disabled]="sim.isSimulating()"
+              (click)="sendBurst(50)"
+              title="Simula 50 alumnos"
+            >
+              <span class="preset-icon">💯</span>
+              <span class="preset-qty">+50</span>
+              <span class="preset-label">Alumnos</span>
+            </button>
+          </div>
+
+          <!-- Custom Quantity Stepper -->
+          <div class="custom-batch-row">
+            <div class="custom-batch-input-wrap">
+              <label for="customBatchInput">Cantidad exacta:</label>
+              <div class="input-with-controls">
+                <input
+                  id="customBatchInput"
+                  type="number"
+                  class="sim-input-qty"
+                  [(ngModel)]="customBatchCount"
+                  min="1"
+                  max="100"
+                  placeholder="Ej. 30"
+                />
+                <span class="input-unit">alumnos</span>
+              </div>
+            </div>
+            <button
+              type="button"
+              class="btn-custom-batch-submit"
+              [disabled]="sim.isSimulating()"
+              (click)="sendCustomBatch()"
+            >
+              @if (sim.isSimulating()) {
+                <span class="spinner"></span> Generando...
+              } @else {
+                <span>⚡ Generar Lote</span>
+              }
+            </button>
+          </div>
+        </div>
+
+        <!-- ─── SECTION 3: INDIVIDUAL STUDENT ARRIVAL SIMULATION ─── -->
         <div class="sim-card sim-card--student">
           <div class="sim-card-title">
-            <span>🚗 Simular Entrada de Alumno</span>
+            <span>🚗 Simular 1 Alumno Individual</span>
           </div>
 
           <!-- Student picker -->
           <div class="form-group">
             <label for="simStudentSelect">Alumno a simular:</label>
             <select id="simStudentSelect" class="sim-select" [(ngModel)]="selectedStudentId">
-              <option value="RANDOM">🎲 Alumno aleatorio (automático)</option>
+              <option value="RANDOM">🎲 Alumno aleatorio (nuevo cada vez)</option>
               @for (st of students; track st.id) {
                 <option [value]="st.id">{{ st.name }} — {{ st.groupName }}</option>
               }
@@ -192,25 +288,15 @@
                 <span>🚀 Simular Entrada de Alumno</span>
               }
             </button>
-
-            <button
-              type="button"
-              class="btn-sim-burst"
-              [disabled]="sim.isSimulating()"
-              (click)="sendBurst()"
-              title="Crea 3 alumnos con tiempos 0m, 4m y 8m para probar orden y colores"
-            >
-              <span>⚡ Simular Ráfaga (3 Alumnos)</span>
-            </button>
           </div>
         </div>
 
-        <!-- ─── SECTION 3: QUICK CLEANUP ─── -->
+        <!-- ─── SECTION 4: QUICK CLEANUP ─── -->
         <div class="sim-footer-tools">
           <button type="button" class="btn-tool" (click)="refreshMonitor()">
-            🔄 Forzar Sincronización
+            🔄 Sincronizar Monitor
           </button>
-          <button type="button" class="btn-tool btn-tool--danger" (click)="dispatchAll()">
+          <button type="button" class="btn-tool btn-tool--danger" (click)="dispatchAll()" title="Despacha todos los alumnos para limpiar la pantalla">
             🧹 Despachar Todo (Limpiar Monitor)
           </button>
         </div>

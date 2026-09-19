@@ -252,6 +252,183 @@
   }
 }
 
+// ─── Header Live Counter ───────────────────────────────────────────────────
+.sim-header-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.sim-live-counter {
+  font-size: 0.76rem;
+  background: #e0f2fe;
+  color: #0369a1;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-weight: 600;
+  border: 1px solid rgba(3, 105, 161, 0.2);
+
+  strong {
+    font-weight: 800;
+    color: #0284c7;
+  }
+}
+
+.badge-unlimited {
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fde68a;
+  letter-spacing: 0.3px;
+}
+
+// ─── Batch Simulation Grid ──────────────────────────────────────────────────
+.batch-presets-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+
+  @media (max-width: 480px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.btn-batch-preset {
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 12px;
+  padding: 8px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  .preset-icon { font-size: 1.1rem; }
+  .preset-qty { font-size: 0.95rem; font-weight: 800; color: #1e293b; }
+  .preset-label { font-size: 0.68rem; font-weight: 600; color: #64748b; }
+
+  &:hover:not(:disabled) {
+    border-color: #3b82f6;
+    background: #eff6ff;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(59, 130, 246, 0.15);
+
+    .preset-qty { color: #1d4ed8; }
+  }
+
+  &--high {
+    border-color: #fed7aa;
+    background: #fffaf5;
+    .preset-qty { color: #ea580c; }
+
+    &:hover:not(:disabled) {
+      border-color: #ea580c;
+      background: #fff7ed;
+      box-shadow: 0 3px 8px rgba(234, 88, 12, 0.15);
+    }
+  }
+
+  &--max {
+    border-color: #fbcfe8;
+    background: #fdf2f8;
+    .preset-qty { color: #db2777; }
+
+    &:hover:not(:disabled) {
+      border-color: #db2777;
+      background: #fce7f3;
+      box-shadow: 0 3px 8px rgba(219, 39, 119, 0.15);
+    }
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.custom-batch-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 10px 12px;
+  background: #ffffff;
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+
+  .custom-batch-input-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    label {
+      font-size: 0.74rem;
+      font-weight: 600;
+      color: #64748b;
+    }
+
+    .input-with-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+
+      .sim-input-qty {
+        width: 70px;
+        height: 38px;
+        padding: 0 8px;
+        border: 1.5px solid #cbd5e1;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #0f172a;
+        text-align: center;
+        outline: none;
+
+        &:focus {
+          border-color: #2563eb;
+        }
+      }
+
+      .input-unit {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #64748b;
+      }
+    }
+  }
+
+  .btn-custom-batch-submit {
+    height: 38px;
+    padding: 0 16px;
+    border: none;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #0284c7, #0369a1);
+    color: #ffffff;
+    font-size: 0.84rem;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+
+    &:hover:not(:disabled) {
+      background: linear-gradient(135deg, #0369a1, #075985);
+      transform: translateY(-1px);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+}
+
 // ─── Form Controls ──────────────────────────────────────────────────────────
 .form-group {
   display: flex;

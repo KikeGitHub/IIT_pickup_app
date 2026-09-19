@@ -1,4 +1,4 @@
-import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SimulationService, SimulateAlertPayload } from '../../../core/services/simulation.service';
@@ -18,11 +18,14 @@ export class SimulationPanelComponent {
   readonly connectivity = inject(ConnectivityService);
   readonly monitor = inject(MonitorService);
 
-  // Form State
+  // Form State - Single Student
   selectedStudentId = 'RANDOM';
   selectedStatus: 'TEN_MIN' | 'FIVE_MIN' | 'EN_FILA' | 'URGENTE' = 'EN_FILA';
   selectedPickupMethod: 'CAR' | 'WALK' = 'CAR';
   selectedMinutesAgo = 0;
+
+  // Form State - Multi-student Batch
+  customBatchCount: number = 10;
 
   get students() {
     return this.sim.availableStudents;
@@ -54,8 +57,13 @@ export class SimulationPanelComponent {
     this.sim.simulateAlert(payload).subscribe();
   }
 
-  sendBurst(): void {
-    this.sim.simulateBurst();
+  sendBurst(count: number = 5): void {
+    this.sim.simulateBatch(count);
+  }
+
+  sendCustomBatch(): void {
+    const qty = Math.max(1, Math.min(Number(this.customBatchCount) || 5, 100));
+    this.sim.simulateBatch(qty);
   }
 
   dispatchAll(): void {
