@@ -24,6 +24,7 @@ type LoginState = 'idle' | 'loading' | 'error';
  * SOLID: S — solo maneja el flujo de login de maestros.
  */
 import { environment } from '../../../../../environments/environment';
+import { setPreferredPortal, syncPortalManifestAndTheme } from '../../../../core/auth/portal-preference';
 
 @Component({
   selector: 'app-login-teacher',
@@ -46,9 +47,8 @@ export class LoginTeacherComponent {
   });
 
   constructor() {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('iit_preferred_portal', 'teacher');
-    }
+    setPreferredPortal('teacher');
+    syncPortalManifestAndTheme('teacher');
   }
 
   readonly state = signal<LoginState>('idle');

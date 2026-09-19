@@ -160,6 +160,18 @@ export class AlertService {
     });
   }
 
+  updateStudentStatusFromEvent(studentId: string, status: AlertStatus, pickupMethod?: PickupMethod): void {
+    const current = this.getStudentStatus(studentId);
+    this.updateStatus(studentId, {
+      ...current,
+      studentId,
+      lastStatus: status,
+      pickupMethod: pickupMethod || current.pickupMethod,
+      state: 'CONFIRMED',
+      updatedAt: new Date().toISOString()
+    });
+  }
+
   private updateStatus(studentId: string, newStatus: StudentAlertStatus): void {
     this.alertStatuses.update(prev => ({
       ...prev,

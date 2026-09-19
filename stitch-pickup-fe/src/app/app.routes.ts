@@ -3,6 +3,7 @@ import { Routes, Router, CanActivateFn } from '@angular/router';
 import { AuthService } from './core/services/auth.service';
 import { authGuard } from './core/auth/guards/auth.guard';
 import { roleGuard } from './core/auth/guards/role.guard';
+import { getPreferredPortal } from './core/auth/portal-preference';
 
 const rootRedirectGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
@@ -19,7 +20,7 @@ const rootRedirectGuard: CanActivateFn = () => {
     }
   }
 
-  const preferred = typeof window !== 'undefined' ? localStorage.getItem('iit_preferred_portal') : null;
+  const preferred = getPreferredPortal();
   if (preferred === 'teacher') {
     return router.createUrlTree(['/auth/maestros']);
   }

@@ -12,6 +12,18 @@
     </div>
 
     <div class="header-actions">
+      <!-- Test / Unlock Audio Button -->
+      <button
+        type="button"
+        class="btn-audio-toggle"
+        [class.btn-audio-toggle--ready]="sound.audioUnlocked()"
+        (click)="testAudio()"
+        title="Probar sonido y activar notificaciones en iPhone / móvil"
+      >
+        <span class="audio-icon">{{ sound.audioUnlocked() ? '🔊' : '🔔' }}</span>
+        <span class="audio-text">{{ sound.audioUnlocked() ? 'Sonido Activo' : 'Probar Sonido' }}</span>
+      </button>
+
       <!-- Offline-only indicator (hidden when online) -->
       @if (!connectivity.isOnline()) {
         <div class="offline-badge" title="Sin conexión — Modo Offline activo">

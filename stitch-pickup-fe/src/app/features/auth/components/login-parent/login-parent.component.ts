@@ -24,6 +24,7 @@ type LoginState = 'idle' | 'loading' | 'error';
  * SOLID: S — solo maneja el flujo de login de padres.
  */
 import { environment } from '../../../../../environments/environment';
+import { setPreferredPortal, syncPortalManifestAndTheme } from '../../../../core/auth/portal-preference';
 
 @Component({
   selector: 'app-login-parent',
@@ -47,9 +48,8 @@ export class LoginParentComponent {
   });
 
   constructor() {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('iit_preferred_portal', 'parent');
-    }
+    setPreferredPortal('parent');
+    syncPortalManifestAndTheme('parent');
   }
 
   // ── State ──────────────────────────────────────────────────────────────────
