@@ -1,4 +1,14 @@
-import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
+import {
+  Component,
+  Input,
+  Output,
+  EventEmitter,
+  ChangeDetectionStrategy,
+  OnInit,
+  OnDestroy,
+  ChangeDetectorRef,
+  inject
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MonitorAlert } from '../../services/monitor.service';
 
@@ -10,11 +20,131 @@ import { MonitorAlert } from '../../services/monitor.service';
   styleUrl: './student-monitor-card.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class StudentMonitorCardComponent {
+export class StudentMonitorCardComponent implements OnInit, OnDestroy {
   @Input({ required: true }) alert!: MonitorAlert;
   @Input() isDispatching: boolean = false;
   @Input() isUpdated: boolean = false;
   @Output() dispatch = new EventEmitter<string>();
+
+  private readonly cdr = inject(ChangeDetectorRef);
+  private timerInterval?: any;
+  currentElapsedSeconds: number = 0;
+
+  ngOnInit(): void {
+    this.updateElapsed();
+    // Cronómetro reactivo en vivo que avanza cada segundo en pantalla
+    if (typeof window !== 'undefined') {
+      this.timerInterval = setInterval(() => {
+        this.updateElapsed();
+        this.cdr.markForCheck();
+      }, 1000);
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+      this.timerInterval = undefined;
+    }
+  }
+
+  private parseSentDate(): Date | null {
+    if (!this.alert?.sentAt) return null;
+
+    if (typeof this.alert.sentAt === 'string' && /^\d{1,2}:\d{2}(:\d{2})?$/.test(this.alert.sentAt.trim())) {
+      const parts = this.alert.sentAt.trim().split(':');
+      const now = new Date();
+      return new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate(),
+        parseInt(parts[0], 10),
+        parseInt(parts[1], 10),
+        parts[2] ? parseInt(parts[2], 10) : 0
+      );
+    }
+
+    const d = new Date(this.alert.sentAt);
+    return isNaN(d.getTime()) || d.getTime() <= 0 ? null : d;
+  }
+
+  private updateElapsed(): void {
+    const d = this.parseSentDate();
+    if (!d) {
+      this.currentElapsedSeconds = 0;
+      return;
+    }
+    this.currentElapsedSeconds = Math.max(0, Math.floor((Date.now() - d.getTime()) / 1000));
+  }
+
+  /**
+   * Hora exacta en que el padre emitió la alerta (ej. 02:35 PM o 14:35)
+   */
+  get exactTime(): string {
+    const d = this.parseSentDate();
+    if (!d) return '';
+
+    return d.toLocaleTimeString('es-MX', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  }
+
+  /**
+   * Cronómetro de espera formateado (ej. 03:45 min)
+   */
+  get elapsedFormatted(): string {
+    const sec = this.currentElapsedSeconds;
+    const mins = Math.floor(sec / 60);
+    const remSec = sec % 60;
+    const pad = (n: number) => n.toString().padStart(2, '0');
+
+    if (mins < 60) {
+      return `${pad(mins)}:${pad(remSec)} min`;
+    }
+    const hrs = Math.floor(mins / 60);
+    const remMins = mins % 60;
+    return `${hrs}h ${pad(remMins)}m`;
+  }
+
+  /**
+   * Semáforo de prioridades según el tiempo transcurrido y estado de la alerta:
+   * - normal (< 3 min): Verde/Azul, a tiempo
+   * - warning (3 a 6 min): Ámbar/Naranja, requiere atención
+   * - critical (> 6 min o URGENTE): Rojo, prioridad alta/demora urgente
+   */
+  get priorityConfig(): {
+    tier: 'normal' | 'warning' | 'critical';
+    label: string;
+    badgeClass: string;
+    icon: string;
+  } {
+    if (this.alert.status === 'URGENTE' || this.alert.isRejectedByParent || this.currentElapsedSeconds >= 360) {
+      return {
+        tier: 'critical',
+        label: this.alert.status === 'URGENTE' ? 'Prioridad Urgente' : 'Demora Alta',
+        badgeClass: 'priority--critical',
+        icon: '🚨'
+      };
+    }
+
+    if (this.currentElapsedSeconds >= 180 || (this.alert.status === 'EN_FILA' && this.currentElapsedSeconds >= 120)) {
+      return {
+        tier: 'warning',
+        label: 'En Espera',
+        badgeClass: 'priority--warning',
+        icon: '⏱️'
+      };
+    }
+
+    return {
+      tier: 'normal',
+      label: 'A tiempo',
+      badgeClass: 'priority--normal',
+      icon: '⏱️'
+    };
+  }
 
   get statusConfig(): { label: string; color: string; bgColor: string; borderColor: string; priority: number } {
     switch (this.alert.status) {
@@ -68,76 +198,6 @@ export class StudentMonitorCardComponent {
       case 'SECUNDARIA': return '🎓 Secundaria';
       default: return this.alert.level;
     }
-  }
-
-  /**
-   * Hora exacta en que el padre emitió la alerta (formato 12 horas: ej. 03:15 PM)
-   */
-  get exactTime(): string {
-    if (!this.alert?.sentAt) return '';
-
-    let date: Date;
-    if (typeof this.alert.sentAt === 'string' && /^\d{1,2}:\d{2}(:\d{2})?$/.test(this.alert.sentAt.trim())) {
-      const parts = this.alert.sentAt.trim().split(':');
-      const now = new Date();
-      date = new Date(
-        now.getFullYear(),
-        now.getMonth(),
-        now.getDate(),
-        parseInt(parts[0], 10),
-        parseInt(parts[1], 10),
-        parts[2] ? parseInt(parts[2], 10) : 0
-      );
-    } else {
-      date = new Date(this.alert.sentAt);
-    }
-
-    if (isNaN(date.getTime()) || date.getTime() <= 0) return '';
-
-    return date.toLocaleTimeString('es-MX', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
-    });
-  }
-
-  get timeAgo(): string {
-    if (!this.alert?.sentAt) return 'hace un momento';
-
-    let date: Date;
-
-    // Si viene en formato solo hora "HH:mm" o "HH:mm:ss"
-    if (typeof this.alert.sentAt === 'string' && /^\d{1,2}:\d{2}(:\d{2})?$/.test(this.alert.sentAt.trim())) {
-      const parts = this.alert.sentAt.trim().split(':');
-      const now = new Date();
-      date = new Date(
-        now.getFullYear(),
-        now.getMonth(),
-        now.getDate(),
-        parseInt(parts[0], 10),
-        parseInt(parts[1], 10),
-        parts[2] ? parseInt(parts[2], 10) : 0
-      );
-    } else {
-      date = new Date(this.alert.sentAt);
-    }
-
-    const timestamp = date.getTime();
-    if (isNaN(timestamp) || timestamp <= 0) {
-      return 'hace un momento';
-    }
-
-    const diff = Math.floor((Date.now() - timestamp) / 1000);
-    if (diff < 0 || diff < 30) return 'hace un momento';
-    if (diff < 60) return `hace ${diff}s`;
-
-    const minutes = Math.floor(diff / 60);
-    if (minutes < 60) return `hace ${minutes} min`;
-
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `hace ${hours} h`;
-
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }
 
   onDispatch(): void {

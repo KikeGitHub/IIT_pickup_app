@@ -14,6 +14,8 @@ import { StudentMonitorCardComponent } from '../student-monitor-card/student-mon
 import { DispatchConfirmationComponent } from '../dispatch-confirmation/dispatch-confirmation.component';
 import { TableSkeletonComponent } from '../../../../shared/components/table-skeleton/table-skeleton.component';
 import { PwaInstallBannerComponent } from '../../../../shared/components/pwa-install-banner/pwa-install-banner.component';
+import { SimulationPanelComponent } from '../../../../shared/components/simulation-panel/simulation-panel.component';
+import { SimulationService } from '../../../../core/services/simulation.service';
 
 import { environment } from '../../../../../environments/environment';
 
@@ -28,7 +30,8 @@ import { environment } from '../../../../../environments/environment';
     StudentMonitorCardComponent,
     DispatchConfirmationComponent,
     TableSkeletonComponent,
-    PwaInstallBannerComponent
+    PwaInstallBannerComponent,
+    SimulationPanelComponent
   ],
   templateUrl: './monitor-dashboard.component.html',
   styleUrl: './monitor-dashboard.component.scss',
@@ -38,6 +41,7 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
   readonly monitorService = inject(MonitorService);
   readonly authService = inject(AuthService);
   readonly teacherService = inject(TeacherService);
+  readonly simulationService = inject(SimulationService);
   readonly imageUpload = inject(ImageUploadService);
   readonly ws = inject(WebSocketService);
   readonly wakeLock = inject(WakeLockService);

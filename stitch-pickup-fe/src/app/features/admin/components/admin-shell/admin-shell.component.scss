@@ -74,6 +74,36 @@
     align-items: center;
     gap: v.$space-md;
 
+    .btn-sim-nav {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      background: rgba(168, 85, 247, 0.2);
+      border: 1px solid rgba(168, 85, 247, 0.45);
+      color: #d8b4fe;
+      border-radius: v.$radius-full;
+      font-size: 13px;
+      font-weight: v.$font-weight-semibold;
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      .nav-sim-icon {
+        font-size: 14px;
+      }
+
+      &:hover {
+        background: rgba(168, 85, 247, 0.35);
+        border-color: #d8b4fe;
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: scale(0.97);
+      }
+    }
+
     .btn-monitor-nav {
       display: inline-flex;
       align-items: center;

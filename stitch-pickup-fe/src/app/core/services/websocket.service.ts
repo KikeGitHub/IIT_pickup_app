@@ -53,7 +53,45 @@ export class WebSocketService implements OnDestroy {
 
   readonly isConnected$ = this.connected$.asObservable();
 
+  constructor() {
+    if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+      const handleWakeup = () => {
+        if (document.visibilityState === 'visible' && localStorage.getItem('sp_jwt')) {
+          this.ensureConnected();
+        }
+      };
+      document.addEventListener('visibilitychange', handleWakeup);
+      window.addEventListener('focus', handleWakeup);
+      window.addEventListener('online', () => {
+        if (localStorage.getItem('sp_jwt')) {
+          this.ensureConnected();
+        }
+      });
+    }
+  }
+
   // ─── Public API ─────────────────────────────────────────────────────────────
+
+  /**
+   * Asegura que el cliente STOMP esté activo y conectado.
+   * Si la app móvil se desbloqueó o volvió del background y el socket se desconectó,
+   * fuerza la reconexión inmediata sin esperar el intervalo de 3s.
+   */
+  ensureConnected(): void {
+    if (!this.stompClient || !this.stompClient.active || !this.stompClient.connected) {
+      console.info('[WebSocket] 🔄 Verificando y forzando reconexión STOMP...');
+      if (this.stompClient) {
+        try {
+          this.stompClient.deactivate();
+        } catch {}
+        this.stompClient = null;
+      }
+      const token = typeof window !== 'undefined' ? localStorage.getItem('sp_jwt') || undefined : undefined;
+      if (token) {
+        this.connect(token);
+      }
+    }
+  }
 
   connect(token?: string): void {
     if (this.stompClient?.active) {

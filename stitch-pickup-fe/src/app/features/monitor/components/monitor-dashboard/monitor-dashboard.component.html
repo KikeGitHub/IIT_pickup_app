@@ -86,37 +86,37 @@
           </div>
         }
 
-        <header class="content-header">
+        <header class="section-header">
           <div class="header-titles">
             <h2 class="section-title">
               <span>{{ authService.userRole() === 'TEACHER' ? 'Mis Alumnos en Espera' : 'Alumnos en Espera' }}</span>
               <span class="active-badge">{{ monitorService.filteredAlerts().length }}</span>
             </h2>
-            <p class="section-sub">
-              {{ authService.userRole() === 'TEACHER' ? 'Alertas en vivo de tus grupos asignados' : 'Actualización en tiempo real vía WebSocket' }}
-            </p>
           </div>
 
           <div class="header-actions">
-            <button
-              type="button"
-              class="btn-tv-mode"
-              (click)="toggleFullscreen()"
-              [title]="isFullscreen() ? 'Salir de pantalla completa (Esc)' : 'Activar Modo TV / Pantalla Completa para proyector o pantalla de 80 pulgadas'"
-            >
-              <span class="tv-icon">{{ isFullscreen() ? '↙' : '📺' }}</span>
-              <span class="tv-text">{{ isFullscreen() ? 'Salir TV' : 'Modo TV' }}</span>
-            </button>
-            @if (monitorService.totalActive() > 0) {
+            @if (authService.userRole() !== 'TEACHER') {
               <button
                 type="button"
-                class="btn-dispatch-all"
-                (click)="onDispatchAll()"
-                title="Marcar como entregados a todos los alumnos pendientes de hoy"
+                class="btn-tv-mode"
+                (click)="toggleFullscreen()"
+                [title]="isFullscreen() ? 'Salir de pantalla completa (Esc)' : 'Activar Modo TV / Pantalla Completa para proyector o pantalla de 80 pulgadas'"
               >
-                <span>✓ Entregar Todos ({{ monitorService.totalActive() }})</span>
+                <span class="tv-icon">{{ isFullscreen() ? '↙' : '📺' }}</span>
+                <span class="tv-text">{{ isFullscreen() ? 'Salir TV' : 'Modo TV' }}</span>
               </button>
             }
+            <!-- Botón de Simulación para pruebas del usuario -->
+            <button
+              type="button"
+              class="btn-sim-trigger"
+              (click)="simulationService.openPanel()"
+              title="Abrir Simulador de Entradas y Pruebas con Señal Baja / Offline"
+            >
+              <span class="sim-icon">🧪</span>
+              <span class="sim-text">Simular</span>
+            </button>
+            <!-- Botón de Actualizar -->
             <button
               type="button"
               class="btn-refresh-monitor"
@@ -125,64 +125,10 @@
               title="Actualizar lista de espera"
             >
               <span class="refresh-icon" [class.refresh-icon--spinning]="monitorService.isRefreshing()">🔄</span>
-              <span class="refresh-text">{{ monitorService.isRefreshing() ? 'Actualizando...' : 'Actualizar' }}</span>
+              <span class="refresh-text">{{ monitorService.isRefreshing() ? '...' : 'Actualizar' }}</span>
             </button>
           </div>
         </header>
-
-        <!-- Status Filter Pills (Todos, Urgente, En Fila, 5 min, 10 min) -->
-        <div class="status-filter-pills" role="tablist" aria-label="Filtro por estado de alerta">
-          <button
-            type="button"
-            class="status-pill-btn status-pill-btn--all"
-            [class.status-pill-btn--active]="monitorService.selectedStatus() === 'ALL'"
-            (click)="onStatusFilterChange('ALL')"
-          >
-            <span class="pill-label">Todos</span>
-            <span class="pill-count-badge">{{ monitorService.totalActive() }}</span>
-          </button>
-
-          <button
-            type="button"
-            class="status-pill-btn status-pill-btn--urgent"
-            [class.status-pill-btn--active]="monitorService.selectedStatus() === 'URGENTE'"
-            [class.status-pill-btn--pulse]="monitorService.urgentCount() > 0"
-            (click)="onStatusFilterChange('URGENTE')"
-          >
-            <span class="pill-label">🚨 Urgentes</span>
-            <span class="pill-count-badge" [class.pill-count-badge--alert]="monitorService.urgentCount() > 0">{{ monitorService.urgentCount() }}</span>
-          </button>
-
-          <button
-            type="button"
-            class="status-pill-btn status-pill-btn--enfila"
-            [class.status-pill-btn--active]="monitorService.selectedStatus() === 'EN_FILA'"
-            (click)="onStatusFilterChange('EN_FILA')"
-          >
-            <span class="pill-label">🚗 En Fila</span>
-            <span class="pill-count-badge" [class.pill-count-badge--alert]="monitorService.enFilaCount() > 0">{{ monitorService.enFilaCount() }}</span>
-          </button>
-
-          <button
-            type="button"
-            class="status-pill-btn status-pill-btn--fivemin"
-            [class.status-pill-btn--active]="monitorService.selectedStatus() === 'FIVE_MIN'"
-            (click)="onStatusFilterChange('FIVE_MIN')"
-          >
-            <span class="pill-label">⏱ 5 min</span>
-            <span class="pill-count-badge" [class.pill-count-badge--alert]="monitorService.fiveMinCount() > 0">{{ monitorService.fiveMinCount() }}</span>
-          </button>
-
-          <button
-            type="button"
-            class="status-pill-btn status-pill-btn--tenmin"
-            [class.status-pill-btn--active]="monitorService.selectedStatus() === 'TEN_MIN'"
-            (click)="onStatusFilterChange('TEN_MIN')"
-          >
-            <span class="pill-label">🕐 10 min</span>
-            <span class="pill-count-badge" [class.pill-count-badge--alert]="monitorService.tenMinCount() > 0">{{ monitorService.tenMinCount() }}</span>
-          </button>
-        </div>
 
         <div class="alerts-grid">
           @for (alert of monitorService.filteredAlerts(); track alert.studentId) {
@@ -1135,5 +1081,8 @@
     <span>Colegio IIT • Monitor de Entregas</span>
     <span class="footer-version">{{ appVersion }}</span>
   </footer>
+
+  <!-- Panel Modal de Simulación y Pruebas -->
+  <app-simulation-panel></app-simulation-panel>
 
 </div>
