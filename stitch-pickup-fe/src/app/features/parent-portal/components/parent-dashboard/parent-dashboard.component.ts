@@ -178,9 +178,12 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
         const eventStudentId = normalize(event.studentId);
 
         const myStudents = this.studentService.students();
-        const tokenStudentIds = this.authService.currentUser()?.studentIds || [];
+        const currentUser = this.authService.currentUser();
+        const tokenStudentIds = currentUser?.studentIds || [];
+        const currentUserId = normalize(currentUser?.userId);
 
         const isMyChild =
+          (currentUserId && normalize(event.parentId) === currentUserId) ||
           myStudents.some(s => normalize(s.id) === eventStudentId) ||
           tokenStudentIds.some(id => normalize(id) === eventStudentId);
 

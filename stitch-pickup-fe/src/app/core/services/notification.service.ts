@@ -31,24 +31,24 @@ export class NotificationService {
 
   // ─── Public API ─────────────────────────────────────────────────────────────
 
-  success(message: string, duration = 4000): void {
+  success(message: string, duration = 5500): void {
     this.show({ type: 'success', message, duration });
   }
 
-  error(message: string, duration = 6000): void {
+  error(message: string, duration = 7500): void {
     this.show({ type: 'error', message, duration });
   }
 
-  warning(message: string, duration = 5000): void {
+  warning(message: string, duration = 6500): void {
     this.show({ type: 'warning', message, duration });
   }
 
-  info(message: string, duration = 4000): void {
+  info(message: string, duration = 5500): void {
     this.show({ type: 'info', message, duration });
   }
 
   offline(message = 'Sin conexión. La alerta se enviará al recuperar señal.'): void {
-    this.show({ type: 'offline', message, duration: 6000 });
+    this.show({ type: 'offline', message, duration: 7000 });
   }
 
   dismiss(id: string): void {
@@ -70,8 +70,8 @@ export class NotificationService {
     this._toasts.update((toasts) => [...toasts, toast]);
     this.toast$.next(toast);
 
-    // Auto-dismiss after duration
-    const duration = config.duration ?? 4000;
+    // Auto-dismiss after duration (default 5.5s to allow reading on Android / iOS)
+    const duration = config.duration ?? 5500;
     setTimeout(() => {
       this.dismiss(toast.id);
     }, duration);
