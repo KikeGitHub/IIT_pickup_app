@@ -22,8 +22,20 @@
       </div>
     </div>
 
-    <!-- Quick Utilities: Theme & Logout (Ultra-resumido) -->
+    <!-- Quick Utilities: Audio/Push, Theme & Logout -->
     <div class="header-tools">
+      <!-- Botón de Bocina / Activar y probar Notificaciones Push y Sonido en iOS/móvil -->
+      <button
+        type="button"
+        class="btn-icon-btn btn-audio-icon-btn"
+        [class.btn-audio-icon-btn--ready]="sound.audioUnlocked()"
+        (click)="onTestAlerts()"
+        [title]="sound.audioUnlocked() ? 'Sonido y notificaciones push activas — Toca para probar' : 'Activar sonido y permitir notificaciones push'"
+        aria-label="Activar sonido y notificaciones"
+      >
+        <span>{{ sound.audioUnlocked() ? '🔊' : '🔈' }}</span>
+      </button>
+
       <!-- Theme Switcher -->
       <button
         type="button"

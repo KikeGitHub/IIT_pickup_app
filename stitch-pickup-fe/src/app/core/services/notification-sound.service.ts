@@ -221,12 +221,13 @@ export class NotificationSoundService {
   }
 
   /**
-   * Emite una notificación nativa del sistema operativo y vibración (sin duplicar sonido de audio).
+   * Emite una notificación nativa del sistema operativo y vibración.
+   * Compatible con iOS Safari (PWA agregada a inicio), Android y Desktop.
    */
   async notifyWithVibration(title: string, body: string, tag?: string): Promise<void> {
     if (!isPlatformBrowser(this.platformId)) return;
 
-    if ('Notification' in window) {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
       if (Notification.permission === 'default') {
         try {
           const res = await Notification.requestPermission();
@@ -235,32 +236,53 @@ export class NotificationSoundService {
       }
 
       if (Notification.permission === 'granted') {
+        // En iOS / Safari y móviles PWA, new Notification() falla; es obligatorio usar ServiceWorkerRegistration
+        if ('serviceWorker' in navigator) {
+          try {
+            const reg = await navigator.serviceWorker.ready;
+            if (reg && 'showNotification' in reg) {
+              await reg.showNotification(title, {
+                body,
+                icon: '/logo_IIT.jpg',
+                badge: '/logo_IIT.jpg',
+                tag: tag || 'iit-pickup-alert',
+                data: { url: window.location.href }
+              } as any);
+              this.triggerHaptic([200, 80, 200]);
+              return;
+            }
+          } catch (swErr) {
+            console.warn('[Notification] Error en Service Worker showNotification:', swErr);
+          }
+        }
+
+        // Fallback estándar para navegadores de escritorio que soportan el constructor
         try {
           const n = new Notification(title, {
             body,
             icon: '/logo_IIT.jpg',
-            tag: tag || 'iit-pickup-alert',
-            ...({ vibrate: [200, 80, 200] } as any)
+            tag: tag || 'iit-pickup-alert'
           });
-          // Mantener visible al menos 6 segundos en Android/Chrome
           setTimeout(() => {
             try { n.close(); } catch {}
           }, 6000);
         } catch (err) {
-          console.warn('[Notification] Could not show native notification:', err);
+          console.warn('[Notification] Fallback new Notification no soportado en este dispositivo:', err);
         }
       }
     }
+
+    this.triggerHaptic([200, 80, 200]);
   }
 
   private checkNotificationPermission(): void {
-    if ('Notification' in window) {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
       this.notificationsAllowed.set(Notification.permission === 'granted');
     }
   }
 
   /**
-   * Prueba de sonido iniciada explícitamente por el usuario para validar celular/tablet.
+   * Prueba de sonido y notificación nativa iniciada explícitamente por el usuario para validar celular/tablet.
    */
   async testSound(): Promise<void> {
     this.unlockAudio();
@@ -275,6 +297,23 @@ export class NotificationSoundService {
       }
 
       if (Notification.permission === 'granted') {
+        // Intentar primero con Service Worker para compatibilidad total con iPhone (iOS PWA)
+        if ('serviceWorker' in navigator) {
+          try {
+            const reg = await navigator.serviceWorker.ready;
+            if (reg && 'showNotification' in reg) {
+              await reg.showNotification('🔊 IIT Pickup — Prueba de Alerta', {
+                body: '¡Sonido profesional, vibración y notificaciones listos en tu dispositivo!',
+                icon: '/logo_IIT.jpg',
+                badge: '/logo_IIT.jpg',
+                tag: 'test-sound'
+              });
+              this.triggerHaptic([200, 80, 200]);
+              return;
+            }
+          } catch {}
+        }
+
         try {
           new Notification('🔊 IIT Pickup — Prueba de Alerta', {
             body: '¡Sonido profesional, vibración y notificaciones listos en tu dispositivo!',
@@ -284,6 +323,8 @@ export class NotificationSoundService {
         } catch {}
       }
     }
+
+    this.triggerHaptic([200, 80, 200]);
   }
 
   private triggerHaptic(pattern: number[]): void {
