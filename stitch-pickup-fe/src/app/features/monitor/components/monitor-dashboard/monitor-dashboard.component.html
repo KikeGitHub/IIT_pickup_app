@@ -106,16 +106,18 @@
                 <span class="tv-text">{{ isFullscreen() ? 'Salir TV' : 'Modo TV' }}</span>
               </button>
             }
-            <!-- Botón de Simulación para pruebas del usuario -->
-            <button
-              type="button"
-              class="btn-sim-trigger"
-              (click)="simulationService.openPanel()"
-              title="Abrir Simulador de Entradas y Pruebas con Señal Baja / Offline"
-            >
-              <span class="sim-icon">🧪</span>
-              <span class="sim-text">Simular</span>
-            </button>
+            <!-- Botón de Simulación exclusivo para ADMIN (oculto en modo maestro) -->
+            @if (authService.userRole() === 'ADMIN') {
+              <button
+                type="button"
+                class="btn-sim-trigger"
+                (click)="simulationService.openPanel()"
+                title="Abrir Simulador de Entradas (Solo Administrador)"
+              >
+                <span class="sim-icon">🧪</span>
+                <span class="sim-text">Simular</span>
+              </button>
+            }
             <!-- Botón de Actualizar -->
             <button
               type="button"
@@ -1082,7 +1084,9 @@
     <span class="footer-version">{{ appVersion }}</span>
   </footer>
 
-  <!-- Panel Modal de Simulación y Pruebas -->
-  <app-simulation-panel></app-simulation-panel>
+  <!-- Panel Modal de Simulación y Pruebas (Solo para ADMIN) -->
+  @if (authService.userRole() === 'ADMIN') {
+    <app-simulation-panel></app-simulation-panel>
+  }
 
 </div>

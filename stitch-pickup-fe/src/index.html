@@ -8,12 +8,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="IIT Pickup" id="apple-app-title">
-  <meta name="description" content="Sistema de logística de recogida de alumnos del Instituto Inglés de Toluca. Padres notifican proximidad, maestros gestionan entregas en tiempo real.">
-  <meta name="theme-color" content="#000e27" id="theme-color-meta">
-
-  <!-- PWA & Favicons (Detección sincronizada para Safari iOS / Android) -->
-  <link rel="manifest" href="manifest.webmanifest" id="app-manifest-link">
+  <!-- PWA & Favicons (Detección sincrónica nativa para Safari iOS / Android) -->
   <script>
     (function() {
       try {
@@ -22,17 +17,25 @@
         var cookieMatch = document.cookie.match(/(?:^|; )iit_preferred_portal=([^;]*)/);
         var preferred = cookieMatch ? cookieMatch[1] : (localStorage.getItem('iit_preferred_portal') || '');
         if (isTeacher || preferred === 'teacher') {
-          var m = document.getElementById('app-manifest-link');
-          if (m) m.href = '/manifest-maestros.webmanifest';
-          var t = document.getElementById('apple-app-title');
-          if (t) t.content = 'IIT Docentes';
-          var c = document.getElementById('theme-color-meta');
-          if (c) c.content = '#166534';
+          document.write('<link rel="manifest" href="/manifest-maestros.webmanifest" id="app-manifest-link">');
+          document.write('<meta name="apple-mobile-web-app-title" content="IIT Docentes" id="apple-app-title">');
+          document.write('<meta name="theme-color" content="#166534" id="theme-color-meta">');
           document.title = 'IIT Docentes — Instituto Inglés de Toluca';
+        } else {
+          document.write('<link rel="manifest" href="/manifest.webmanifest" id="app-manifest-link">');
+          document.write('<meta name="apple-mobile-web-app-title" content="IIT Pickup" id="apple-app-title">');
+          document.write('<meta name="theme-color" content="#000e27" id="theme-color-meta">');
         }
-      } catch (e) {}
+      } catch (e) {
+        document.write('<link rel="manifest" href="/manifest.webmanifest" id="app-manifest-link">');
+      }
     })();
   </script>
+  <noscript>
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="apple-mobile-web-app-title" content="IIT Pickup">
+    <meta name="theme-color" content="#000e27">
+  </noscript>
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="icon" type="image/png" href="favicon.png">
   <link rel="apple-touch-icon" href="icons/icon-192x192.png">

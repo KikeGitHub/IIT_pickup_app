@@ -222,12 +222,16 @@ export class NotificationSoundService {
 
       if (Notification.permission === 'granted') {
         try {
-          new Notification(title, {
+          const n = new Notification(title, {
             body,
             icon: '/logo_IIT.jpg',
             tag: tag || 'iit-pickup-alert',
             ...({ vibrate: [200, 80, 200] } as any)
           });
+          // Mantener visible al menos 6 segundos en Android/Chrome
+          setTimeout(() => {
+            try { n.close(); } catch {}
+          }, 6000);
         } catch (err) {
           console.warn('[Notification] Could not show native notification:', err);
         }
