@@ -8,5 +8,5 @@ export const environment = {
   apiBaseUrl: isLocal ? 'http://localhost:8080/api/v1' : '/api/v1',
   apiUrl: isLocal ? 'http://localhost:8080/api/v1' : '/api/v1',
   wsUrl: isLocal ? 'http://localhost:8080/ws' : '/ws',
-  appVersion: 'v1.2.7',
+  appVersion: 'v1.2.8',
 };

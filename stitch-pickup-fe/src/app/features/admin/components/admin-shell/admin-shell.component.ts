@@ -37,12 +37,17 @@ export class AdminShellComponent {
 
   readonly activeTab = signal<AdminTab>('KPIS');
 
-  setTab(tab: AdminTab): void {
+  setTab(tab: AdminTab, event?: Event): void {
     if (this.authService.userRole() === 'MONITOR' && tab !== 'KPIS') {
       return;
     }
     this.activeTab.set(tab);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    if (event?.currentTarget) {
+      const el = event.currentTarget as HTMLElement;
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
   }
 
   logout(): void {
