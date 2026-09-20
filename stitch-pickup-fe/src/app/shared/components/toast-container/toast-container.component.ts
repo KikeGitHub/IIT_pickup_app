@@ -29,7 +29,7 @@ import { NotificationService, Toast } from '../../../core/services/notification.
   styles: [`
     .toast-container {
       position: fixed;
-      bottom: 24px;
+      bottom: max(24px, calc(16px + env(safe-area-inset-bottom, 0px)));
       left: 50%;
       transform: translateX(-50%);
       z-index: 10000;

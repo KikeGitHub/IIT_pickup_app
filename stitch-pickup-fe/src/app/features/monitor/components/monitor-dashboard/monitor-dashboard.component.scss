@@ -3035,7 +3035,7 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 32px 12px 20px;
+  padding: 32px 12px max(20px, calc(12px + env(safe-area-inset-bottom, 0px)));
   color: #94a3b8;
   font-size: 11px;
 
