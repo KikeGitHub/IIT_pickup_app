@@ -368,10 +368,20 @@
                       <select [(ngModel)]="t.relationship" class="form-control">
                         <option value="Mamá">Mamá</option>
                         <option value="Papá">Papá</option>
-                        <option value="Abuelo/a">Abuelo/a</option>
-                        <option value="Tío/a">Tío/a</option>
-                        <option value="Chofer">Chofer</option>
+                        <option value="Abuelo">Abuelo</option>
+                        <option value="Abuela">Abuela</option>
+                        <option value="Hermano">Hermano</option>
+                        <option value="Hermana">Hermana</option>
+                        <option value="Tío">Tío</option>
+                        <option value="Tía">Tía</option>
                         <option value="Tutor Legal">Tutor Legal</option>
+                        <option value="Chofer">Chofer</option>
+                        <option value="Otro">Otro</option>
+                        <!-- Compatibilidad histórica con registros previos -->
+                        <option *ngIf="t.relationship === 'Abuelo/a'" value="Abuelo/a">Abuelo/a</option>
+                        <option *ngIf="t.relationship === 'Hermano(a)'" value="Hermano(a)">Hermano(a)</option>
+                        <option *ngIf="t.relationship === 'Tío/a'" value="Tío/a">Tío/a</option>
+                        <option *ngIf="t.relationship === 'Tutor / Familiar'" value="Tutor / Familiar">Tutor / Familiar</option>
                       </select>
                     </div>
 

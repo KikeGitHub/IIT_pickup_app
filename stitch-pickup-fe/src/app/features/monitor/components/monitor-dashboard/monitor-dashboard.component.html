@@ -106,18 +106,6 @@
                 <span class="tv-text">{{ isFullscreen() ? 'Salir TV' : 'Modo TV' }}</span>
               </button>
             }
-            <!-- Botón de Simulación exclusivo para ADMIN (oculto en modo maestro) -->
-            @if (authService.userRole() === 'ADMIN') {
-              <button
-                type="button"
-                class="btn-sim-trigger"
-                (click)="simulationService.openPanel()"
-                title="Abrir Simulador de Entradas (Solo Administrador)"
-              >
-                <span class="sim-icon">🧪</span>
-                <span class="sim-text">Simular</span>
-              </button>
-            }
             <!-- Botón de Actualizar -->
             <button
               type="button"
@@ -250,276 +238,521 @@
       <!-- Student Roster for Selected Group -->
       @if (currentGroup; as grp) {
         <div class="roster-table-card">
-          <!-- Toolbar for the Group -->
-          <div class="roster-toolbar">
-            <div class="search-box">
-              <span class="search-icon">🔍</span>
-              <input
-                type="text"
-                [(ngModel)]="studentSearchQuery"
-                placeholder="Buscar por nombre o CURP..."
-                class="search-input"
-              />
-              <button
-                type="button"
-                *ngIf="studentSearchQuery"
-                class="btn-clear-search"
-                (click)="studentSearchQuery = ''"
-              >&times;</button>
-            </div>
 
-            <!-- Active / Inactive filter pills (Desktop only) -->
-            <div class="status-filter-pills desktop-only-pills">
+          <!-- View Mode Switch: Alumnos vs Directorio de Padres -->
+          <div class="roster-subnav-bar">
+            <div class="subnav-pill-group">
               <button
                 type="button"
-                class="status-pill-btn"
-                [class.status-pill-btn--active]="activeFilter() === 'ACTIVE'"
-                (click)="setActiveFilter('ACTIVE')"
-                title="Mostrar únicamente alumnos activos"
+                class="subnav-pill"
+                [class.subnav-pill--active]="groupSubView() === 'STUDENTS'"
+                (click)="setGroupSubView('STUDENTS')"
               >
-                Activos ({{ activeStudentsCount }})
+                <span>🎓 Alumnos ({{ totalStudentsCount }})</span>
               </button>
               <button
                 type="button"
-                class="status-pill-btn status-pill-btn--inactive"
-                [class.status-pill-btn--active]="activeFilter() === 'INACTIVE'"
-                (click)="setActiveFilter('INACTIVE')"
-                title="Mostrar alumnos dados de baja"
+                class="subnav-pill"
+                [class.subnav-pill--active]="groupSubView() === 'PARENTS'"
+                (click)="setGroupSubView('PARENTS')"
               >
-                Bajas ({{ inactiveStudentsCount }})
-              </button>
-              <button
-                type="button"
-                class="status-pill-btn"
-                [class.status-pill-btn--active]="activeFilter() === 'ALL'"
-                (click)="setActiveFilter('ALL')"
-                title="Mostrar todos los alumnos"
-              >
-                Todos ({{ totalStudentsCount }})
-              </button>
-            </div>
-
-            <!-- Add Student Button -->
-            <div class="roster-toolbar-actions">
-              <button
-                type="button"
-                class="btn-add-student"
-                (click)="openCreateStudentModal()"
-                title="Registrar nuevo alumno en este salón"
-              >
-                <span>➕ Registrar</span>
+                <span>👨‍👩‍👧 Directorio de Padres ({{ filteredGroupParents.length }})</span>
               </button>
             </div>
           </div>
 
-          <!-- Loading Skeleton State -->
-          @if (teacherService.isLoading()) {
-            <div class="table-loading-header">
-              <div class="loading-spinner-sm"></div>
-              <span>Cargando lista de alumnos asignados...</span>
+          <!-- SUB-VIEW 1: STUDENTS ROSTER -->
+          @if (groupSubView() === 'STUDENTS') {
+            <!-- Toolbar for the Group -->
+            <div class="roster-toolbar">
+              <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input
+                  type="text"
+                  [(ngModel)]="studentSearchQuery"
+                  placeholder="Buscar por nombre o CURP..."
+                  class="search-input"
+                />
+                <button
+                  type="button"
+                  *ngIf="studentSearchQuery"
+                  class="btn-clear-search"
+                  (click)="studentSearchQuery = ''"
+                >&times;</button>
+              </div>
+
+              <!-- Active / Inactive filter pills (Desktop only) -->
+              <div class="status-filter-pills desktop-only-pills">
+                <button
+                  type="button"
+                  class="status-pill-btn"
+                  [class.status-pill-btn--active]="activeFilter() === 'ACTIVE'"
+                  (click)="setActiveFilter('ACTIVE')"
+                  title="Mostrar únicamente alumnos activos"
+                >
+                  Activos ({{ activeStudentsCount }})
+                </button>
+                <button
+                  type="button"
+                  class="status-pill-btn status-pill-btn--inactive"
+                  [class.status-pill-btn--active]="activeFilter() === 'INACTIVE'"
+                  (click)="setActiveFilter('INACTIVE')"
+                  title="Mostrar alumnos dados de baja"
+                >
+                  Bajas ({{ inactiveStudentsCount }})
+                </button>
+                <button
+                  type="button"
+                  class="status-pill-btn"
+                  [class.status-pill-btn--active]="activeFilter() === 'ALL'"
+                  (click)="setActiveFilter('ALL')"
+                  title="Mostrar todos los alumnos"
+                >
+                  Todos ({{ totalStudentsCount }})
+                </button>
+              </div>
+
+              <!-- Add Student Button -->
+              <div class="roster-toolbar-actions">
+                <button
+                  type="button"
+                  class="btn-add-student"
+                  (click)="openCreateStudentModal()"
+                  title="Registrar nuevo alumno en este salón"
+                >
+                  <span>➕ Registrar</span>
+                </button>
+              </div>
             </div>
-            <app-table-skeleton [rows]="6" [cols]="3"></app-table-skeleton>
-          } @else {
-            <!-- Desktop / Tablet Table View (>= 768px) -->
-            <div class="table-responsive roster-table-view">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th class="sortable" (click)="toggleRosterSort('name')" title="Clic para ordenar por nombre de alumno">
-                      <span class="th-content">
-                        Alumno
-                        <span class="sort-icon" [class.sort-icon--active]="rosterSortField() === 'name'">
-                          {{ rosterSortField() === 'name' ? (rosterSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}
+
+            <!-- Loading Skeleton State -->
+            @if (teacherService.isLoading()) {
+              <div class="table-loading-header">
+                <div class="loading-spinner-sm"></div>
+                <span>Cargando lista de alumnos asignados...</span>
+              </div>
+              <app-table-skeleton [rows]="6" [cols]="3"></app-table-skeleton>
+            } @else {
+              <!-- Desktop / Tablet Table View (>= 768px) -->
+              <div class="table-responsive roster-table-view">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th class="sortable" (click)="toggleRosterSort('name')" title="Clic para ordenar por nombre de alumno">
+                        <span class="th-content">
+                          Alumno
+                          <span class="sort-icon" [class.sort-icon--active]="rosterSortField() === 'name'">
+                            {{ rosterSortField() === 'name' ? (rosterSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}
+                          </span>
                         </span>
-                      </span>
-                    </th>
-                    <th class="sortable" (click)="toggleRosterSort('grade')" title="Clic para ordenar por grado">
-                      <span class="th-content">
-                        Nivel & Grado
-                        <span class="sort-icon" [class.sort-icon--active]="rosterSortField() === 'grade'">
-                          {{ rosterSortField() === 'grade' ? (rosterSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}
+                      </th>
+                      <th class="sortable" (click)="toggleRosterSort('grade')" title="Clic para ordenar por grado">
+                        <span class="th-content">
+                          Nivel & Grado
+                          <span class="sort-icon" [class.sort-icon--active]="rosterSortField() === 'grade'">
+                            {{ rosterSortField() === 'grade' ? (rosterSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}
+                          </span>
                         </span>
-                      </span>
-                    </th>
-                    <th>Grupo</th>
-                    <th class="sortable" (click)="toggleRosterSort('tutors')" title="Clic para ordenar por número de tutores">
-                      <span class="th-content">
-                        Tutores Autorizados (Pickup)
-                        <span class="sort-icon" [class.sort-icon--active]="rosterSortField() === 'tutors'">
-                          {{ rosterSortField() === 'tutors' ? (rosterSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}
+                      </th>
+                      <th>Grupo</th>
+                      <th class="sortable" (click)="toggleRosterSort('tutors')" title="Clic para ordenar por número de tutores">
+                        <span class="th-content">
+                          Tutores & Padres Vinculados
+                          <span class="sort-icon" [class.sort-icon--active]="rosterSortField() === 'tutors'">
+                            {{ rosterSortField() === 'tutors' ? (rosterSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}
+                          </span>
                         </span>
-                      </span>
-                    </th>
-                    <th>Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (s of filteredGroupStudents; track s.id) {
-                    <tr [class.student-row--inactive]="!s.active">
-                      <td>
-                        <div class="student-cell">
-                          <div class="student-avatar-wrap">
-                            @if (s.avatarUrl) {
-                              <img [src]="s.avatarUrl" [alt]="s.name" class="student-avatar-img" (error)="onAvatarError(s)" />
-                            } @else {
-                              <span class="student-avatar">{{ s.name.charAt(0) }}</span>
+                      </th>
+                      <th>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (s of filteredGroupStudents; track s.id) {
+                      <tr [class.student-row--inactive]="!s.active">
+                        <td>
+                          <div class="student-cell">
+                            <div class="student-avatar-wrap">
+                              @if (s.avatarUrl) {
+                                <img [src]="s.avatarUrl" [alt]="s.name" class="student-avatar-img" (error)="onAvatarError(s)" />
+                              } @else {
+                                <span class="student-avatar">{{ s.name.charAt(0) }}</span>
+                              }
+                            </div>
+                            <div>
+                              <div class="s-name-row">
+                                <p class="s-name">{{ s.name }}</p>
+                                <span class="badge-inactive-pill" *ngIf="!s.active">🚫 Baja</span>
+                              </div>
+                              <p class="s-meta" *ngIf="s.curp || s.gender">
+                                <span class="curp-badge" *ngIf="s.curp">🏷️ {{ s.curp }}</span>
+                                <span class="gender-pill" *ngIf="s.gender" [class.gender-pill--m]="s.gender === 'M'" [class.gender-pill--f]="s.gender === 'F'">
+                                  {{ s.gender === 'M' ? '👦 M' : '👧 F' }}
+                                </span>
+                              </p>
+                              <p class="s-bday" *ngIf="s.birthday">🎂 {{ s.birthday }}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <div class="level-badge-wrap">
+                            <span class="level-tag" [class]="'level-tag--' + s.level.toLowerCase()">{{ s.level }}</span>
+                            <span class="grade-tag" *ngIf="s.grade">{{ s.grade }}</span>
+                          </div>
+                        </td>
+                        <td>
+                          <span class="group-pill">{{ grp.name }}</span>
+                        </td>
+                        <td>
+                          <div class="tutors-list">
+                            <!-- Pickup Tutors (Gate) -->
+                            <div class="tutors-pickup-chips">
+                              @for (t of s.familyMembers; track t.name) {
+                                <span class="tutor-pill" [class.tutor-pill--disabled]="!t.authorized" [title]="t.phone ? 'Tel: ' + t.phone : ''">
+                                  🛡️ {{ t.name }} ({{ t.relationship }})
+                                </span>
+                              } @empty {
+                                <span class="text-muted">Sin tutores pickup</span>
+                              }
+                            </div>
+
+                            <!-- Parent User Accounts linked -->
+                            @if (s.parentAccounts && s.parentAccounts.length > 0) {
+                              <div class="parent-accounts-row">
+                                @for (p of s.parentAccounts; track p.id) {
+                                  <div class="parent-acc-badge">
+                                    <span class="p-acc-user">👤 {{ p.nombre }}</span>
+                                    <span class="badge-status-xs" [class.badge-status-xs--temp]="p.tempPassword" [class.badge-status-xs--active]="!p.tempPassword">
+                                      {{ p.tempPassword ? '🟡 Clave Temporal' : '🟢 Activo' }}
+                                    </span>
+                                    <button
+                                      type="button"
+                                      class="btn-reset-xs"
+                                      (click)="resetPasswordDirect(p.id, p.nombre)"
+                                      [disabled]="isResettingPassword()"
+                                      title="Restablecer contraseña a IIT2026"
+                                    >
+                                      🔑 Reset
+                                    </button>
+                                  </div>
+                                }
+                              </div>
                             }
                           </div>
-                          <div>
-                            <div class="s-name-row">
-                              <p class="s-name">{{ s.name }}</p>
-                              <span class="badge-inactive-pill" *ngIf="!s.active">🚫 Baja</span>
-                            </div>
-                            <p class="s-meta" *ngIf="s.curp || s.gender">
-                              <span class="curp-badge" *ngIf="s.curp">🏷️ {{ s.curp }}</span>
-                              <span class="gender-pill" *ngIf="s.gender" [class.gender-pill--m]="s.gender === 'M'" [class.gender-pill--f]="s.gender === 'F'">
-                                {{ s.gender === 'M' ? '👦 M' : '👧 F' }}
-                              </span>
-                            </p>
-                            <p class="s-bday" *ngIf="s.birthday">🎂 {{ s.birthday }}</p>
+                        </td>
+                        <td>
+                          <div class="action-btns">
+                            <button type="button" class="btn-action-wa" (click)="openShareModal(s)" title="Ficha de acceso para padres y credenciales">
+                              <span>💬 Acceso</span>
+                            </button>
+                            <button type="button" class="btn-action-edit" (click)="openEditStudentModal(s)" title="Editar alumno">
+                              <span>✏️ Editar</span>
+                            </button>
+                            @if (s.active) {
+                              <button type="button" class="btn-action-deactivate" (click)="openConfirmToggleActive(s)" title="Dar de baja alumno">
+                                <span>🚫 Baja</span>
+                              </button>
+                            } @else {
+                              <button type="button" class="btn-action-reactivate" (click)="openConfirmToggleActive(s)" title="Reactivar alumno">
+                                <span>🔄 Activar</span>
+                              </button>
+                            }
                           </div>
-                        </div>
-                      </td>
-                      <td>
-                        <div class="level-badge-wrap">
-                          <span class="level-tag" [class]="'level-tag--' + s.level.toLowerCase()">{{ s.level }}</span>
-                          <span class="grade-tag" *ngIf="s.grade">{{ s.grade }}</span>
-                        </div>
-                      </td>
-                      <td>
-                        <span class="group-pill">{{ grp.name }}</span>
-                      </td>
-                      <td>
-                        <div class="tutors-list">
-                          @for (t of s.familyMembers; track t.name) {
-                            <span class="tutor-pill" [class.tutor-pill--disabled]="!t.authorized" [title]="t.phone ? 'Tel: ' + t.phone : ''">
-                              {{ t.name }} ({{ t.relationship }})
-                            </span>
-                          } @empty {
-                            <span class="text-muted">Sin tutores asignados</span>
-                          }
-                        </div>
-                      </td>
-                      <td>
-                        <div class="action-btns">
-                          <button type="button" class="btn-action-wa" (click)="openShareModal(s)" title="Compartir acceso para padres por WhatsApp">
-                            <span>💬 Acceso</span>
-                          </button>
-                          <button type="button" class="btn-action-edit" (click)="openEditStudentModal(s)" title="Editar alumno">
-                            <span>✏️ Editar</span>
-                          </button>
-                          @if (s.active) {
-                            <button type="button" class="btn-action-deactivate" (click)="openConfirmToggleActive(s)" title="Dar de baja alumno">
-                              <span>🚫 Baja</span>
-                            </button>
-                          } @else {
-                            <button type="button" class="btn-action-reactivate" (click)="openConfirmToggleActive(s)" title="Reactivar alumno">
-                              <span>🔄 Activar</span>
-                            </button>
-                          }
-                        </div>
-                      </td>
-                    </tr>
-                  } @empty {
-                    <tr>
-                      <td colspan="5" class="empty-cell">
-                        No se encontraron alumnos con los criterios seleccionados en {{ grp.name }}.
-                      </td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
+                        </td>
+                      </tr>
+                    } @empty {
+                      <tr>
+                        <td colspan="5" class="empty-cell">
+                          No se encontraron alumnos con los criterios seleccionados en {{ grp.name }}.
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
 
-            <!-- Mobile-First Cards View (< 768px) -->
-            <div class="roster-mobile-view">
-              @for (s of filteredGroupStudents; track s.id) {
-                <div class="mobile-student-card" [class.mobile-student-card--inactive]="!s.active">
-                  <div class="m-card-body">
-                    <!-- Left: Avatar -->
-                    <div class="m-avatar-wrap">
-                      @if (s.avatarUrl) {
-                        <img [src]="s.avatarUrl" [alt]="s.name" class="m-avatar-img" (error)="onAvatarError(s)" />
-                      } @else {
-                        <span class="m-avatar-initial">{{ s.name.charAt(0) }}</span>
-                      }
+              <!-- Mobile-First Cards View (< 768px) -->
+              <div class="roster-mobile-view">
+                @for (s of filteredGroupStudents; track s.id) {
+                  <div class="mobile-student-card" [class.mobile-student-card--inactive]="!s.active">
+                    <div class="m-card-body">
+                      <!-- Left: Avatar -->
+                      <div class="m-avatar-wrap">
+                        @if (s.avatarUrl) {
+                          <img [src]="s.avatarUrl" [alt]="s.name" class="m-avatar-img" (error)="onAvatarError(s)" />
+                        } @else {
+                          <span class="m-avatar-initial">{{ s.name.charAt(0) }}</span>
+                        }
+                      </div>
+
+                      <!-- Center: Student Details -->
+                      <div class="m-student-info">
+                        <div class="m-name-line">
+                          <strong class="m-student-name">{{ s.name }}</strong>
+                          <span class="badge-inactive-pill" *ngIf="!s.active">Baja</span>
+                        </div>
+
+                        <div class="m-meta-line">
+                          <span class="m-grade-tag" *ngIf="s.grade">{{ s.grade }}</span>
+                          <span class="m-gender-tag" *ngIf="s.gender">{{ s.gender === 'M' ? '👦 M' : '👧 F' }}</span>
+                          <span class="m-curp-tag" *ngIf="s.curp">🏷️ {{ s.curp }}</span>
+                        </div>
+
+                        <!-- Compact Tutor Contact Line -->
+                        <div class="m-tutor-line">
+                          @if (s.familyMembers && s.familyMembers.length > 0) {
+                            <span class="m-tutor-name" [title]="s.familyMembers[0].phone ? 'Tel: ' + s.familyMembers[0].phone : ''">
+                              🛡️ {{ s.familyMembers[0].name }} ({{ s.familyMembers[0].relationship }})
+                            </span>
+                          } @else {
+                            <span class="m-tutor-empty">Sin tutores pickup registrados</span>
+                          }
+                        </div>
+                      </div>
                     </div>
 
-                    <!-- Center: Student Details -->
-                    <div class="m-student-info">
-                      <div class="m-name-line">
-                        <strong class="m-student-name">{{ s.name }}</strong>
-                        <span class="badge-inactive-pill" *ngIf="!s.active">Baja</span>
+                    <!-- Parents Portal Accounts Section in Mobile Card -->
+                    @if (s.parentAccounts && s.parentAccounts.length > 0) {
+                      <div class="m-parents-box">
+                        <span class="m-parents-box-title">👨‍👩‍👧 Cuentas de Padres (Acceso Portal):</span>
+                        <div class="m-parents-list">
+                          @for (p of s.parentAccounts; track p.id) {
+                            <div class="m-parent-account-item">
+                              <div class="m-p-left">
+                                <span class="m-p-name">👤 {{ p.nombre }}</span>
+                                <span class="m-p-email">{{ p.email }}</span>
+                              </div>
+                              <div class="m-p-right">
+                                <span class="badge-status-xs" [class.badge-status-xs--temp]="p.tempPassword" [class.badge-status-xs--active]="!p.tempPassword">
+                                  {{ p.tempPassword ? '🟡 Clave Temporal' : '🟢 Activo' }}
+                                </span>
+                                <button
+                                  type="button"
+                                  class="btn-m-quick-reset"
+                                  (click)="resetPasswordDirect(p.id, p.nombre)"
+                                  [disabled]="isResettingPassword()"
+                                  title="Restablecer contraseña a IIT2026"
+                                >
+                                  🔑 Reset
+                                </button>
+                              </div>
+                            </div>
+                          }
+                        </div>
                       </div>
+                    }
 
-                      <div class="m-meta-line">
-                        <span class="m-grade-tag" *ngIf="s.grade">{{ s.grade }}</span>
-                        <span class="m-gender-tag" *ngIf="s.gender">{{ s.gender === 'M' ? '👦 M' : '👧 F' }}</span>
-                        <span class="m-curp-tag" *ngIf="s.curp">🏷️ {{ s.curp }}</span>
-                      </div>
+                    <!-- Bottom: Thumb-friendly Actions Row -->
+                    <div class="m-card-footer">
+                      <button
+                        type="button"
+                        class="btn-m-wa"
+                        (click)="openShareModal(s)"
+                        title="Enviar credenciales a papás por WhatsApp"
+                      >
+                        <span class="m-wa-icon">💬</span>
+                        <span>Ficha Acceso</span>
+                      </button>
 
-                      <!-- Compact Tutor Contact Line -->
-                      <div class="m-tutor-line">
-                        @if (s.familyMembers && s.familyMembers.length > 0) {
-                          <span class="m-tutor-name" [title]="s.familyMembers[0].phone ? 'Tel: ' + s.familyMembers[0].phone : ''">
-                            🛡️ {{ s.familyMembers[0].name }} ({{ s.familyMembers[0].relationship }})
+                      <button
+                        type="button"
+                        class="btn-m-edit"
+                        (click)="openEditStudentModal(s)"
+                        title="Editar datos del alumno"
+                      >
+                        <span>✏️ Editar</span>
+                      </button>
+
+                      @if (s.active) {
+                        <button
+                          type="button"
+                          class="btn-m-toggle-active btn-m-toggle-active--danger"
+                          (click)="openConfirmToggleActive(s)"
+                          title="Dar de baja alumno"
+                        >
+                          <span>🚫</span>
+                        </button>
+                      } @else {
+                        <button
+                          type="button"
+                          class="btn-m-toggle-active btn-m-toggle-active--restore"
+                          (click)="openConfirmToggleActive(s)"
+                          title="Reactivar alumno"
+                        >
+                          <span>🔄</span>
+                        </button>
+                      }
+                    </div>
+                  </div>
+                } @empty {
+                  <div class="empty-roster-box">
+                    <p>No se encontraron alumnos en {{ grp.name }}.</p>
+                  </div>
+                }
+              </div>
+            }
+          }
+
+          <!-- SUB-VIEW 2: PARENTS DIRECTORY -->
+          @if (groupSubView() === 'PARENTS') {
+            <div class="parents-directory-wrap">
+              <div class="roster-toolbar">
+                <div class="search-box">
+                  <span class="search-icon">🔍</span>
+                  <input
+                    type="text"
+                    [(ngModel)]="parentSearchQuery"
+                    placeholder="Buscar padre por nombre, correo, teléfono o alumno..."
+                    class="search-input"
+                  />
+                  <button
+                    type="button"
+                    *ngIf="parentSearchQuery"
+                    class="btn-clear-search"
+                    (click)="parentSearchQuery = ''"
+                  >&times;</button>
+                </div>
+                <div class="directory-count-badge">
+                  <span>Padres Registrados: <strong>{{ filteredGroupParents.length }}</strong></span>
+                </div>
+              </div>
+
+              <!-- Desktop Parents Table (>= 768px) -->
+              <div class="table-responsive roster-table-view">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Padre / Tutor</th>
+                      <th>Contacto</th>
+                      <th>Alumno(s) Vinculado(s)</th>
+                      <th>Estado de Cuenta</th>
+                      <th>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (p of filteredGroupParents; track p.id) {
+                      <tr>
+                        <td>
+                          <div class="student-cell">
+                            <span class="student-avatar student-avatar--parent">{{ p.nombre.charAt(0) }}</span>
+                            <div>
+                              <strong class="s-name">{{ p.nombre }}</strong>
+                              <p class="s-meta">{{ p.email }}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <div class="contact-cell">
+                            <a *ngIf="p.phone" [href]="'tel:' + p.phone" class="phone-link">📞 {{ p.phone }}</a>
+                            <span *ngIf="!p.phone" class="text-muted">Sin teléfono</span>
+                          </div>
+                        </td>
+                        <td>
+                          <div class="student-chips-list">
+                            @for (st of p.students; track st.id) {
+                              <span class="student-ref-chip" [class.student-ref-chip--inactive]="!st.active">
+                                🎓 {{ st.name }} <small *ngIf="st.grade">({{ st.grade }})</small>
+                              </span>
+                            }
+                          </div>
+                        </td>
+                        <td>
+                          <span class="badge-status" [class.badge-status--temp]="p.tempPassword" [class.badge-status--active]="!p.tempPassword">
+                            {{ p.tempPassword ? '🟡 Clave Temporal (IIT2026)' : '🟢 Contraseña Personal Activa' }}
                           </span>
-                        } @else {
-                          <span class="m-tutor-empty">Sin tutores registrados</span>
+                        </td>
+                        <td>
+                          <div class="action-btns">
+                            <button
+                              type="button"
+                              class="btn-action-reset"
+                              (click)="resetPasswordDirect(p.id, p.nombre)"
+                              [disabled]="isResettingPassword()"
+                              title="Restablecer contraseña a IIT2026"
+                            >
+                              <span>🔄 Restablecer</span>
+                            </button>
+                            <button
+                              type="button"
+                              class="btn-action-wa"
+                              (click)="openParentAccess(p)"
+                              title="Ver ficha de credenciales y compartir por WhatsApp"
+                            >
+                              <span>💬 Ficha WhatsApp</span>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    } @empty {
+                      <tr>
+                        <td colspan="5" class="empty-cell">
+                          No se encontraron cuentas de padres que coincidan con la búsqueda.
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Mobile Parents Cards (< 768px) -->
+              <div class="roster-mobile-view">
+                @for (p of filteredGroupParents; track p.id) {
+                  <div class="mobile-student-card mobile-parent-card">
+                    <div class="m-card-body">
+                      <div class="m-avatar-wrap m-avatar-wrap--parent">
+                        <span class="m-avatar-initial">{{ p.nombre.charAt(0) }}</span>
+                      </div>
+                      <div class="m-student-info">
+                        <strong class="m-student-name">{{ p.nombre }}</strong>
+                        <span class="m-parent-email">✉️ {{ p.email }}</span>
+                        <a *ngIf="p.phone" [href]="'tel:' + p.phone" class="m-parent-phone">📞 {{ p.phone }}</a>
+                      </div>
+                    </div>
+
+                    <!-- Associated Students -->
+                    <div class="m-linked-students-row">
+                      <span class="m-lbl-xs">Hijos en salón:</span>
+                      <div class="m-chips-wrap">
+                        @for (st of p.students; track st.id) {
+                          <span class="m-child-chip">{{ st.name }}</span>
                         }
                       </div>
                     </div>
+
+                    <!-- Footer: Status and Action Buttons -->
+                    <div class="m-card-footer m-card-footer--parent">
+                      <span class="badge-status-xs" [class.badge-status-xs--temp]="p.tempPassword" [class.badge-status-xs--active]="!p.tempPassword">
+                        {{ p.tempPassword ? '🟡 Clave Temporal' : '🟢 Personal Activa' }}
+                      </span>
+                      <div class="m-btn-group">
+                        <button
+                          type="button"
+                          class="btn-m-reset"
+                          (click)="resetPasswordDirect(p.id, p.nombre)"
+                          [disabled]="isResettingPassword()"
+                          title="Restablecer contraseña a IIT2026"
+                        >
+                          <span>🔄 Reset IIT2026</span>
+                        </button>
+                        <button
+                          type="button"
+                          class="btn-m-wa"
+                          (click)="openParentAccess(p)"
+                          title="Ficha y WhatsApp"
+                        >
+                          <span>💬 Ficha</span>
+                        </button>
+                      </div>
+                    </div>
                   </div>
-
-                  <!-- Bottom: Thumb-friendly Actions Row -->
-                  <div class="m-card-footer">
-                    <button
-                      type="button"
-                      class="btn-m-wa"
-                      (click)="openShareModal(s)"
-                      title="Enviar credenciales a papás por WhatsApp"
-                    >
-                      <span class="m-wa-icon">💬</span>
-                      <span>WhatsApp Padres</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      class="btn-m-edit"
-                      (click)="openEditStudentModal(s)"
-                      title="Editar datos del alumno"
-                    >
-                      <span>✏️ Editar</span>
-                    </button>
-
-                    @if (s.active) {
-                      <button
-                        type="button"
-                        class="btn-m-toggle-active btn-m-toggle-active--danger"
-                        (click)="openConfirmToggleActive(s)"
-                        title="Dar de baja alumno"
-                      >
-                        <span>🚫</span>
-                      </button>
-                    } @else {
-                      <button
-                        type="button"
-                        class="btn-m-toggle-active btn-m-toggle-active--restore"
-                        (click)="openConfirmToggleActive(s)"
-                        title="Reactivar alumno"
-                      >
-                        <span>🔄</span>
-                      </button>
-                    }
+                } @empty {
+                  <div class="empty-roster-box">
+                    <p>No se encontraron cuentas de padres en este grupo.</p>
                   </div>
-                </div>
-              } @empty {
-                <div class="empty-roster-box">
-                  <p>No se encontraron alumnos en {{ grp.name }}.</p>
-                </div>
-              }
+                }
+              </div>
             </div>
           }
+
         </div>
       }
     </main>
@@ -644,10 +877,20 @@
                       <select [(ngModel)]="t.relationship" class="form-control">
                         <option value="Mamá">Mamá</option>
                         <option value="Papá">Papá</option>
-                        <option value="Abuelo/a">Abuelo/a</option>
-                        <option value="Tío/a">Tío/a</option>
-                        <option value="Chofer">Chofer</option>
+                        <option value="Abuelo">Abuelo</option>
+                        <option value="Abuela">Abuela</option>
+                        <option value="Hermano">Hermano</option>
+                        <option value="Hermana">Hermana</option>
+                        <option value="Tío">Tío</option>
+                        <option value="Tía">Tía</option>
                         <option value="Tutor Legal">Tutor Legal</option>
+                        <option value="Chofer">Chofer</option>
+                        <option value="Otro">Otro</option>
+                        <option *ngIf="t.relationship === 'Abuelo/a'" value="Abuelo/a">Abuelo/a</option>
+                        <option *ngIf="t.relationship === 'Hermano(a)'" value="Hermano(a)">Hermano(a)</option>
+                        <option *ngIf="t.relationship === 'Hermano/a'" value="Hermano/a">Hermano/a</option>
+                        <option *ngIf="t.relationship === 'Tío/a'" value="Tío/a">Tío/a</option>
+                        <option *ngIf="t.relationship === 'Tutor / Familiar'" value="Tutor / Familiar">Tutor / Familiar</option>
                       </select>
                     </div>
 
@@ -992,11 +1235,18 @@
                     <select [(ngModel)]="t.relationship" class="form-control">
                       <option value="Mamá">Mamá</option>
                       <option value="Papá">Papá</option>
-                      <option value="Abuela / Abuelo">Abuela / Abuelo</option>
-                      <option value="Tía / Tío">Tía / Tío</option>
-                      <option value="Hermano(a)">Hermano(a)</option>
-                      <option value="Tutor / Familiar">Tutor / Familiar</option>
+                      <option value="Abuelo">Abuelo</option>
+                      <option value="Abuela">Abuela</option>
+                      <option value="Hermano">Hermano</option>
+                      <option value="Hermana">Hermana</option>
+                      <option value="Tío">Tío</option>
+                      <option value="Tía">Tía</option>
+                      <option value="Tutor Legal">Tutor Legal</option>
                       <option value="Chofer">Chofer</option>
+                      <option value="Otro">Otro</option>
+                      <option *ngIf="t.relationship === 'Abuela / Abuelo'" value="Abuela / Abuelo">Abuela / Abuelo</option>
+                      <option *ngIf="t.relationship === 'Hermano(a)'" value="Hermano(a)">Hermano(a)</option>
+                      <option *ngIf="t.relationship === 'Tutor / Familiar'" value="Tutor / Familiar">Tutor / Familiar</option>
                     </select>
                   </div>
 
@@ -1083,10 +1333,5 @@
     <span>Colegio IIT • Monitor de Entregas</span>
     <span class="footer-version">{{ appVersion }}</span>
   </footer>
-
-  <!-- Panel Modal de Simulación y Pruebas (Solo para ADMIN) -->
-  @if (authService.userRole() === 'ADMIN') {
-    <app-simulation-panel></app-simulation-panel>
-  }
 
 </div>

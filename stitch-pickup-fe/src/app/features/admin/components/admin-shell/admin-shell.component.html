@@ -14,16 +14,6 @@
     </div>
 
     <div class="header-right">
-      <button
-        type="button"
-        class="btn-sim-nav"
-        (click)="simulationService.openPanel()"
-        title="Simulador de Alumnos y Conectividad (Modo Pruebas)"
-      >
-        <span class="nav-sim-icon">🧪</span>
-        <span>Simulación</span>
-      </button>
-
       <a routerLink="/monitor" class="btn-monitor-nav" title="Ver Monitor de Entregas en vivo">
         <svg viewBox="0 0 24 24" fill="none" class="nav-icon"><path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" stroke="currentColor" stroke-width="2"/><line x1="6" y1="1" x2="6" y2="4" stroke="currentColor" stroke-width="2"/><line x1="10" y1="1" x2="10" y2="4" stroke="currentColor" stroke-width="2"/><line x1="14" y1="1" x2="14" y2="4" stroke="currentColor" stroke-width="2"/></svg>
         <span>🚗 Monitor de Entregas</span>
@@ -197,8 +187,4 @@
       </button>
     }
   </nav>
-
-  <!-- Modal de Simulación y Pruebas -->
-  <app-simulation-panel></app-simulation-panel>
-
 </div>

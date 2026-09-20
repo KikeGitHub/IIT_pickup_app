@@ -364,24 +364,210 @@
       }
 
       .s-name { color: #f8fafc; }
+      .s-bday { color: #94a3b8; }
+      .grade-tag { color: #cbd5e1; }
+      .curp-badge {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.15);
+        color: #cbd5e1;
+      }
+      .group-pill {
+        background: rgba(59, 130, 246, 0.2);
+        border-color: rgba(59, 130, 246, 0.35);
+        color: #93c5fd;
+      }
       .tutor-pill {
         background: rgba(255, 255, 255, 0.04);
         border-color: rgba(255, 255, 255, 0.08);
         color: #cbd5e1;
       }
+      .text-muted { color: #94a3b8 !important; }
+      .empty-cell { color: #94a3b8; }
+      .parent-acc-badge {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(255, 255, 255, 0.1);
+        color: #cbd5e1;
+        .p-acc-user { color: #f8fafc; }
+      }
+      .student-ref-chip {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(255, 255, 255, 0.1);
+        color: #cbd5e1;
+      }
+      .phone-link { color: #38bdf8; }
+    }
+
+    .roster-subnav-bar {
+      border-bottom-color: rgba(255, 255, 255, 0.08);
+      .subnav-pill {
+        background: rgba(255, 255, 255, 0.04);
+        border-color: rgba(255, 255, 255, 0.1);
+        color: #cbd5e1;
+
+        &:hover { background: rgba(255, 255, 255, 0.08); }
+        &--active {
+          background: #2563eb;
+          border-color: #2563eb;
+          color: white;
+        }
+      }
+    }
+
+    .status-pill-btn {
+      background: #1e293b;
+      border-color: rgba(255, 255, 255, 0.12);
+      color: #cbd5e1;
+      &:hover { background: #334155; color: white; }
+      &--active { background: #2563eb; border-color: #2563eb; color: white; }
+      &--inactive.status-pill-btn--active { background: #dc2626; border-color: #dc2626; color: white; }
+    }
+
+    .directory-count-badge {
+      background: #0b0f19;
+      border-color: rgba(255, 255, 255, 0.1);
+      color: #94a3b8;
+      strong { color: #f8fafc; }
     }
 
     .mobile-student-card {
       background: #131c2e;
       border-color: rgba(255, 255, 255, 0.08);
 
-      .m-name { color: #f8fafc; }
-      .m-tutors-section {
-        background: rgba(0, 0, 0, 0.2);
-        border-color: rgba(255, 255, 255, 0.05);
-        .tutor-pill {
-          background: rgba(255, 255, 255, 0.06);
+      .m-student-name { color: #f8fafc !important; }
+      .m-grade-tag {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.15);
+        color: #cbd5e1;
+      }
+      .m-gender-tag { color: #94a3b8; }
+      .m-curp-tag {
+        color: #cbd5e1;
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(255, 255, 255, 0.12);
+      }
+      .m-tutor-name { color: #93c5fd !important; }
+      .m-tutor-line { color: #cbd5e1; }
+      .m-tutor-empty { color: #64748b; }
+      .m-card-footer { border-color: rgba(255, 255, 255, 0.08); }
+
+      .m-parents-box {
+        background: rgba(0, 0, 0, 0.25);
+        border-color: rgba(255, 255, 255, 0.08);
+        .m-parents-box-title { color: #93c5fd; }
+        .m-p-name { color: #f8fafc; }
+        .m-p-email { color: #94a3b8; }
+      }
+
+      .m-parent-email { color: #94a3b8; }
+      .m-parent-phone { color: #38bdf8; }
+      .m-linked-students-row {
+        border-top-color: rgba(255, 255, 255, 0.06);
+        .m-lbl-xs { color: #94a3b8; }
+        .m-child-chip {
+          background: rgba(255, 255, 255, 0.08);
+          border-color: rgba(255, 255, 255, 0.12);
           color: #cbd5e1;
+        }
+      }
+    }
+  }
+
+  // Modales en Modo Oscuro (alto contraste y textos 100% legibles)
+  .modal-card {
+    background: #131c2e !important;
+    color: #f8fafc !important;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+
+    .modal-body {
+      background: #131c2e;
+      color: #f8fafc;
+    }
+
+    .modal-footer {
+      background: #0b0f19;
+      border-top-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .form-group label {
+      color: #cbd5e1;
+    }
+
+    .form-control {
+      background: #0b0f19;
+      color: #f8fafc;
+      border-color: rgba(255, 255, 255, 0.18);
+      &:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+      }
+      &::placeholder {
+        color: #64748b;
+      }
+      option {
+        background: #0b0f19;
+        color: #f8fafc;
+      }
+    }
+
+    .btn-secondary {
+      background: #1e293b;
+      color: #e2e8f0;
+      border-color: rgba(255, 255, 255, 0.15);
+      &:hover {
+        background: #334155;
+      }
+    }
+
+    .tutor-card-form {
+      background: #0b0f19;
+      border-color: rgba(255, 255, 255, 0.08);
+      .tutor-form-header {
+        border-bottom-color: rgba(255, 255, 255, 0.08);
+      }
+    }
+
+    .parent-info-card {
+      background: #0b0f19;
+      border-color: rgba(255, 255, 255, 0.08);
+      .p-name { color: #f8fafc; }
+      .p-email { color: #60a5fa; }
+      .p-phone { color: #94a3b8; }
+      .reset-hint { color: #94a3b8; }
+      .p-reset-bar { border-top-color: rgba(255, 255, 255, 0.1); }
+    }
+
+    .section-desc {
+      color: #94a3b8;
+    }
+
+    .form-section-title h4 {
+      color: #f8fafc;
+    }
+
+    .avatar-preview-box {
+      border-color: rgba(255, 255, 255, 0.15);
+      background: #0b0f19;
+    }
+
+    .wa-preview-wrap {
+      .wa-preview-header .wa-preview-tag { color: #34d399; }
+      .wa-preview-box {
+        background: #182229;
+        color: #e9edef;
+        border-color: #2a3942;
+      }
+    }
+
+    .parent-tabs-bar {
+      .tabs-label { color: #94a3b8; }
+      .parent-pill-btn {
+        background: #0b0f19;
+        border-color: rgba(255, 255, 255, 0.15);
+        color: #cbd5e1;
+        &--active {
+          background: #2563eb;
+          color: white;
+          border-color: #2563eb;
         }
       }
     }
@@ -693,45 +879,6 @@
       &--spinning {
         animation: spin 1s linear infinite;
       }
-    }
-  }
-
-  .btn-sim-trigger {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 6px 13px;
-    height: 34px;
-    background: #f5f3ff;
-    border: 1.5px solid #c4b5fd;
-    border-radius: 20px;
-    color: #6d28d9;
-    font-size: 12px;
-    font-weight: 700;
-    cursor: pointer;
-    box-shadow: 0 1px 3px rgba(109, 40, 217, 0.12);
-    transition: all 0.2s ease;
-    white-space: nowrap;
-    flex-shrink: 0;
-
-    &:hover {
-      background: #ede9fe;
-      border-color: #8b5cf6;
-      transform: translateY(-1px);
-      box-shadow: 0 3px 6px rgba(109, 40, 217, 0.18);
-    }
-
-    &:active {
-      transform: scale(0.97);
-    }
-
-    .sim-icon {
-      font-size: 13px;
-    }
-
-    @media (max-width: 640px) {
-      padding: 5px 9px;
-      font-size: 11px;
     }
   }
 }

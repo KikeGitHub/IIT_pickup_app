@@ -81,7 +81,7 @@ export class AlertService {
         updatedAt: new Date().toISOString()
       });
 
-      this.notification.warning('Sin conexión. Alerta guardada localmente, se enviará automáticamente al reconectarse.');
+      this.notification.warning('📡 Sin señal. Tu aviso fue guardado localmente y se enviará automáticamente en cuanto recuperes conexión.');
       return;
     }
 
@@ -116,7 +116,7 @@ export class AlertService {
           updatedAt: new Date().toISOString()
         });
 
-        this.notification.warning('Error de red. Alerta guardada en cola offline.');
+        this.notification.warning('📡 Sin señal o fallo de red. Tu aviso fue guardado en tu teléfono y se enviará automáticamente al reconectarse.');
         return of(null);
       })
     ).subscribe();
