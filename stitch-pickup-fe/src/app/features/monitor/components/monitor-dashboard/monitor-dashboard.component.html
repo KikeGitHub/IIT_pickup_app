@@ -248,7 +248,9 @@
                 [class.subnav-pill--active]="groupSubView() === 'STUDENTS'"
                 (click)="setGroupSubView('STUDENTS')"
               >
-                <span>🎓 Alumnos ({{ totalStudentsCount }})</span>
+                <span class="subnav-icon">🎓</span>
+                <span class="subnav-label">Alumnos</span>
+                <span class="subnav-count-badge">{{ totalStudentsCount }}</span>
               </button>
               <button
                 type="button"
@@ -256,7 +258,9 @@
                 [class.subnav-pill--active]="groupSubView() === 'PARENTS'"
                 (click)="setGroupSubView('PARENTS')"
               >
-                <span>👨‍👩‍👧 Directorio de Padres ({{ filteredGroupParents.length }})</span>
+                <span class="subnav-icon">👨‍👩‍👧</span>
+                <span class="subnav-label">Directorio de Padres</span>
+                <span class="subnav-count-badge">{{ filteredGroupParents.length }}</span>
               </button>
             </div>
           </div>
@@ -357,7 +361,7 @@
                       <th>Grupo</th>
                       <th class="sortable" (click)="toggleRosterSort('tutors')" title="Clic para ordenar por número de tutores">
                         <span class="th-content">
-                          Tutores & Padres Vinculados
+                          Tutores Pickup Autorizados
                           <span class="sort-icon" [class.sort-icon--active]="rosterSortField() === 'tutors'">
                             {{ rosterSortField() === 'tutors' ? (rosterSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}
                           </span>
@@ -403,46 +407,25 @@
                           <span class="group-pill">{{ grp.name }}</span>
                         </td>
                         <td>
-                          <div class="tutors-list">
-                            <!-- Pickup Tutors (Gate) -->
-                            <div class="tutors-pickup-chips">
-                              @for (t of s.familyMembers; track t.name) {
-                                <span class="tutor-pill" [class.tutor-pill--disabled]="!t.authorized" [title]="t.phone ? 'Tel: ' + t.phone : ''">
-                                  🛡️ {{ t.name }} ({{ t.relationship }})
-                                </span>
-                              } @empty {
-                                <span class="text-muted">Sin tutores pickup</span>
-                              }
-                            </div>
-
-                            <!-- Parent User Accounts linked -->
-                            @if (s.parentAccounts && s.parentAccounts.length > 0) {
-                              <div class="parent-accounts-row">
-                                @for (p of s.parentAccounts; track p.id) {
-                                  <div class="parent-acc-badge">
-                                    <span class="p-acc-user">👤 {{ p.nombre }}</span>
-                                    <span class="badge-status-xs" [class.badge-status-xs--temp]="p.tempPassword" [class.badge-status-xs--active]="!p.tempPassword">
-                                      {{ p.tempPassword ? '🟡 Clave Temporal' : '🟢 Activo' }}
-                                    </span>
-                                    <button
-                                      type="button"
-                                      class="btn-reset-xs"
-                                      (click)="resetPasswordDirect(p.id, p.nombre)"
-                                      [disabled]="isResettingPassword()"
-                                      title="Restablecer contraseña a IIT2026"
-                                    >
-                                      🔑 Reset
-                                    </button>
-                                  </div>
-                                }
-                              </div>
+                          <div class="tutors-pickup-chips">
+                            @for (t of s.familyMembers; track t.name) {
+                              <span class="tutor-pill" [class.tutor-pill--disabled]="!t.authorized" [title]="t.phone ? 'Tel: ' + t.phone : ''">
+                                🛡️ {{ t.name }} ({{ t.relationship }})
+                              </span>
+                            } @empty {
+                              <span class="text-muted">Sin tutores pickup</span>
                             }
                           </div>
                         </td>
                         <td>
                           <div class="action-btns">
-                            <button type="button" class="btn-action-wa" (click)="openShareModal(s)" title="Ficha de acceso para padres y credenciales">
-                              <span>💬 Acceso</span>
+                            <button
+                              type="button"
+                              class="btn-action-wa"
+                              (click)="openShareModal(s)"
+                              title="Ver cuentas de padres asignados, gestionar accesos y enviar ficha por WhatsApp"
+                            >
+                              <span>👨‍👩‍👧 Padres ({{ s.parentAccounts?.length || 0 }})</span>
                             </button>
                             <button type="button" class="btn-action-edit" (click)="openEditStudentModal(s)" title="Editar alumno">
                               <span>✏️ Editar</span>
@@ -510,47 +493,17 @@
                       </div>
                     </div>
 
-                    <!-- Parents Portal Accounts Section in Mobile Card -->
-                    @if (s.parentAccounts && s.parentAccounts.length > 0) {
-                      <div class="m-parents-box">
-                        <span class="m-parents-box-title">👨‍👩‍👧 Cuentas de Padres (Acceso Portal):</span>
-                        <div class="m-parents-list">
-                          @for (p of s.parentAccounts; track p.id) {
-                            <div class="m-parent-account-item">
-                              <div class="m-p-left">
-                                <span class="m-p-name">👤 {{ p.nombre }}</span>
-                                <span class="m-p-email">{{ p.email }}</span>
-                              </div>
-                              <div class="m-p-right">
-                                <span class="badge-status-xs" [class.badge-status-xs--temp]="p.tempPassword" [class.badge-status-xs--active]="!p.tempPassword">
-                                  {{ p.tempPassword ? '🟡 Clave Temporal' : '🟢 Activo' }}
-                                </span>
-                                <button
-                                  type="button"
-                                  class="btn-m-quick-reset"
-                                  (click)="resetPasswordDirect(p.id, p.nombre)"
-                                  [disabled]="isResettingPassword()"
-                                  title="Restablecer contraseña a IIT2026"
-                                >
-                                  🔑 Reset
-                                </button>
-                              </div>
-                            </div>
-                          }
-                        </div>
-                      </div>
-                    }
-
                     <!-- Bottom: Thumb-friendly Actions Row -->
                     <div class="m-card-footer">
                       <button
                         type="button"
-                        class="btn-m-wa"
+                        class="btn-m-parents"
                         (click)="openShareModal(s)"
-                        title="Enviar credenciales a papás por WhatsApp"
+                        title="Ver cuentas de padres vinculados, restablecer contraseña y enviar ficha de acceso"
                       >
-                        <span class="m-wa-icon">💬</span>
-                        <span>Ficha Acceso</span>
+                        <span class="m-parents-icon">👨‍👩‍👧</span>
+                        <span>Padres y Acceso</span>
+                        <span class="m-parents-count">{{ s.parentAccounts?.length || 0 }}</span>
                       </button>
 
                       <button
@@ -923,10 +876,10 @@
         <div class="modal-card modal-card--share" (click)="$event.stopPropagation()">
           <header class="modal-header modal-header--wa">
             <div class="header-wa-title">
-              <span class="wa-icon-bubble">💬</span>
+              <span class="wa-icon-bubble">👨‍👩‍👧</span>
               <div>
-                <h3>Ficha de Acceso para Padres</h3>
-                <p class="header-wa-sub">{{ student.name }} &bull; {{ student.groupName || 'Grupo Escolar' }}</p>
+                <h3>Padres Asignados y Ficha de Acceso</h3>
+                <p class="header-wa-sub">Alumno: <strong>{{ student.name }}</strong> &bull; {{ student.groupName || currentGroup?.name || 'Grupo Escolar' }}</p>
               </div>
             </div>
             <button type="button" class="btn-close" (click)="closeShareModal()">&times;</button>
@@ -938,15 +891,15 @@
               <div class="no-parent-warning">
                 <span class="warn-icon">⚠️</span>
                 <div>
-                  <h4>No hay cuentas de usuario padre vinculadas</h4>
-                  <p>Este alumno aún no tiene un usuario padre vinculado en el sistema. Los accesos se vinculan desde el panel de Administración.</p>
+                  <h4>Sin cuentas de acceso portal vinculadas</h4>
+                  <p>Este alumno no tiene usuarios registrados en la app para padres. Puedes vincularlos o editarlos desde el botón Editar Alumno o en Administración.</p>
                 </div>
               </div>
             } @else {
               <!-- Tabs if multiple parent accounts -->
               @if (student.parentAccounts.length > 1) {
                 <div class="parent-tabs-bar">
-                  <span class="tabs-label">Seleccionar cuenta:</span>
+                  <span class="tabs-label">Cuentas vinculadas ({{ student.parentAccounts.length }}):</span>
                   <div class="parent-pills">
                     @for (p of student.parentAccounts; track p.id; let idx = $index) {
                       <button
@@ -985,14 +938,17 @@
                     </div>
                   </div>
 
-                  <!-- Reset password button if already active -->
-                  <div class="p-reset-bar" *ngIf="!parent.tempPassword">
-                    <span class="reset-hint">¿El padre olvidó su contraseña?</span>
+                  <!-- Reset password button -->
+                  <div class="p-reset-bar">
+                    <span class="reset-hint">
+                      {{ parent.tempPassword ? 'Clave temporal vigente (IIT2026)' : '¿El padre olvidó su contraseña?' }}
+                    </span>
                     <button
                       type="button"
                       class="btn-reset-pwd"
                       [disabled]="isResettingPassword()"
                       (click)="resetPassword(parent.id)"
+                      title="Restablecer contraseña a IIT2026"
                     >
                       {{ isResettingPassword() ? '⏳ Restableciendo...' : '🔄 Restablecer a IIT2026' }}
                     </button>
