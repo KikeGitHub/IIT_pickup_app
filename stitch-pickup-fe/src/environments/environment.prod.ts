@@ -3,5 +3,5 @@ export const environment = {
   apiBaseUrl: '/api/v1',
   apiUrl: '/api/v1',
   wsUrl: '/ws',
-  appVersion: 'v1.2.6',
+  appVersion: 'v1.2.7',
 };

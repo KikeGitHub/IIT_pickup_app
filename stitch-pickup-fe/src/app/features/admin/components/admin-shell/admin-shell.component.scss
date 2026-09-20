@@ -12,7 +12,11 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: v.$space-md v.$space-lg;
+  /* Safe Area Inset para evitar colisión con el notch / Dynamic Island en iOS PWA */
+  padding-top: calc(v.$space-md + env(safe-area-inset-top, 0px));
+  padding-right: calc(v.$space-lg + env(safe-area-inset-right, 0px));
+  padding-bottom: v.$space-md;
+  padding-left: calc(v.$space-lg + env(safe-area-inset-left, 0px));
   background: linear-gradient(135deg, v.$color-admin-header-from 0%, v.$color-admin-header-via 100%);
   color: white;
   box-shadow: v.$shadow-md;
