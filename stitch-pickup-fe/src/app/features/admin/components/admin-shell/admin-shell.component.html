@@ -32,7 +32,7 @@
     </div>
   </header>
 
-  <!-- Subnav Tabs (Desktop & Tablet) -->
+  <!-- Admin Navigation Bar (Desktop, Tablet & Mobile) -->
   <nav class="admin-nav" role="tablist">
     <div class="nav-container">
       <button
@@ -40,7 +40,7 @@
         role="tab"
         class="nav-tab"
         [class.nav-tab--active]="activeTab() === 'KPIS'"
-        (click)="setTab('KPIS')"
+        (click)="setTab('KPIS', $event)"
       >
         <span>📊 Panel KPIs & Métricas</span>
       </button>
@@ -63,7 +63,7 @@
           role="tab"
           class="nav-tab"
           [class.nav-tab--active]="activeTab() === 'GROUPS'"
-          (click)="setTab('GROUPS')"
+          (click)="setTab('GROUPS', $event)"
         >
           <span>🏫 Grados & Grupos</span>
         </button>
@@ -73,7 +73,7 @@
           role="tab"
           class="nav-tab"
           [class.nav-tab--active]="activeTab() === 'STUDENTS'"
-          (click)="setTab('STUDENTS')"
+          (click)="setTab('STUDENTS', $event)"
         >
           <span>🎓 Alumnos & Tutores</span>
         </button>
@@ -83,7 +83,7 @@
           role="tab"
           class="nav-tab"
           [class.nav-tab--active]="activeTab() === 'TEACHERS'"
-          (click)="setTab('TEACHERS')"
+          (click)="setTab('TEACHERS', $event)"
         >
           <span>👨‍🏫 Maestros & Personal</span>
         </button>
@@ -93,7 +93,7 @@
           role="tab"
           class="nav-tab"
           [class.nav-tab--active]="activeTab() === 'PARENTS'"
-          (click)="setTab('PARENTS')"
+          (click)="setTab('PARENTS', $event)"
         >
           <span>👨‍👩‍👧 Padres de Familia</span>
         </button>
@@ -103,7 +103,7 @@
           role="tab"
           class="nav-tab"
           [class.nav-tab--active]="activeTab() === 'CSV'"
-          (click)="setTab('CSV')"
+          (click)="setTab('CSV', $event)"
         >
           <span>📂 Carga Masiva Excel/CSV</span>
         </button>
@@ -145,46 +145,4 @@
       <span class="bottom-version">{{ appVersion }}</span>
     </footer>
   </main>
-
-  <!-- Mobile Bottom Navigation Bar (< 768px) -->
-  <nav class="mobile-bottom-nav">
-    <button type="button" class="mobile-nav-btn" [class.mobile-nav-btn--active]="activeTab() === 'KPIS'" (click)="setTab('KPIS')">
-      <span class="m-icon">📊</span>
-      <span class="m-lbl">KPIs</span>
-    </button>
-
-    @if (authService.userRole() === 'MONITOR') {
-      <a routerLink="/monitor" class="mobile-nav-btn">
-        <span class="m-icon">🚗</span>
-        <span class="m-lbl">Monitor</span>
-      </a>
-    }
-
-    @if (authService.userRole() !== 'MONITOR') {
-      <button type="button" class="mobile-nav-btn" [class.mobile-nav-btn--active]="activeTab() === 'GROUPS'" (click)="setTab('GROUPS')">
-        <span class="m-icon">🏫</span>
-        <span class="m-lbl">Grupos</span>
-      </button>
-
-      <button type="button" class="mobile-nav-btn" [class.mobile-nav-btn--active]="activeTab() === 'STUDENTS'" (click)="setTab('STUDENTS')">
-        <span class="m-icon">🎓</span>
-        <span class="m-lbl">Alumnos</span>
-      </button>
-
-      <button type="button" class="mobile-nav-btn" [class.mobile-nav-btn--active]="activeTab() === 'TEACHERS'" (click)="setTab('TEACHERS')">
-        <span class="m-icon">👨‍🏫</span>
-        <span class="m-lbl">Maestros</span>
-      </button>
-
-      <button type="button" class="mobile-nav-btn" [class.mobile-nav-btn--active]="activeTab() === 'PARENTS'" (click)="setTab('PARENTS')">
-        <span class="m-icon">👨‍👩‍👧</span>
-        <span class="m-lbl">Padres</span>
-      </button>
-
-      <button type="button" class="mobile-nav-btn" [class.mobile-nav-btn--active]="activeTab() === 'CSV'" (click)="setTab('CSV')">
-        <span class="m-icon">📂</span>
-        <span class="m-lbl">Excel</span>
-      </button>
-    }
-  </nav>
 </div>

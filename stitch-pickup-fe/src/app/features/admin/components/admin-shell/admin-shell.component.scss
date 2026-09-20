@@ -5,7 +5,7 @@
   background: v.$color-surface-container-low;
   color: v.$color-on-surface;
   font-family: v.$font-family-base;
-  padding-bottom: 70px; // Padding for mobile bottom nav
+  padding-bottom: v.$space-xl;
 }
 
 .admin-header {
@@ -204,69 +204,9 @@
   padding: v.$space-md;
 }
 
-/* Mobile Bottom Navigation Bar (< 768px) */
-.mobile-bottom-nav {
-  display: none;
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: rgba(255, 255, 255, 0.96);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
-  box-shadow: 0 -3px 12px rgba(0, 0, 0, 0.06);
-  z-index: 1000;
-  justify-content: space-around;
-  padding: 6px 2px calc(6px + env(safe-area-inset-bottom, 8px));
-
-  .mobile-nav-btn {
-    background: none;
-    border: none;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 2px;
-    color: #64748b;
-    cursor: pointer;
-    padding: 5px 6px;
-    border-radius: 8px;
-    min-width: 48px;
-    text-decoration: none;
-    transition: all 0.15s ease;
-    user-select: none;
-    -webkit-tap-highlight-color: transparent;
-
-    .m-icon {
-      font-size: 19px;
-      line-height: 1;
-    }
-
-    .m-lbl {
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: -0.2px;
-    }
-
-    &:active {
-      transform: scale(0.92);
-    }
-
-    &--active {
-      color: #1d4ed8;
-      background: rgba(29, 78, 216, 0.08);
-
-      .m-lbl {
-        font-weight: 800;
-      }
-    }
-  }
-}
-
 @media (max-width: 768px) {
   .admin-root {
-    padding-bottom: calc(68px + env(safe-area-inset-bottom, 10px));
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 10px));
   }
 
   .admin-header {
@@ -329,12 +269,57 @@
     }
   }
 
+  /* Admin Nav visible and optimized as horizontal scrollable pill bar on mobile */
   .admin-nav {
-    display: none; // Hidden on mobile, replaced by bottom nav
-  }
+    display: block; // ALWAYS VISIBLE ON MOBILE
+    background: #ffffff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.06);
+    border-bottom: 1px solid #e2e8f0;
 
-  .mobile-bottom-nav {
-    display: flex;
+    .nav-container {
+      padding: 8px 10px;
+      gap: 6px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      &::-webkit-scrollbar { display: none; }
+    }
+
+    .nav-tab {
+      padding: 7px 13px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #334155;
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-radius: 9999px; // Modern pill format on mobile
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: all 0.15s ease;
+
+      &:active {
+        transform: scale(0.96);
+      }
+
+      &--active {
+        background: #1e3a8a !important;
+        color: #ffffff !important;
+        border-color: #1e3a8a !important;
+        font-weight: 700;
+        box-shadow: 0 2px 6px rgba(30, 58, 138, 0.28);
+      }
+
+      &--monitor-direct {
+        margin: 0;
+        background: rgba(14, 165, 233, 0.1);
+        border-color: rgba(14, 165, 233, 0.3);
+        color: #0284c7;
+
+        &:hover {
+          background: rgba(14, 165, 233, 0.2);
+        }
+      }
+    }
   }
 
   .admin-main {
