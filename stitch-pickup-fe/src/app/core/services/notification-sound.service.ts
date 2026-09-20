@@ -72,7 +72,7 @@ export class NotificationSoundService {
   }
 
   public unlockAudio(): void {
-    if (!isPlatformBrowser(this.platformId)) return;
+    if (!isPlatformBrowser(this.platformId) || this.isUnlocked) return;
 
     try {
       const ctx = this.getContext();
@@ -80,25 +80,39 @@ export class NotificationSoundService {
         ctx.resume().catch(() => {});
       }
 
-      // Micro-buffer silencioso para despertar el hardware de audio
+      // Micro-buffer silencioso para despertar el hardware de audio sin ruido
       const buffer = ctx.createBuffer(1, 1, 22050);
       const source = ctx.createBufferSource();
       source.buffer = buffer;
       source.connect(ctx.destination);
       source.start(0);
 
-      // Desbloquear elementos HTML5 Audio durante el gesto de usuario (requerido por iOS)
+      // Desbloquear elementos HTML5 Audio en iOS de forma 100% silenciosa
       if (this.htmlAudioAlert) {
+        const prevVol = this.htmlAudioAlert.volume;
+        this.htmlAudioAlert.volume = 0;
         this.htmlAudioAlert.play().then(() => {
           this.htmlAudioAlert?.pause();
-          if (this.htmlAudioAlert) this.htmlAudioAlert.currentTime = 0;
-        }).catch(() => {});
+          if (this.htmlAudioAlert) {
+            this.htmlAudioAlert.currentTime = 0;
+            this.htmlAudioAlert.volume = prevVol || 1.0;
+          }
+        }).catch(() => {
+          if (this.htmlAudioAlert) this.htmlAudioAlert.volume = prevVol || 1.0;
+        });
       }
       if (this.htmlAudioUrgent) {
+        const prevVol = this.htmlAudioUrgent.volume;
+        this.htmlAudioUrgent.volume = 0;
         this.htmlAudioUrgent.play().then(() => {
           this.htmlAudioUrgent?.pause();
-          if (this.htmlAudioUrgent) this.htmlAudioUrgent.currentTime = 0;
-        }).catch(() => {});
+          if (this.htmlAudioUrgent) {
+            this.htmlAudioUrgent.currentTime = 0;
+            this.htmlAudioUrgent.volume = prevVol || 1.0;
+          }
+        }).catch(() => {
+          if (this.htmlAudioUrgent) this.htmlAudioUrgent.volume = prevVol || 1.0;
+        });
       }
 
       this.isUnlocked = true;

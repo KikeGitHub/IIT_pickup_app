@@ -101,22 +101,22 @@
 .btn-audio-toggle {
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 5px 10px;
-  border-radius: 20px;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: white;
-  font-size: 11px;
-  font-weight: v.$font-weight-semibold;
   cursor: pointer;
   transition: all 0.2s ease;
+  flex-shrink: 0;
 
-  .audio-icon { font-size: 13px; }
-  .audio-text { white-space: nowrap; }
+  .audio-icon { font-size: 15px; line-height: 1; }
 
   &:hover {
     background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
   }
 
   &--ready {

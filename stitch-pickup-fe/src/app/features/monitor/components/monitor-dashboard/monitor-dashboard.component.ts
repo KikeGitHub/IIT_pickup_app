@@ -14,10 +14,17 @@ import { StudentMonitorCardComponent } from '../student-monitor-card/student-mon
 import { DispatchConfirmationComponent } from '../dispatch-confirmation/dispatch-confirmation.component';
 import { TableSkeletonComponent } from '../../../../shared/components/table-skeleton/table-skeleton.component';
 import { PwaInstallBannerComponent } from '../../../../shared/components/pwa-install-banner/pwa-install-banner.component';
-import { SimulationPanelComponent } from '../../../../shared/components/simulation-panel/simulation-panel.component';
-import { SimulationService } from '../../../../core/services/simulation.service';
 
 import { environment } from '../../../../../environments/environment';
+
+export interface GroupParentItem {
+  id: string;
+  nombre: string;
+  email: string;
+  phone?: string;
+  tempPassword: boolean;
+  students: { id: string; name: string; grade?: string; active: boolean }[];
+}
 
 @Component({
   selector: 'app-monitor-dashboard',
@@ -30,8 +37,7 @@ import { environment } from '../../../../../environments/environment';
     StudentMonitorCardComponent,
     DispatchConfirmationComponent,
     TableSkeletonComponent,
-    PwaInstallBannerComponent,
-    SimulationPanelComponent
+    PwaInstallBannerComponent
   ],
   templateUrl: './monitor-dashboard.component.html',
   styleUrl: './monitor-dashboard.component.scss',
@@ -41,7 +47,6 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
   readonly monitorService = inject(MonitorService);
   readonly authService = inject(AuthService);
   readonly teacherService = inject(TeacherService);
-  readonly simulationService = inject(SimulationService);
   readonly imageUpload = inject(ImageUploadService);
   readonly ws = inject(WebSocketService);
   readonly wakeLock = inject(WakeLockService);
@@ -391,6 +396,85 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
       }
       const cmp = valA.localeCompare(valB, 'es', { sensitivity: 'base', numeric: true });
       return dir === 'asc' ? cmp : -cmp;
+    });
+  }
+
+  // ─── Sub-view in GROUPS: Students vs Parents Directory ─────────────────────
+  readonly groupSubView = signal<'STUDENTS' | 'PARENTS'>('STUDENTS');
+  parentSearchQuery = '';
+
+  setGroupSubView(view: 'STUDENTS' | 'PARENTS'): void {
+    this.groupSubView.set(view);
+  }
+
+  get filteredGroupParents(): GroupParentItem[] {
+    const grp = this.currentGroup;
+    if (!grp || !grp.students) return [];
+
+    const parentMap = new Map<string, GroupParentItem>();
+
+    grp.students.forEach((s) => {
+      (s.parentAccounts || []).forEach((p) => {
+        if (!parentMap.has(p.id)) {
+          parentMap.set(p.id, {
+            id: p.id,
+            nombre: p.nombre || 'Tutor sin nombre',
+            email: p.email,
+            phone: p.phone,
+            tempPassword: !!p.tempPassword,
+            students: []
+          });
+        }
+        parentMap.get(p.id)!.students.push({
+          id: s.id,
+          name: s.name,
+          grade: s.grade,
+          active: s.active
+        });
+      });
+    });
+
+    let list = Array.from(parentMap.values());
+    const q = this.parentSearchQuery.trim().toLowerCase();
+    if (q) {
+      list = list.filter(
+        (p) =>
+          p.nombre.toLowerCase().includes(q) ||
+          p.email.toLowerCase().includes(q) ||
+          (p.phone && p.phone.toLowerCase().includes(q)) ||
+          p.students.some((st) => st.name.toLowerCase().includes(q))
+      );
+    }
+    return list.sort((a, b) => a.nombre.localeCompare(b.nombre));
+  }
+
+  openParentAccess(parent: GroupParentItem): void {
+    const stId = parent.students[0]?.id;
+    const student = this.currentGroup?.students.find((s) => s.id === stId);
+    if (student) {
+      const idx = (student.parentAccounts || []).findIndex((p) => p.id === parent.id);
+      this.selectedStudentForShare.set(student);
+      this.selectedParentIndex.set(idx >= 0 ? idx : 0);
+      this.copySuccess.set(false);
+      this.resetSuccessMsg.set('');
+      this.showShareModal.set(true);
+    }
+  }
+
+  resetPasswordDirect(parentId: string, parentName?: string): void {
+    const nameStr = parentName ? ` a ${parentName}` : '';
+    if (!confirm(`¿Deseas restablecer la contraseña a IIT2026${nameStr}?`)) return;
+
+    this.isResettingPassword.set(true);
+    this.teacherService.resetParentPassword(parentId).subscribe({
+      next: () => {
+        this.isResettingPassword.set(false);
+        alert('✅ Contraseña restablecida exitosamente a IIT2026.');
+      },
+      error: (err) => {
+        this.isResettingPassword.set(false);
+        alert(err.error?.message || 'Error al restablecer la contraseña.');
+      }
     });
   }
 

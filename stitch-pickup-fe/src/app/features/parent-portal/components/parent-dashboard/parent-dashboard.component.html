@@ -1,4 +1,4 @@
-<div class="portal-root" (touchstart)="sound.unlockAudio()" (click)="sound.unlockAudio()">
+<div class="portal-root">
 
   <!-- Header bar -->
   <header class="portal-header">
@@ -12,16 +12,16 @@
     </div>
 
     <div class="header-actions">
-      <!-- Test / Unlock Audio Button -->
+      <!-- Test / Unlock Audio Button (Solo Icono de Bocina) -->
       <button
         type="button"
         class="btn-audio-toggle"
         [class.btn-audio-toggle--ready]="sound.audioUnlocked()"
         (click)="testAudio()"
-        title="Probar sonido y activar notificaciones en iPhone / móvil"
+        [title]="sound.audioUnlocked() ? 'Sonido de alertas activo — Toca para probar' : 'Activar y probar sonido de alertas'"
+        aria-label="Estado del sonido"
       >
-        <span class="audio-icon">{{ sound.audioUnlocked() ? '🔊' : '🔔' }}</span>
-        <span class="audio-text">{{ sound.audioUnlocked() ? 'Sonido Activo' : 'Probar Sonido' }}</span>
+        <span class="audio-icon">{{ sound.audioUnlocked() ? '🔊' : '🔈' }}</span>
       </button>
 
       <!-- Offline-only indicator (hidden when online) -->
