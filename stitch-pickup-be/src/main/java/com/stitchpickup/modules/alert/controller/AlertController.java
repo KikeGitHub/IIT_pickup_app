@@ -146,4 +146,24 @@ public class AlertController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.noContent().build());
     }
+
+    @DeleteMapping("/student/{studentId}/cancel-latest")
+    @PreAuthorize("hasRole('PARENT')")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(
+        summary = "Cancelar la última alerta del día (Padre)",
+        description = "Permite a un padre cancelar la última alerta que emitió hoy para un alumno. "
+            + "Solo puede cancelarse la propia alerta (no la de otro padre). "
+            + "Se elimina el registro y se emite un evento WebSocket al monitor para retirar la tarjeta del tablero."
+    )
+    public ResponseEntity<Void> cancelLatestAlert(
+            @PathVariable UUID studentId,
+            HttpServletRequest request) {
+
+        String token = request.getHeader("Authorization").substring(7);
+        UUID parentId = UUID.fromString(tokenProvider.getUserIdFromToken(token));
+
+        alertService.cancelLatestAlert(parentId, studentId);
+        return ResponseEntity.noContent().build();
+    }
 }

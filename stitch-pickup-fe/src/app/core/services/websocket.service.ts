@@ -50,6 +50,8 @@ export class WebSocketService implements OnDestroy {
   private readonly deliveryReverted$ = new Subject<DeliveryDispatchedEvent>();
   /** Emite cuando el padre rechaza una entrega → alerta urgente en monitor */
   private readonly deliveryRejected$ = new Subject<DeliveryDispatchedEvent>();
+  /** Emite cuando el padre CANCELA su propia alerta por error → el monitor retira la tarjeta */
+  private readonly alertCancelled$ = new Subject<ParentAlertEvent>();
 
   readonly isConnected$ = this.connected$.asObservable();
 
@@ -168,6 +170,11 @@ export class WebSocketService implements OnDestroy {
     return this.deliveryRejected$.asObservable().pipe(share());
   }
 
+  /** Monitor/Teacher: padre canceló su alerta por error → retirar tarjeta del tablero */
+  onAlertCancelled(): Observable<ParentAlertEvent> {
+    return this.alertCancelled$.asObservable().pipe(share());
+  }
+
   // ─── Private ────────────────────────────────────────────────────────────────
 
   private subscribeToTopics(): void {
@@ -217,6 +224,21 @@ export class WebSocketService implements OnDestroy {
       }
     );
     this.subscriptions.set('delivery-reverted', revertedSub);
+
+    // Alert cancelled by parent: monitor retira la tarjeta del alumno del board
+    const alertCancelledSub = this.stompClient.subscribe(
+      '/topic/school/alerts/cancelled',
+      (message: IMessage) => {
+        try {
+          const event = JSON.parse(message.body) as ParentAlertEvent;
+          console.info('[WebSocket] 🗑️ Alerta Cancelada por Padre:', event);
+          this.alertCancelled$.next(event);
+        } catch (e) {
+          console.error('[STOMP] Failed to parse alert cancelled event', e);
+        }
+      }
+    );
+    this.subscriptions.set('school-alerts-cancelled', alertCancelledSub);
 
     // Delivery rejected by parent: urgente en monitor
     const rejectedSub = this.stompClient.subscribe(

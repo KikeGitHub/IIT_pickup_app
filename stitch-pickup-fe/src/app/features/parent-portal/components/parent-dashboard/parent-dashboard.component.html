@@ -108,6 +108,52 @@
           <app-alert-status-card
             [alertStatus]="currentAlertStatus"
           ></app-alert-status-card>
+
+          <!-- Botón Cancelar aviso — solo visible cuando hay alerta activa confirmada -->
+          @if (currentAlertStatus.state === 'CONFIRMED' && !showCancelConfirm()) {
+            <div class="cancel-alert-row">
+              <button
+                type="button"
+                class="btn-cancel-alert"
+                id="btn-cancel-alert"
+                [disabled]="alertService.isCancelling()"
+                (click)="openCancelConfirm()"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="cancel-icon">
+                  <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+                  <path d="M21 3v5h-5"/>
+                  <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+                  <path d="M3 21v-5h5"/>
+                </svg>
+                Cancelar aviso (lo envié por error)
+              </button>
+            </div>
+          }
+
+          <!-- Panel de confirmación de cancelación -->
+          @if (showCancelConfirm()) {
+            <div class="cancel-confirm-panel">
+              <p class="cancel-confirm-title">¿Cancelar el aviso?</p>
+              <p class="cancel-confirm-desc">El monitor dejará de ver tu alerta en el tablero. Usa esto solo si lo enviaste por error.</p>
+              <div class="cancel-confirm-actions">
+                <button
+                  type="button"
+                  class="btn-confirm-cancel"
+                  [disabled]="alertService.isCancelling()"
+                  (click)="confirmCancelAlert()"
+                >
+                  {{ alertService.isCancelling() ? 'Cancelando...' : '✓ Sí, cancelar aviso' }}
+                </button>
+                <button
+                  type="button"
+                  class="btn-abort-cancel"
+                  (click)="closeCancelConfirm()"
+                >
+                  No, mantener aviso
+                </button>
+              </div>
+            </div>
+          }
         </section>
 
         <!-- 5. Collapsible Day History Timeline -->

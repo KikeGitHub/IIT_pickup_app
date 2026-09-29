@@ -594,5 +594,13 @@ export class MonitorService {
       // Quitar de entregados
       this.deliveries.update(list => list.filter(d => d.id !== delivery.id));
     });
+
+    // 5. Listen for alert CANCELLED by parent → retirar la tarjeta del board activo
+    this.ws.onAlertCancelled().subscribe(event => {
+      console.info('[MonitorService] 🗑️ Alerta cancelada por padre:', event);
+      // Eliminar la tarjeta del tablero activo
+      this.alerts.update(alerts => alerts.filter(a => a.studentId !== event.studentId));
+      this.notification.info(`ℹ️ ${event.studentName} canceló su aviso de llegada.`);
+    });
   }
 }

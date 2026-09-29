@@ -69,6 +69,9 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
   readonly isRejectingDelivery = signal<boolean>(false);
   readonly showRejectConfirm = signal<boolean>(false);
 
+  // Cancel Alert State (padre cancela su propia alerta por error)
+  readonly showCancelConfirm = signal<boolean>(false);
+
   // Student Edit Modal State for Parent
   readonly showEditModal = signal<boolean>(false);
   readonly editingStudent = signal<Student | null>(null);
@@ -339,6 +342,9 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
     const id = this.currentStudentId;
     if (!id) return;
 
+    // Cerrar confirmación de cancelación si estaba abierta
+    this.showCancelConfirm.set(false);
+
     // Feedback sonoro y háptico inmediato en el dispositivo móvil del padre
     if (status === 'URGENTE') {
       this.sound.playUrgentSound();
@@ -364,6 +370,29 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
     });
 
     setTimeout(() => this.loadHistoryForStudent(id), 1200);
+  }
+
+  // ─── Cancel Alert (padre cancela su alerta por error) ────────────────────
+  openCancelConfirm(): void {
+    this.showCancelConfirm.set(true);
+  }
+
+  closeCancelConfirm(): void {
+    this.showCancelConfirm.set(false);
+  }
+
+  confirmCancelAlert(): void {
+    const id = this.currentStudentId;
+    if (!id) return;
+    this.showCancelConfirm.set(false);
+    this.alertService.cancelAlert(id);
+    const timeStr = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false });
+    this.addHistoryEvent(id, {
+      time: timeStr,
+      title: 'Aviso Cancelado',
+      description: 'El padre canceló la alerta enviada por error.',
+      type: 'ALERT'
+    });
   }
 
   // ─── Bi-directional Delivery Receipt Confirmation ────────────────────────
