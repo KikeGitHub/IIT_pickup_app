@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
  *
  * Tópicos:
  *   /topic/school/alerts            → Broadcast de nueva alerta a monitores
+ *   /topic/school/alerts/cancelled  → Broadcast cuando el padre cancela su alerta (elimina tarjeta del board)
  *   /topic/deliveries               → Broadcast de entregas (despacho, confirmación, rechazo, reversión)
  *   /topic/delivery/reverted        → Broadcast específico cuando se revierte una entrega (alumno regresa al board)
  *   /topic/delivery/parent/{id}     → Notificación directa al padre (despacho)
@@ -35,6 +36,20 @@ public class NotificationPublisher {
                     alertResponse.studentName(), alertResponse.level(), alertResponse.groupName(), alertResponse.status());
         } catch (Exception e) {
             log.error("[WebSocket] ❌ Failed to broadcast alert: {}", e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Broadcast cuando el padre cancela su alerta del día — el monitor debe retirar
+     * la tarjeta del alumno del tablero activo.
+     */
+    public void publishAlertCancelled(AlertResponse alertResponse) {
+        try {
+            messagingTemplate.convertAndSend("/topic/school/alerts/cancelled", alertResponse);
+            log.info("[WebSocket] 🗑️ Alert cancelled broadcast → /topic/school/alerts/cancelled: Alumno={} ({}) Grupo={}",
+                    alertResponse.studentName(), alertResponse.level(), alertResponse.groupName());
+        } catch (Exception e) {
+            log.error("[WebSocket] ❌ Failed to broadcast alert cancellation: {}", e.getMessage(), e);
         }
     }
 

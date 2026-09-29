@@ -140,6 +140,37 @@ public class AlertService {
     }
 
     /**
+     * cancelLatestAlert — El padre cancela su última alerta del día para un alumno.
+     *
+     * Reglas de negocio:
+     *   1. Solo el padre autenticado puede cancelar su propia alerta.
+     *   2. Solo se puede cancelar si la alerta fue enviada en el día de hoy.
+     *   3. El registro se elimina de la BD (es un "undo" limpio, no un cambio de estado).
+     *   4. Se emite un WebSocket a /topic/school/alerts para que el monitor
+     *      elimine la tarjeta del alumno del tablero activo.
+     */
+    @Transactional
+    public void cancelLatestAlert(UUID parentId, UUID studentId) {
+        Instant startOfDay = LocalDate.now(MEXICO_ZONE).atStartOfDay(MEXICO_ZONE).toInstant();
+
+        List<Alert> alerts = alertRepository.findLatestTodayAlertForStudentAndParent(studentId, parentId, startOfDay);
+        if (alerts.isEmpty()) {
+            throw new IllegalStateException("No hay alerta activa hoy para este alumno.");
+        }
+
+        Alert latest = alerts.get(0);
+        AlertResponse response = mapToResponse(latest);
+
+        alertRepository.delete(latest);
+
+        log.info("[Alert] 🗑️ Alerta cancelada por padre {}. AlertId={} Alumno={}",
+                parentId, latest.getId(), latest.getStudent().getName());
+
+        // Notificar al monitor para que retire la tarjeta del tablero
+        publisher.publishAlertCancelled(response);
+    }
+
+    /**
      * Devuelve la alerta más reciente del día de hoy para un alumno específico.
      * Permite a los padres de familia recuperar el estado exacto persistido en BD al recargar la página.
      */

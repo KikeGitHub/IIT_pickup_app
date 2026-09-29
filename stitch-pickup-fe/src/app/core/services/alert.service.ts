@@ -21,6 +21,9 @@ export class AlertService {
   // Reactive state map: studentId -> StudentAlertStatus
   readonly alertStatuses = signal<Record<string, StudentAlertStatus>>({});
 
+  // Cancellation loading state
+  readonly isCancelling = signal<boolean>(false);
+
   constructor() {
     // BLINDAJE 2: Cuando la cola offline envía exitosamente una alerta al servidor,
     // actualizar automáticamente el estado visual del alumno a 'CONFIRMED'.
@@ -141,6 +144,33 @@ export class AlertService {
       }),
       catchError(() => of(null))
     );
+  }
+
+  /**
+   * cancelAlert — El padre cancela su última alerta del día para un alumno.
+   * Llama a DELETE /alerts/student/{studentId}/cancel-latest.
+   * Al completarse, resetea el estado local a IDLE.
+   */
+  cancelAlert(studentId: string): void {
+    this.isCancelling.set(true);
+    this.http.delete(`${this.apiUrl}/student/${studentId}/cancel-latest`).pipe(
+      tap(() => {
+        this.isCancelling.set(false);
+        this.updateStatus(studentId, {
+          studentId,
+          pickupMethod: this.getStudentStatus(studentId).pickupMethod,
+          state: 'IDLE',
+          updatedAt: new Date().toISOString()
+        });
+        this.notification.success('✅ Aviso cancelado. El monitor ya no verá tu alerta.');
+      }),
+      catchError((err) => {
+        this.isCancelling.set(false);
+        const msg = err?.error?.message || 'No se pudo cancelar el aviso. Intente nuevamente.';
+        this.notification.error(msg);
+        return of(null);
+      })
+    ).subscribe();
   }
 
   getStudentStatus(studentId: string): StudentAlertStatus {

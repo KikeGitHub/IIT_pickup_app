@@ -33,6 +33,23 @@ public interface AlertRepository extends JpaRepository<Alert, UUID> {
     List<Alert> findLatestTodayAlertForStudent(@Param("studentId") UUID studentId, @Param("startOfDay") Instant startOfDay);
 
     /**
+     * Devuelve la alerta más reciente del día para un alumno específico,
+     * filtrando por el padre autenticado (para que un padre no cancele
+     * una alerta de otro tutor del mismo alumno).
+     */
+    @Query("""
+        SELECT a FROM Alert a
+        WHERE a.student.id = :studentId
+          AND a.parent.id = :parentId
+          AND a.sentAt >= :startOfDay
+        ORDER BY a.sentAt DESC
+        """)
+    List<Alert> findLatestTodayAlertForStudentAndParent(
+            @Param("studentId") UUID studentId,
+            @Param("parentId") UUID parentId,
+            @Param("startOfDay") Instant startOfDay);
+
+    /**
      * Devuelve la alerta más reciente de cada alumno para el día de hoy.
      * Agrupa por student_id y toma la que tiene sentAt más reciente.
      */
