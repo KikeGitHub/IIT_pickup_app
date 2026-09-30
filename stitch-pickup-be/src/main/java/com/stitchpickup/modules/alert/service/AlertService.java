@@ -36,6 +36,7 @@ public class AlertService {
     private final StudentRepository studentRepository;
     private final TeacherUserRepository teacherUserRepository;
     private final com.stitchpickup.modules.student.repository.SchoolGroupRepository schoolGroupRepository;
+    private final com.stitchpickup.modules.delivery.repository.DeliveryLogRepository deliveryLogRepository;
     private final NotificationPublisher publisher;
 
     @Transactional
@@ -176,7 +177,14 @@ public class AlertService {
      */
     @Transactional(readOnly = true)
     public Optional<AlertResponse> getLatestTodayAlertForStudent(UUID studentId) {
-        Instant startOfDay = LocalDate.now(MEXICO_ZONE).atStartOfDay(MEXICO_ZONE).toInstant();
+        LocalDate today = LocalDate.now(MEXICO_ZONE);
+        // Si el alumno ya fue recibido hoy por el tutor, la alerta ya fue completada y no hay ciclo pendiente
+        Optional<com.stitchpickup.modules.delivery.entity.DeliveryLog> delivery = deliveryLogRepository.findByStudentIdAndLogDate(studentId, today);
+        if (delivery.isPresent() && delivery.get().getStatus() == com.stitchpickup.modules.delivery.entity.DeliveryLog.DeliveryStatus.RECIBIDO_PADRE) {
+            return Optional.empty();
+        }
+
+        Instant startOfDay = today.atStartOfDay(MEXICO_ZONE).toInstant();
         List<Alert> alerts = alertRepository.findLatestTodayAlertForStudent(studentId, startOfDay);
         if (alerts.isEmpty()) {
             return Optional.empty();

@@ -147,11 +147,36 @@ export class AlertService {
   }
 
   /**
-   * cancelAlert — El padre cancela su última alerta del día para un alumno.
-   * Llama a DELETE /alerts/student/{studentId}/cancel-latest.
-   * Al completarse, resetea el estado local a IDLE.
+   * cancelAlert — El padre cancela/revierte su última alerta del día para un alumno.
+   *
+   * - Si la alerta está en estado QUEUED (sin conexión), se elimina de la cola offline
+   *   en IndexedDB y se resetea el estado a IDLE sin llamar al backend.
+   * - Si está en estado CONFIRMED, llama a DELETE /alerts/student/{studentId}/cancel-latest
+   *   en el backend y luego resetea a IDLE.
    */
   cancelAlert(studentId: string): void {
+    const current = this.getStudentStatus(studentId);
+
+    // ── Caso QUEUED: solo borrar de la cola local ──────────────────────────
+    if (current.state === 'QUEUED') {
+      this.isCancelling.set(true);
+      this.offlineQueue.clearQueueForStudent(studentId).then(() => {
+        this.isCancelling.set(false);
+        this.updateStatus(studentId, {
+          studentId,
+          pickupMethod: current.pickupMethod,
+          state: 'IDLE',
+          updatedAt: new Date().toISOString()
+        });
+        this.notification.success('↩ Aviso cancelado. No será enviado al monitor.');
+      }).catch(() => {
+        this.isCancelling.set(false);
+        this.notification.error('No se pudo cancelar el aviso en cola. Intente nuevamente.');
+      });
+      return;
+    }
+
+    // ── Caso CONFIRMED: cancelar en el backend ─────────────────────────────
     this.isCancelling.set(true);
     this.http.delete(`${this.apiUrl}/student/${studentId}/cancel-latest`).pipe(
       tap(() => {
@@ -162,16 +187,17 @@ export class AlertService {
           state: 'IDLE',
           updatedAt: new Date().toISOString()
         });
-        this.notification.success('✅ Aviso cancelado. El monitor ya no verá tu alerta.');
+        this.notification.success('↩ Aviso revertido. El monitor ya no verá tu alerta.');
       }),
       catchError((err) => {
         this.isCancelling.set(false);
-        const msg = err?.error?.message || 'No se pudo cancelar el aviso. Intente nuevamente.';
+        const msg = err?.error?.message || 'No se pudo revertir el aviso. Intente nuevamente.';
         this.notification.error(msg);
         return of(null);
       })
     ).subscribe();
   }
+
 
   getStudentStatus(studentId: string): StudentAlertStatus {
     return this.alertStatuses()[studentId] || {
@@ -180,6 +206,16 @@ export class AlertService {
       state: 'IDLE',
       updatedAt: new Date().toISOString()
     };
+  }
+
+  setStudentStatusToIdle(studentId: string): void {
+    const current = this.getStudentStatus(studentId);
+    this.updateStatus(studentId, {
+      studentId,
+      pickupMethod: current.pickupMethod,
+      state: 'IDLE',
+      updatedAt: new Date().toISOString()
+    });
   }
 
   setPickupMethod(studentId: string, method: PickupMethod): void {
