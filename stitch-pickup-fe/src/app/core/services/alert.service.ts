@@ -138,7 +138,8 @@ export class AlertService {
             lastStatus: res.status,
             pickupMethod: res.pickupMethod,
             state: 'CONFIRMED',
-            updatedAt: res.sentAt
+            updatedAt: res.sentAt,
+            seenAt: res.seenAt
           });
         }
       }),
@@ -235,6 +236,14 @@ export class AlertService {
       pickupMethod: pickupMethod || current.pickupMethod,
       state: 'CONFIRMED',
       updatedAt: new Date().toISOString()
+    });
+  }
+
+  updateAlertSeen(studentId: string, seenAt?: string): void {
+    const current = this.getStudentStatus(studentId);
+    this.updateStatus(studentId, {
+      ...current,
+      seenAt: seenAt || new Date().toISOString()
     });
   }
 

@@ -118,4 +118,19 @@ public class NotificationPublisher {
             log.error("[WebSocket] ❌ Failed to notify parent {} of revert: {}", parentId, e.getMessage(), e);
         }
     }
+
+    /**
+     * Broadcast cuando el monitor/docente tiene la tarjeta en pantalla (Doble Check).
+     * Notifica al padre específico y al monitor escolar.
+     */
+    public void notifyAlertSeen(String parentId, AlertResponse alertResponse) {
+        try {
+            messagingTemplate.convertAndSend("/topic/alert/parent/" + parentId + "/seen", alertResponse);
+            messagingTemplate.convertAndSend("/topic/school/alerts/seen", alertResponse);
+            log.info("[WebSocket] 👁️ Alert seen broadcast: ParentId={} Alumno={} Status={} SeenAt={}",
+                    parentId, alertResponse.studentName(), alertResponse.status(), alertResponse.seenAt());
+        } catch (Exception e) {
+            log.error("[WebSocket] ❌ Failed to broadcast alert seen: {}", e.getMessage(), e);
+        }
+    }
 }

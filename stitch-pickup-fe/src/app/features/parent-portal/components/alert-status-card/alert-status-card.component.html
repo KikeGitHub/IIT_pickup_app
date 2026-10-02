@@ -1,4 +1,4 @@
-<div class="status-card" [class]="'status-card--' + alertStatus.state.toLowerCase()">
+<div class="status-card" [class]="'status-card--' + alertStatus.state.toLowerCase()" [class.status-card--seen]="alertStatus.state === 'CONFIRMED' && !!alertStatus.seenAt">
 
   @if (alertStatus.state === 'IDLE') {
     <div class="status-content">
@@ -42,19 +42,49 @@
 
   @if (alertStatus.state === 'CONFIRMED') {
     <div class="status-content">
-      <div class="status-icon status-icon--confirmed">
-        <svg viewBox="0 0 24 24" fill="none">
-          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" stroke="currentColor" stroke-width="2"/>
-          <polyline points="22 4 12 14.01 9 11.01" stroke="currentColor" stroke-width="2"/>
-        </svg>
-      </div>
-      <div class="status-text">
-        <p class="status-title">¡Alerta Confirmada!</p>
-        <p class="status-sub">
-          Estatus: <strong>{{ getStatusLabel(alertStatus.lastStatus) }}</strong>
-          ({{ alertStatus.pickupMethod === 'CAR' ? 'En Auto' : 'A Pie' }})
-        </p>
-      </div>
+      @if (alertStatus.seenAt) {
+        <div class="status-icon status-icon--seen" title="Alerta vista en pantalla por el personal docente">
+          <!-- Doble Palomita Azul / WhatsApp Style -->
+          <svg viewBox="0 0 24 24" fill="none" class="double-check-svg">
+            <path d="M2 13L6 17L14 9" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M9 13L13 17L22 8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="status-text">
+          <div class="status-title-row">
+            <p class="status-title status-title--seen">¡Visto por el Docente!</p>
+            <span class="seen-pill-badge">
+              <span class="double-check-text">✓✓</span> Visto
+            </span>
+          </div>
+          <p class="status-sub">
+            En pantalla del patio • <strong>{{ getStatusLabel(alertStatus.lastStatus) }}</strong>
+            ({{ alertStatus.pickupMethod === 'CAR' ? 'En Auto' : 'A Pie' }})
+            @if (seenTimeFormatted) {
+              <span class="seen-time-chip">· {{ seenTimeFormatted }}</span>
+            }
+          </p>
+        </div>
+      } @else {
+        <div class="status-icon status-icon--confirmed" title="Alerta recibida en el servidor escolar">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" stroke="currentColor" stroke-width="2"/>
+            <polyline points="22 4 12 14.01 9 11.01" stroke="currentColor" stroke-width="2"/>
+          </svg>
+        </div>
+        <div class="status-text">
+          <div class="status-title-row">
+            <p class="status-title">¡Alerta en Colegio!</p>
+            <span class="received-pill-badge">
+              <span class="single-check-text">✓</span> Recibida
+            </span>
+          </div>
+          <p class="status-sub">
+            Estatus: <strong>{{ getStatusLabel(alertStatus.lastStatus) }}</strong>
+            ({{ alertStatus.pickupMethod === 'CAR' ? 'En Auto' : 'A Pie' }}) • En espera del monitor
+          </p>
+        </div>
+      }
     </div>
   }
 

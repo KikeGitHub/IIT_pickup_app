@@ -166,4 +166,22 @@ public class AlertController {
         alertService.cancelLatestAlert(parentId, studentId);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/{id}/seen")
+    @Operation(
+        summary = "Marcar alerta como vista en monitor (Doble Check automático)",
+        description = "Llamado en segundo plano por el monitor de docentes cuando la tarjeta del alumno aparece en pantalla. Emite WebSocket de confirmación al padre."
+    )
+    public ResponseEntity<AlertResponse> markAsSeen(@PathVariable UUID id) {
+        return ResponseEntity.ok(alertService.markAlertAsSeen(id));
+    }
+
+    @PostMapping("/seen/batch")
+    @Operation(
+        summary = "Marcar múltiples alertas como vistas en monitor (Lote)",
+        description = "Permite al monitor escolar confirmar la visualización de un conjunto de tarjetas en una sola petición."
+    )
+    public ResponseEntity<List<AlertResponse>> markBatchAsSeen(@RequestBody List<UUID> alertIds) {
+        return ResponseEntity.ok(alertService.markAlertsAsSeen(alertIds));
+    }
 }

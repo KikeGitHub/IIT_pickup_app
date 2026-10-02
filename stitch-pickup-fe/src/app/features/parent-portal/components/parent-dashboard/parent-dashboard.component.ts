@@ -234,6 +234,29 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
         }
       })
     );
+
+    // Suscribirse a eventos de confirmación visual del docente (Doble Check WhatsApp style)
+    this.subscriptions.add(
+      this.ws.onAlertSeen().subscribe(event => {
+        const normalize = (id?: string) => (id || '').trim().toLowerCase();
+        const eventStudentId = normalize(event.studentId);
+
+        const myStudents = this.studentService.students();
+        const currentUser = this.authService.currentUser();
+        const tokenStudentIds = currentUser?.studentIds || [];
+        const currentUserId = normalize(currentUser?.userId);
+
+        const isMyChild =
+          (currentUserId && normalize(event.parentId) === currentUserId) ||
+          myStudents.some(s => normalize(s.id) === eventStudentId) ||
+          tokenStudentIds.some(id => normalize(id) === eventStudentId);
+
+        if (isMyChild) {
+          console.info('[ParentDashboard] 👁️ Doble check recibido para alumno:', event.studentName);
+          this.alertService.updateAlertSeen(event.studentId, event.seenAt);
+        }
+      })
+    );
   }
 
   /**

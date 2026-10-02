@@ -25,6 +25,11 @@
     border-left: 4px solid #16a34a;
     background: #f0fdf4;
   }
+
+  &--seen {
+    border-left: 4px solid #0284c7;
+    background: #f0f9ff;
+  }
 }
 
 .status-content {
@@ -34,13 +39,14 @@
 }
 
 .status-icon {
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 
   svg { width: 22px; height: 22px; }
 
@@ -58,6 +64,19 @@
     background: #dcfce7;
     color: #16a34a;
   }
+
+  &--seen {
+    background: #e0f2fe;
+    color: #0284c7;
+    box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+    animation: pop-seen 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+    .double-check-svg {
+      width: 24px;
+      height: 24px;
+      stroke-width: 2.8;
+    }
+  }
 }
 
 .status-spinner {
@@ -73,20 +92,83 @@
 .status-text {
   flex: 1;
 
+  .status-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
   .status-title {
     margin: 0;
     font-size: v.$font-size-label-md;
     font-weight: v.$font-weight-bold;
     color: v.$color-on-surface;
+
+    &--seen {
+      color: #0369a1;
+    }
+  }
+
+  .seen-pill-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #e0f2fe;
+    color: #0284c7;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 12px;
+    border: 1px solid #bae6fd;
+
+    .double-check-text {
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: -2px;
+      margin-right: 2px;
+      color: #0284c7;
+    }
+  }
+
+  .received-pill-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    background: #dcfce7;
+    color: #16a34a;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 12px;
+    border: 1px solid #bbf7d0;
+
+    .single-check-text {
+      font-size: 12px;
+      font-weight: 900;
+    }
   }
 
   .status-sub {
     margin: 2px 0 0;
     font-size: v.$font-size-body-md;
     color: v.$color-on-surface-variant;
+    line-height: 1.35;
+
+    .seen-time-chip {
+      font-weight: 600;
+      color: #0284c7;
+    }
   }
 }
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+@keyframes pop-seen {
+  0% { transform: scale(0.8); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
 }

@@ -16,6 +16,7 @@ export interface ParentAlertEvent {
   status: 'TEN_MIN' | 'FIVE_MIN' | 'EN_FILA' | 'URGENTE';
   pickupMethod: 'CAR' | 'WALK';
   sentAt: string;
+  seenAt?: string;
 }
 
 export interface DeliveryDispatchedEvent {
@@ -45,6 +46,7 @@ export class WebSocketService implements OnDestroy {
 
   private readonly connected$ = new BehaviorSubject<boolean>(false);
   private readonly parentAlert$ = new Subject<ParentAlertEvent>();
+  private readonly alertSeen$ = new Subject<ParentAlertEvent>();
   private readonly deliveryEvent$ = new Subject<DeliveryDispatchedEvent>();
   /** Emite cuando una entrega es REVERTIDA por docente/admin → alumno vuelve al board */
   private readonly deliveryReverted$ = new Subject<DeliveryDispatchedEvent>();
@@ -175,6 +177,11 @@ export class WebSocketService implements OnDestroy {
     return this.alertCancelled$.asObservable().pipe(share());
   }
 
+  /** Padre/Monitor: alerta vista por docente en pantalla → doble check azul (WhatsApp style) */
+  onAlertSeen(): Observable<ParentAlertEvent> {
+    return this.alertSeen$.asObservable().pipe(share());
+  }
+
   // ─── Private ────────────────────────────────────────────────────────────────
 
   private subscribeToTopics(): void {
@@ -239,6 +246,21 @@ export class WebSocketService implements OnDestroy {
       }
     );
     this.subscriptions.set('school-alerts-cancelled', alertCancelledSub);
+
+    // Alert seen: confirmación visual en pantalla del monitor (Doble Check)
+    const alertSeenSub = this.stompClient.subscribe(
+      '/topic/school/alerts/seen',
+      (message: IMessage) => {
+        try {
+          const event = JSON.parse(message.body) as ParentAlertEvent;
+          console.info('[WebSocket] 👁️ Alerta Marcada como Vista en Pantalla:', event);
+          this.alertSeen$.next(event);
+        } catch (e) {
+          console.error('[STOMP] Failed to parse alert seen event', e);
+        }
+      }
+    );
+    this.subscriptions.set('school-alerts-seen', alertSeenSub);
 
     // Delivery rejected by parent: urgente en monitor
     const rejectedSub = this.stompClient.subscribe(
@@ -312,6 +334,21 @@ export class WebSocketService implements OnDestroy {
         }
       );
       this.subscriptions.set('parent-delivery-reverted-queue', parentRevertedQueueSub);
+
+      // Padre: notificación directa de alerta vista en monitor (Doble Check)
+      const parentAlertSeenSub = this.stompClient.subscribe(
+        `/topic/alert/parent/${userId}/seen`,
+        (message: IMessage) => {
+          try {
+            const event = JSON.parse(message.body) as ParentAlertEvent;
+            console.info('[WebSocket] 👁️ Mi alerta fue vista por el docente:', event);
+            this.alertSeen$.next(event);
+          } catch (e) {
+            console.error('[STOMP] Failed to parse parent alert seen event', e);
+          }
+        }
+      );
+      this.subscriptions.set('parent-alert-seen', parentAlertSeenSub);
     }
   }
 

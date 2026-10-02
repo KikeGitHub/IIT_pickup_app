@@ -20,6 +20,7 @@ export interface MonitorAlert {
   status: 'TEN_MIN' | 'FIVE_MIN' | 'EN_FILA' | 'URGENTE';
   pickupMethod: 'CAR' | 'WALK';
   sentAt: string;
+  seenAt?: string;
   isDispatched: boolean;
   isUpdated: boolean;
   /** Indica que el padre reportó no haber recibido al alumno — mostrar badge 🚨 */
@@ -176,6 +177,7 @@ export class MonitorService {
           status: a.status,
           pickupMethod: a.pickupMethod,
           sentAt: a.sentAt,
+          seenAt: a.seenAt,
           isDispatched: deliveredStudentIds.has(a.studentId),
           isUpdated: false,
           isRejectedByParent: false
@@ -348,6 +350,7 @@ export class MonitorService {
           status: a.status,
           pickupMethod: a.pickupMethod,
           sentAt: a.sentAt,
+          seenAt: a.seenAt,
           isDispatched: deliveredStudentIds.has(a.studentId),
           isUpdated: false,
           isRejectedByParent: false
@@ -426,6 +429,7 @@ export class MonitorService {
                 status: event.status,
                 pickupMethod: event.pickupMethod,
                 sentAt: event.sentAt,
+                seenAt: event.seenAt,
                 parentName: event.parentName,
                 level: event.level,
                 groupName: event.groupName,
@@ -475,6 +479,7 @@ export class MonitorService {
           status: event.status,
           pickupMethod: event.pickupMethod,
           sentAt: event.sentAt,
+          seenAt: event.seenAt,
           isDispatched: false,
           isUpdated: true,
           isRejectedByParent: false
@@ -602,5 +607,33 @@ export class MonitorService {
       this.alerts.update(alerts => alerts.filter(a => a.studentId !== event.studentId));
       this.notification.info(`ℹ️ ${event.studentName} canceló su aviso de llegada.`);
     });
+
+    // 6. Listen for alert SEEN en pantalla → actualizar seenAt en el board
+    this.ws.onAlertSeen().subscribe(event => {
+      this.alerts.update(alerts =>
+        alerts.map(a => (a.id === event.id || a.studentId === event.studentId)
+          ? { ...a, seenAt: event.seenAt }
+          : a
+        )
+      );
+    });
+  }
+
+  private readonly acknowledgedAlertIds = new Set<string>();
+
+  /**
+   * Confirma automáticamente que la alerta ya apareció en la pantalla del monitor escolar (Doble Check).
+   * Cero clics para el docente: se invoca automáticamente al renderizarse la tarjeta.
+   */
+  acknowledgeAlert(alertId: string): void {
+    if (!alertId || this.acknowledgedAlertIds.has(alertId)) return;
+    this.acknowledgedAlertIds.add(alertId);
+
+    this.http.post<AlertResponse>(`${this.apiUrl}/alerts/${alertId}/seen`, {}).pipe(
+      catchError(() => {
+        this.acknowledgedAlertIds.delete(alertId);
+        return of(null);
+      })
+    ).subscribe();
   }
 }

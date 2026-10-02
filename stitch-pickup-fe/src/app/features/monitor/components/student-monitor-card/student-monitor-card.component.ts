@@ -10,7 +10,7 @@ import {
   inject
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MonitorAlert } from '../../services/monitor.service';
+import { MonitorAlert, MonitorService } from '../../services/monitor.service';
 
 @Component({
   selector: 'app-student-monitor-card',
@@ -27,6 +27,7 @@ export class StudentMonitorCardComponent implements OnInit, OnDestroy {
   @Output() dispatch = new EventEmitter<string>();
 
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly monitorService = inject(MonitorService);
   private timerInterval?: any;
   currentElapsedSeconds: number = 0;
 
@@ -38,6 +39,13 @@ export class StudentMonitorCardComponent implements OnInit, OnDestroy {
         this.updateElapsed();
         this.cdr.markForCheck();
       }, 1000);
+    }
+
+    // AUTO-ACK: Si la alerta no ha sido marcada como vista aún,
+    // notificar al servidor en segundo plano (Doble Check WhatsApp).
+    // Cero clics para el profesor: el mero renderizado en el monitor confirma que ya fue vista.
+    if (this.alert && !this.alert.seenAt) {
+      this.monitorService.acknowledgeAlert(this.alert.id);
     }
   }
 

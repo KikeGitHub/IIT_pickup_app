@@ -22,4 +22,19 @@ export class AlertStatusCardComponent {
       default: return 'Ninguna';
     }
   }
+
+  get seenTimeFormatted(): string {
+    if (!this.alertStatus?.seenAt) return '';
+    try {
+      const d = new Date(this.alertStatus.seenAt);
+      if (isNaN(d.getTime())) return '';
+      return d.toLocaleTimeString('es-MX', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+    } catch {
+      return '';
+    }
+  }
 }
