@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { AdminService, SchoolGroup } from '../../services/admin.service';
+import { NotificationService } from '../../../../core/services/notification.service';
 import { LoadingOverlayComponent } from '../../../../shared/components/loading-overlay/loading-overlay.component';
 
 @Component({
@@ -15,6 +16,7 @@ import { LoadingOverlayComponent } from '../../../../shared/components/loading-o
 })
 export class GroupConfigComponent implements OnInit {
   readonly adminService = inject(AdminService);
+  private readonly notification = inject(NotificationService);
 
   readonly showModal = signal<boolean>(false);
   readonly isEditing = signal<boolean>(false);
@@ -103,8 +105,9 @@ export class GroupConfigComponent implements OnInit {
       this.adminService.deleteGroup(group.id).pipe(
         finalize(() => this.adminService.endTransaction())
       ).subscribe({
+        next: () => this.notification.success(`Grupo "${group.level} - ${group.name}" eliminado correctamente.`),
         error: (err) => {
-          alert(err.error?.message || 'No se pudo eliminar el grupo.');
+          this.notification.error(err.error?.message || 'No se pudo eliminar el grupo.');
         }
       });
     }
