@@ -184,8 +184,75 @@ export class WebSocketService implements OnDestroy {
 
   // ─── Private ────────────────────────────────────────────────────────────────
 
+  private readonly recentDeliveryKeys = new Map<string, number>();
+  private readonly recentRevertedKeys = new Map<string, number>();
+  private readonly recentSeenKeys = new Map<string, number>();
+  private readonly recentAlertKeys = new Map<string, number>();
+
+  private dispatchDeliveryEvent(event: DeliveryDispatchedEvent): void {
+    const key = `${event.id}_${event.status}`;
+    const now = Date.now();
+    const last = this.recentDeliveryKeys.get(key);
+    if (last && now - last < 3000) return;
+    this.recentDeliveryKeys.set(key, now);
+    if (this.recentDeliveryKeys.size > 50) {
+      for (const [k, t] of this.recentDeliveryKeys.entries()) {
+        if (now - t > 10000) this.recentDeliveryKeys.delete(k);
+      }
+    }
+    this.deliveryEvent$.next(event);
+  }
+
+  private dispatchDeliveryReverted(event: DeliveryDispatchedEvent): void {
+    const key = `${event.id}_reverted`;
+    const now = Date.now();
+    const last = this.recentRevertedKeys.get(key);
+    if (last && now - last < 3000) return;
+    this.recentRevertedKeys.set(key, now);
+    if (this.recentRevertedKeys.size > 50) {
+      for (const [k, t] of this.recentRevertedKeys.entries()) {
+        if (now - t > 10000) this.recentRevertedKeys.delete(k);
+      }
+    }
+    this.deliveryReverted$.next(event);
+  }
+
+  private dispatchAlertSeen(event: ParentAlertEvent): void {
+    const key = `${event.id || event.studentId}_seen`;
+    const now = Date.now();
+    const last = this.recentSeenKeys.get(key);
+    if (last && now - last < 2500) return;
+    this.recentSeenKeys.set(key, now);
+    if (this.recentSeenKeys.size > 50) {
+      for (const [k, t] of this.recentSeenKeys.entries()) {
+        if (now - t > 10000) this.recentSeenKeys.delete(k);
+      }
+    }
+    this.alertSeen$.next(event);
+  }
+
+  private dispatchParentAlert(event: ParentAlertEvent): void {
+    const key = `${event.id}_${event.status}`;
+    const now = Date.now();
+    const last = this.recentAlertKeys.get(key);
+    if (last && now - last < 2500) return;
+    this.recentAlertKeys.set(key, now);
+    if (this.recentAlertKeys.size > 50) {
+      for (const [k, t] of this.recentAlertKeys.entries()) {
+        if (now - t > 10000) this.recentAlertKeys.delete(k);
+      }
+    }
+    this.parentAlert$.next(event);
+  }
+
   private subscribeToTopics(): void {
     if (!this.stompClient || !this.stompClient.connected) return;
+
+    // Limpiar suscripciones previas para evitar listeners duplicados en reconexiones
+    this.subscriptions.forEach((sub) => {
+      try { sub.unsubscribe(); } catch {}
+    });
+    this.subscriptions.clear();
 
     // School alerts topic
     const alertSub = this.stompClient.subscribe(
@@ -194,7 +261,7 @@ export class WebSocketService implements OnDestroy {
         try {
           const event = JSON.parse(message.body) as ParentAlertEvent;
           console.info('[WebSocket] 🔔 Nueva Alerta Recibida por Broadcast:', event);
-          this.parentAlert$.next(event);
+          this.dispatchParentAlert(event);
         } catch (e) {
           console.error('[STOMP] Failed to parse alert event', e);
         }
@@ -209,7 +276,7 @@ export class WebSocketService implements OnDestroy {
         try {
           const event = JSON.parse(message.body) as DeliveryDispatchedEvent;
           console.info('[WebSocket] 🚗 Evento de Entrega Recibido:', event);
-          this.deliveryEvent$.next(event);
+          this.dispatchDeliveryEvent(event);
         } catch (e) {
           console.error('[STOMP] Failed to parse delivery event', e);
         }
@@ -224,7 +291,7 @@ export class WebSocketService implements OnDestroy {
         try {
           const event = JSON.parse(message.body) as DeliveryDispatchedEvent;
           console.info('[WebSocket] 🔄 Entrega Revertida:', event);
-          this.deliveryReverted$.next(event);
+          this.dispatchDeliveryReverted(event);
         } catch (e) {
           console.error('[STOMP] Failed to parse reverted delivery event', e);
         }
@@ -254,7 +321,7 @@ export class WebSocketService implements OnDestroy {
         try {
           const event = JSON.parse(message.body) as ParentAlertEvent;
           console.info('[WebSocket] 👁️ Alerta Marcada como Vista en Pantalla:', event);
-          this.alertSeen$.next(event);
+          this.dispatchAlertSeen(event);
         } catch (e) {
           console.error('[STOMP] Failed to parse alert seen event', e);
         }
@@ -285,7 +352,7 @@ export class WebSocketService implements OnDestroy {
         (message: IMessage) => {
           try {
             const event = JSON.parse(message.body) as DeliveryDispatchedEvent;
-            this.deliveryEvent$.next(event);
+            this.dispatchDeliveryEvent(event);
           } catch (e) {
             console.error('[STOMP] Failed to parse parent delivery event', e);
           }
@@ -298,7 +365,7 @@ export class WebSocketService implements OnDestroy {
         (message: IMessage) => {
           try {
             const event = JSON.parse(message.body) as DeliveryDispatchedEvent;
-            this.deliveryEvent$.next(event);
+            this.dispatchDeliveryEvent(event);
           } catch (e) {
             console.error('[STOMP] Failed to parse queue delivery event', e);
           }
@@ -313,7 +380,7 @@ export class WebSocketService implements OnDestroy {
           try {
             const event = JSON.parse(message.body) as DeliveryDispatchedEvent;
             console.info('[WebSocket] 🔄 Mi entrega fue revertida por el docente:', event);
-            this.deliveryReverted$.next(event);
+            this.dispatchDeliveryReverted(event);
           } catch (e) {
             console.error('[STOMP] Failed to parse parent reverted event', e);
           }
@@ -327,7 +394,7 @@ export class WebSocketService implements OnDestroy {
         (message: IMessage) => {
           try {
             const event = JSON.parse(message.body) as DeliveryDispatchedEvent;
-            this.deliveryReverted$.next(event);
+            this.dispatchDeliveryReverted(event);
           } catch (e) {
             console.error('[STOMP] Failed to parse parent reverted queue event', e);
           }
@@ -342,7 +409,7 @@ export class WebSocketService implements OnDestroy {
           try {
             const event = JSON.parse(message.body) as ParentAlertEvent;
             console.info('[WebSocket] 👁️ Mi alerta fue vista por el docente:', event);
-            this.alertSeen$.next(event);
+            this.dispatchAlertSeen(event);
           } catch (e) {
             console.error('[STOMP] Failed to parse parent alert seen event', e);
           }

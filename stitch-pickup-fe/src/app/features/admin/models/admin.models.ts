@@ -65,6 +65,9 @@ export interface TeacherDeliveryMetric {
   teacherName: string;
   totalDelivered: number;
   avgTimeMinutes: number;
+  topLevel?: string;
+  fastestTimeMinutes?: number;
+  slowestTimeMinutes?: number;
 }
 
 export interface KpisData {
@@ -76,6 +79,8 @@ export interface KpisData {
   peakHour: string;
   alertsByLevel: Record<string, number>;
   alertsByMethod: Record<string, number>;
+  deliveriesByLevel?: Record<string, number>;
+  deliveriesByMethod?: Record<string, number>;
   teacherMetrics?: TeacherDeliveryMetric[];
 }
 

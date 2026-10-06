@@ -61,12 +61,31 @@ public class KpiService {
                 .filter(a -> a.getStatus() == Alert.AlertStatus.URGENTE).count();
         long pendingCount = Math.max(0, totalAlerts - totalDelivered);
 
-        // Distribución por nivel
+        // Distribución por nivel de ENTREGAS REALES (alumnos despachados)
+        Map<String, Long> deliveriesByLevel = deliveries.stream()
+                .filter(d -> (d.getStatus() == DeliveryLog.DeliveryStatus.ENTREGADO_ESCUELA
+                           || d.getStatus() == DeliveryLog.DeliveryStatus.RECIBIDO_PADRE)
+                           && d.getStudent() != null && d.getStudent().getLevel() != null)
+                .collect(Collectors.groupingBy(
+                    d -> d.getStudent().getLevel().name(), Collectors.counting()));
+
+        // Distribución por modalidad de ENTREGAS REALES (despachos completados)
+        Map<String, Long> deliveriesByMethod = deliveries.stream()
+                .filter(d -> d.getStatus() == DeliveryLog.DeliveryStatus.ENTREGADO_ESCUELA
+                          || d.getStatus() == DeliveryLog.DeliveryStatus.RECIBIDO_PADRE)
+                .map(d -> {
+                    if (d.getPickupMethod() != null) return d.getPickupMethod().name();
+                    if (d.getAlert() != null && d.getAlert().getPickupMethod() != null) return d.getAlert().getPickupMethod().name();
+                    return "CAR";
+                })
+                .collect(Collectors.groupingBy(m -> m, Collectors.counting()));
+
+        // Distribución por nivel de ALERTAS (solicitudes/avisos de llegada)
         Map<String, Long> alertsByLevel = alerts.stream()
                 .collect(Collectors.groupingBy(
                     a -> a.getStudent().getLevel().name(), Collectors.counting()));
 
-        // Distribución por modalidad
+        // Distribución por modalidad de ALERTAS (solicitudes/avisos de llegada)
         Map<String, Long> alertsByMethod = alerts.stream()
                 .collect(Collectors.groupingBy(
                     a -> a.getPickupMethod().name(), Collectors.counting()));
@@ -110,8 +129,43 @@ public class KpiService {
                                           - d.getAlert().getSentAt().toEpochMilli())
                             .average();
                     double tMin = tAvg.isPresent() ? tAvg.getAsDouble() / 60_000.0 : 0.0;
-                    return new TeacherDeliveryMetric(e.getKey(), count,
-                                                     Math.round(tMin * 10.0) / 10.0);
+
+                    String topLevel = e.getValue().stream()
+                            .filter(d -> d.getStudent() != null && d.getStudent().getLevel() != null)
+                            .collect(Collectors.groupingBy(d -> d.getStudent().getLevel().name(), Collectors.counting()))
+                            .entrySet().stream()
+                            .max(Map.Entry.comparingByValue())
+                            .map(Map.Entry::getKey)
+                            .orElse("General");
+
+                    OptionalLong tFastest = e.getValue().stream()
+                            .filter(d -> d.getTeacherConfirmedAt() != null && d.getAlert() != null
+                                      && d.getAlert().getSentAt() != null)
+                            .mapToLong(d -> d.getTeacherConfirmedAt().toEpochMilli()
+                                          - d.getAlert().getSentAt().toEpochMilli())
+                            .min();
+                    double fastestMin = tFastest.isPresent()
+                            ? Math.round((tFastest.getAsLong() / 60_000.0) * 10.0) / 10.0
+                            : Math.round(tMin * 10.0) / 10.0;
+
+                    OptionalLong tSlowest = e.getValue().stream()
+                            .filter(d -> d.getTeacherConfirmedAt() != null && d.getAlert() != null
+                                      && d.getAlert().getSentAt() != null)
+                            .mapToLong(d -> d.getTeacherConfirmedAt().toEpochMilli()
+                                          - d.getAlert().getSentAt().toEpochMilli())
+                            .max();
+                    double slowestMin = tSlowest.isPresent()
+                            ? Math.round((tSlowest.getAsLong() / 60_000.0) * 10.0) / 10.0
+                            : Math.round(tMin * 10.0) / 10.0;
+
+                    return new TeacherDeliveryMetric(
+                        e.getKey(),
+                        count,
+                        Math.round(tMin * 10.0) / 10.0,
+                        topLevel,
+                        fastestMin,
+                        slowestMin
+                    );
                 })
                 .sorted(Comparator.comparingLong(TeacherDeliveryMetric::totalDelivered).reversed())
                 .toList();
@@ -119,7 +173,9 @@ public class KpiService {
         return new KpisResponse(
                 totalAlerts, totalDelivered, pendingCount, urgentCount,
                 Math.round(avgMinutes * 10.0) / 10.0,
-                peakHour, alertsByLevel, alertsByMethod, teacherMetrics);
+                peakHour, alertsByLevel, alertsByMethod,
+                deliveriesByLevel, deliveriesByMethod,
+                teacherMetrics);
     }
 
     /** Shortcut para compatibilidad — devuelve métricas del día */

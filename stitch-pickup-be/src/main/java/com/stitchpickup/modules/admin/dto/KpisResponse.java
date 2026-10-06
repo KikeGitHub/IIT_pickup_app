@@ -17,12 +17,21 @@ public record KpisResponse(
     String peakHour,
     Map<String, Long> alertsByLevel,
     Map<String, Long> alertsByMethod,
+    Map<String, Long> deliveriesByLevel,
+    Map<String, Long> deliveriesByMethod,
     List<TeacherDeliveryMetric> teacherMetrics
 ) {
     /** Métrica de entregas por maestro */
     public record TeacherDeliveryMetric(
         String teacherName,
         long totalDelivered,
-        double avgTimeMinutes
-    ) {}
+        double avgTimeMinutes,
+        String topLevel,
+        double fastestTimeMinutes,
+        double slowestTimeMinutes
+    ) {
+        public TeacherDeliveryMetric(String teacherName, long totalDelivered, double avgTimeMinutes) {
+            this(teacherName, totalDelivered, avgTimeMinutes, "General", avgTimeMinutes, avgTimeMinutes);
+        }
+    }
 }
