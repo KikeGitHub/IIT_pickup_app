@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { AdminService, StudentDetail, SchoolGroup, FamilyMember } from '../../services/admin.service';
 import { ImageUploadService } from '../../../../core/services/image-upload.service';
+import { NotificationService } from '../../../../core/services/notification.service';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination.component';
 import { LoadingOverlayComponent } from '../../../../shared/components/loading-overlay/loading-overlay.component';
 import { TableSkeletonComponent } from '../../../../shared/components/table-skeleton/table-skeleton.component';
@@ -17,8 +18,9 @@ import { TableSkeletonComponent } from '../../../../shared/components/table-skel
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class StudentCrudComponent implements OnInit {
-  readonly adminService  = inject(AdminService);
-  readonly imageUpload   = inject(ImageUploadService);
+  readonly adminService   = inject(AdminService);
+  readonly imageUpload    = inject(ImageUploadService);
+  private readonly notification = inject(NotificationService);
 
   readonly isUploadingPhoto = signal<boolean>(false);
 
@@ -349,7 +351,8 @@ export class StudentCrudComponent implements OnInit {
       this.adminService.deleteStudent(student.id).pipe(
         finalize(() => this.adminService.endTransaction())
       ).subscribe({
-        error: (err) => alert(err.error?.message || 'No se pudo eliminar el alumno.')
+        next: () => this.notification.success(`Alumno "${student.name}" eliminado correctamente.`),
+        error: (err) => this.notification.error(err.error?.message || 'No se pudo eliminar el alumno.')
       });
     }
   }

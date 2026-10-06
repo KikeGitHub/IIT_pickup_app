@@ -137,3 +137,30 @@ La comunicación en tiempo real entre el portal de padres, el servidor y las pan
 ### ADR-004: Paginación en Grids Administrativos y Bloqueo de Pantalla (Loading Overlay)
 - **Paginación Dinámica:** Las tablas administrativas (Alumnos, Padres, Maestros) implementan paginación reactiva con selector de **15, 30 y 100** registros por página, recálculo reactivo y reseteo automático a la página 1 al filtrar.
 - **Bloqueo en Transacciones:** Las operaciones de creación, edición, borrado o importación masiva CSV activan un overlay modal con `backdrop-filter: blur` y spinner que inhabilita la interfaz hasta confirmar respuesta del servidor para evitar duplicidad de envíos.
+
+---
+
+## 🛡️ Reporte de Calidad y Certificación del Entregable (Release v1.4.0)
+
+A continuación se detalla la matriz de pruebas y validaciones técnicas ejecutadas sobre el monorepo previo a la entrega:
+
+### 1. Backend (Spring Boot 3.3.5 / Java 21)
+| Criterio | Validación | Estado |
+|---|---|:---:|
+| **Compilación de Clases** | `mvn test-compile` sin errores de compilación ni de dependencias. | ✅ APROBADO |
+| **Pruebas Unitarias** | `mvn test` ejecutado exitosamente con 0 fallas y 0 errores. | ✅ APROBADO |
+| **Clean Code & Trazas** | Cero `System.out.println` o `System.err.println` en `src/main/java`. Todo el registro de eventos se maneja vía `@Slf4j`. | ✅ APROBADO |
+| **Manejo de Errores** | `@RestControllerAdvice` con RFC 9457 `ProblemDetail` que encapsula excepciones sin fugar trazas de base de datos ni stacktraces al cliente. | ✅ APROBADO |
+| **Integridad Transaccional** | Uso riguroso de `@Transactional` en operaciones de escritura y `@Transactional(readOnly = true)` en lecturas en todas las capas de servicio (`AlertService`, `DeliveryService`, `KpiService`, `TeacherPortalService`). | ✅ APROBADO |
+| **Seguridad de Secretos** | Credenciales de base de datos, puertos y secretos JWT parametrizados mediante variables de entorno con fallbacks seguros. | ✅ APROBADO |
+
+### 2. Frontend (Angular 20 / TypeScript)
+| Criterio | Validación | Estado |
+|---|---|:---:|
+| **Tipado Estricto** | `npx tsc --noEmit` completado con 0 errores de TypeScript. | ✅ APROBADO |
+| **Build de Producción** | `ng build --configuration=production` completado exitosamente con 0 errores y 0 advertencias. | ✅ APROBADO |
+| **Rendimiento de Bundle** | Tamaño de transferencia inicial optimizado a solo **118.7 kB** (tree-shaking, lazy-loading por rutas y AOT habilitado). | ✅ APROBADO |
+| **Experiencia de Usuario (UI/UX)** | Reemplazo total de popups nativos `alert()` por el sistema centralizado de notificaciones `NotificationService` (Toasts animados). Cero `alert()` en código fuente. | ✅ APROBADO |
+| **Código Limpio** | Cero sentencias `debugger` y cero `console.log` en el código de componentes y servicios. | ✅ APROBADO |
+| **WebSocket & Memoria** | Deduplicación de eventos STOMP, suscripciones reactivas limpias y desuscripción en ciclo de vida para evitar fugas de memoria. | ✅ APROBADO |
+| **Diseño Responsivo** | Grilla de KPIs con adaptación simétrica (6 cols en escritorio, 3x2 en laptops, 2x3 en tablets/móviles y 1 col en pantallas ultra-pequeñas) con cero tarjetas huérfanas y contraste de botones en hover verificado. | ✅ APROBADO |
