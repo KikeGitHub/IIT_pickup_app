@@ -4,7 +4,7 @@
   <div class="period-toolbar">
     <div class="toolbar-title">
       <h3>Resumen Operativo & Flujo de Salida</h3>
-      <p class="text-muted">Métricas de tiempo, entregas por división y desempeño de maestros</p>
+      <p class="text-muted">Métricas de tiempo, entregas por división y desempeño del personal escolar</p>
     </div>
     <div class="period-pills">
       <button
@@ -37,9 +37,12 @@
   <!-- Loading Skeleton State -->
   @if (adminService.isLoading()) {
     <div class="kpi-skeleton-grid">
-      @for (i of [1,2,3,4]; track i) {
+      @for (i of [1,2,3,4,5,6]; track i) {
         <div class="kpi-skeleton-card">
-          <div class="kpi-sk-icon"></div>
+          <div class="kpi-sk-top">
+            <div class="kpi-sk-icon"></div>
+            <div class="kpi-sk-badge"></div>
+          </div>
           <div class="kpi-sk-lines">
             <div class="kpi-sk-line kpi-sk-line--val"></div>
             <div class="kpi-sk-line kpi-sk-line--lbl"></div>
@@ -52,70 +55,195 @@
       <div class="chart-sk-box"></div>
     </div>
   } @else if (adminService.kpis(); as kpis) {
-    <!-- Metric Cards Grid -->
+    <!-- Metric Cards Grid (6 KPI cards compact and responsive) -->
     <div class="kpi-grid">
-      <div class="metric-card">
-        <div class="metric-icon metric-icon--blue">📍</div>
-        <div class="metric-data">
+      <!-- 1. Alertas Recibidas -->
+      <div class="metric-card" title="Total de solicitudes de proximidad recibidas hoy">
+        <div class="metric-top">
+          <div class="metric-icon metric-icon--blue">📍</div>
+          <span class="metric-badge metric-badge--blue" title="Solicitudes totales">Solicitudes</span>
+        </div>
+        <div class="metric-body">
           <span class="metric-val">{{ kpis.totalAlertsToday }}</span>
-          <span class="metric-lbl">Alertas Recibidas</span>
+          <span class="metric-lbl" title="Alertas Recibidas">Alertas Recibidas</span>
         </div>
       </div>
 
-      <div class="metric-card">
-        <div class="metric-icon metric-icon--green">✅</div>
-        <div class="metric-data">
+      <!-- 2. Alumnos Entregados -->
+      <div class="metric-card" title="Total de alumnos despachados con éxito en puerta">
+        <div class="metric-top">
+          <div class="metric-icon metric-icon--green">✅</div>
+          <span class="metric-badge metric-badge--green" [title]="completionRate + '% Efectividad de entrega'">{{ completionRate }}% Éxito</span>
+        </div>
+        <div class="metric-body">
           <span class="metric-val">{{ kpis.totalDeliveredToday }}</span>
-          <span class="metric-lbl">Alumnos Entregados</span>
+          <span class="metric-lbl" title="Alumnos Entregados">Alumnos Entregados</span>
         </div>
       </div>
 
-      <div class="metric-card">
-        <div class="metric-icon metric-icon--amber">⏱</div>
-        <div class="metric-data">
-          <span class="metric-val">{{ kpis.avgPickupTimeMinutes }} min</span>
-          <span class="metric-lbl">Tiempo Promedio de Entrega</span>
+      <!-- 3. Tiempo Promedio de Entrega -->
+      <div class="metric-card" title="Tiempo promedio desde aviso del padre hasta entrega en puerta">
+        <div class="metric-top">
+          <div class="metric-icon metric-icon--amber">⏱</div>
+          <span class="metric-badge" [class]="'metric-badge--' + speedStatus.class" [title]="'Ritmo: ' + speedStatus.label">
+            {{ speedStatus.icon }} {{ speedStatus.label }}
+          </span>
+        </div>
+        <div class="metric-body">
+          <span class="metric-val">{{ kpis.avgPickupTimeMinutes }} <small class="metric-unit">min</small></span>
+          <span class="metric-lbl" title="Tiempo Promedio de Entrega">Tiempo Promedio</span>
         </div>
       </div>
 
-      <div class="metric-card">
-        <div class="metric-icon metric-icon--purple">🔥</div>
-        <div class="metric-data">
-          <span class="metric-val">{{ kpis.peakHour }}</span>
-          <span class="metric-lbl">Franja / Hora Pico</span>
+      <!-- 4. Franja / Hora Pico -->
+      <div class="metric-card" title="Franja horaria con mayor volumen de vehículos y entregas">
+        <div class="metric-top">
+          <div class="metric-icon metric-icon--purple">🔥</div>
+          <span class="metric-badge metric-badge--purple" title="Franja de Mayor Flujo">Hora Pico</span>
         </div>
+        <div class="metric-body">
+          <span class="metric-val metric-val--time" [title]="kpis.peakHour">{{ kpis.peakHour }}</span>
+          <span class="metric-lbl" title="Mayor Flujo">Mayor Flujo</span>
+        </div>
+      </div>
+
+      <!-- 5. Alumnos en Espera -->
+      <div class="metric-card" title="Alumnos en espera con alerta activa sin despachar">
+        <div class="metric-top">
+          <div class="metric-icon metric-icon--cyan">⏳</div>
+          @if (kpis.pendingCount > 0) {
+            <span class="metric-badge metric-badge--amber" title="Alumnos en proceso">Pendientes</span>
+          } @else {
+            <span class="metric-badge metric-badge--green" title="Sin alumnos en espera">Al Día</span>
+          }
+        </div>
+        <div class="metric-body">
+          <span class="metric-val">{{ kpis.pendingCount }}</span>
+          <span class="metric-lbl" title="Alumnos en Espera">Alumnos en Espera</span>
+        </div>
+      </div>
+
+      <!-- 6. Alertas Urgentes -->
+      <div class="metric-card" title="Alertas marcadas como urgentes o prioritarias">
+        <div class="metric-top">
+          <div class="metric-icon metric-icon--red">🚨</div>
+          @if (kpis.urgentCount > 0) {
+            <span class="metric-badge metric-badge--red" title="Atención Prioritaria">Prioridad</span>
+          } @else {
+            <span class="metric-badge metric-badge--green" title="Operación Normal">Normal</span>
+          }
+        </div>
+        <div class="metric-body">
+          <span class="metric-val" [class.metric-val--alert]="kpis.urgentCount > 0">{{ kpis.urgentCount }}</span>
+          <span class="metric-lbl" title="Alertas Urgentes">Alertas Urgentes</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Data Mode Toggle (Entregas Reales vs Avisos Recibidos) -->
+    <div class="breakdown-control-bar">
+      <div class="control-info">
+        <h4 class="control-title">Distribución y Flujo Operativo</h4>
+        <p class="control-desc">
+          @if (dataMode() === 'deliveries') {
+            Mostrando <strong>{{ kpis.totalDeliveredToday }} alumnos efectivamente entregados</strong> en puerta escolar.
+          } @else {
+            Mostrando <strong>{{ kpis.totalAlertsToday }} solicitudes de proximidad</strong> enviadas por los padres.
+          }
+        </p>
+      </div>
+
+      <div class="mode-pills">
+        <button
+          type="button"
+          class="mode-btn"
+          [class.mode-btn--active]="dataMode() === 'deliveries'"
+          (click)="setDataMode('deliveries')"
+          title="Ver estadísticas basadas en alumnos efectivamente entregados"
+        >
+          🎓 Alumnos Entregados ({{ kpis.totalDeliveredToday }})
+        </button>
+        <button
+          type="button"
+          class="mode-btn"
+          [class.mode-btn--active]="dataMode() === 'alerts'"
+          (click)="setDataMode('alerts')"
+          title="Ver estadísticas basadas en solicitudes y alertas recibidas"
+        >
+          📍 Solicitudes / Avisos ({{ kpis.totalAlertsToday }})
+        </button>
       </div>
     </div>
 
     <!-- Charts Row: Level & Method Breakdown -->
     <div class="charts-row">
+      <!-- 1. Distribución por Nivel Escolar -->
       <div class="chart-card">
-        <h3 class="chart-title">Distribución por Nivel Escolar</h3>
+        <div class="chart-header">
+          <div>
+            <h3 class="chart-title">Distribución por Nivel Escolar</h3>
+            <span class="chart-subtitle">
+              {{ dataMode() === 'deliveries' ? 'Alumnos entregados por división' : 'Volumen de avisos recibidos' }}
+            </span>
+          </div>
+          <span class="chart-counter-badge">
+            {{ getTotalLevelCount() }} {{ dataMode() === 'deliveries' ? 'entregados' : 'avisos' }}
+          </span>
+        </div>
+
+        <!-- Segmented Proportion Bar -->
+        <div class="segmented-bar" role="progressbar" aria-label="Distribución por Nivel">
+          <div
+            class="seg-fill seg-fill--kinder"
+            [style.width.%]="getLevelPercent('KINDER')"
+            [title]="'Kinder: ' + getLevelCount('KINDER') + ' (' + getLevelPercent('KINDER') + '%)'"
+          ></div>
+          <div
+            class="seg-fill seg-fill--primaria"
+            [style.width.%]="getLevelPercent('PRIMARIA')"
+            [title]="'Primaria: ' + getLevelCount('PRIMARIA') + ' (' + getLevelPercent('PRIMARIA') + '%)'"
+          ></div>
+          <div
+            class="seg-fill seg-fill--secundaria"
+            [style.width.%]="getLevelPercent('SECUNDARIA')"
+            [title]="'Secundaria: ' + getLevelCount('SECUNDARIA') + ' (' + getLevelPercent('SECUNDARIA') + '%)'"
+          ></div>
+        </div>
+
         <div class="bar-list">
+          <!-- Kinder -->
           <div class="bar-item">
             <div class="bar-header">
-              <span class="bar-lbl">🎒 Kinder</span>
-              <span class="bar-qty">{{ kpis.alertsByLevel['KINDER'] || 0 }} alumnos ({{ getLevelPercent('KINDER') }}%)</span>
+              <span class="bar-lbl"><span class="level-indicator level-indicator--kinder"></span>🌱 Kinder</span>
+              <span class="bar-qty">
+                <strong>{{ getLevelCount('KINDER') }}</strong> {{ dataMode() === 'deliveries' ? 'alumnos' : 'avisos' }} ({{ getLevelPercent('KINDER') }}%)
+              </span>
             </div>
             <div class="bar-track">
               <div class="bar-fill bar-fill--kinder" [style.width.%]="getLevelPercent('KINDER')"></div>
             </div>
           </div>
 
+          <!-- Primaria -->
           <div class="bar-item">
             <div class="bar-header">
-              <span class="bar-lbl">📚 Primaria</span>
-              <span class="bar-qty">{{ kpis.alertsByLevel['PRIMARIA'] || 0 }} alumnos ({{ getLevelPercent('PRIMARIA') }}%)</span>
+              <span class="bar-lbl"><span class="level-indicator level-indicator--primaria"></span>📚 Primaria</span>
+              <span class="bar-qty">
+                <strong>{{ getLevelCount('PRIMARIA') }}</strong> {{ dataMode() === 'deliveries' ? 'alumnos' : 'avisos' }} ({{ getLevelPercent('PRIMARIA') }}%)
+              </span>
             </div>
             <div class="bar-track">
               <div class="bar-fill bar-fill--primaria" [style.width.%]="getLevelPercent('PRIMARIA')"></div>
             </div>
           </div>
 
+          <!-- Secundaria -->
           <div class="bar-item">
             <div class="bar-header">
-              <span class="bar-lbl">🎓 Secundaria</span>
-              <span class="bar-qty">{{ kpis.alertsByLevel['SECUNDARIA'] || 0 }} alumnos ({{ getLevelPercent('SECUNDARIA') }}%)</span>
+              <span class="bar-lbl"><span class="level-indicator level-indicator--secundaria"></span>🎓 Secundaria</span>
+              <span class="bar-qty">
+                <strong>{{ getLevelCount('SECUNDARIA') }}</strong> {{ dataMode() === 'deliveries' ? 'alumnos' : 'avisos' }} ({{ getLevelPercent('SECUNDARIA') }}%)
+              </span>
             </div>
             <div class="bar-track">
               <div class="bar-fill bar-fill--secundaria" [style.width.%]="getLevelPercent('SECUNDARIA')"></div>
@@ -124,28 +252,74 @@
         </div>
       </div>
 
+      <!-- 2. Modalidad de Recogida -->
       <div class="chart-card">
-        <h3 class="chart-title">Modalidad de Recogida</h3>
+        <div class="chart-header">
+          <div>
+            <h3 class="chart-title">Modalidad de Recogida</h3>
+            <span class="chart-subtitle">
+              {{ dataMode() === 'deliveries' ? 'Entregas por vehículo vs puerta peatonal' : 'Preferencia declarada por padres' }}
+            </span>
+          </div>
+          <span class="chart-counter-badge">
+            {{ getTotalMethodCount() }} {{ dataMode() === 'deliveries' ? 'entregas' : 'avisos' }}
+          </span>
+        </div>
+
+        <!-- Segmented Proportion Bar -->
+        <div class="segmented-bar" role="progressbar" aria-label="Distribución por Modalidad">
+          <div
+            class="seg-fill seg-fill--car"
+            [style.width.%]="getMethodPercent('CAR')"
+            [title]="'En Auto: ' + getMethodCount('CAR') + ' (' + getMethodPercent('CAR') + '%)'"
+          ></div>
+          <div
+            class="seg-fill seg-fill--walk"
+            [style.width.%]="getMethodPercent('WALK')"
+            [title]="'A Pie: ' + getMethodCount('WALK') + ' (' + getMethodPercent('WALK') + '%)'"
+          ></div>
+        </div>
+
         <div class="bar-list">
+          <!-- Circuito en Auto -->
           <div class="bar-item">
             <div class="bar-header">
-              <span class="bar-lbl">🚗 Circuito en Auto</span>
-              <span class="bar-qty">{{ kpis.alertsByMethod['CAR'] || 0 }} entregas ({{ getMethodPercent('CAR') }}%)</span>
+              <span class="bar-lbl"><span class="level-indicator level-indicator--car"></span>🚗 Circuito en Auto</span>
+              <span class="bar-qty">
+                <strong>{{ getMethodCount('CAR') }}</strong> {{ dataMode() === 'deliveries' ? 'entregas' : 'avisos' }} ({{ getMethodPercent('CAR') }}%)
+              </span>
             </div>
             <div class="bar-track">
               <div class="bar-fill bar-fill--car" [style.width.%]="getMethodPercent('CAR')"></div>
             </div>
           </div>
 
+          <!-- Puerta Peatonal -->
           <div class="bar-item">
             <div class="bar-header">
-              <span class="bar-lbl">🚶 Puerta Peatonal</span>
-              <span class="bar-qty">{{ kpis.alertsByMethod['WALK'] || 0 }} entregas ({{ getMethodPercent('WALK') }}%)</span>
+              <span class="bar-lbl"><span class="level-indicator level-indicator--walk"></span>🚶 Puerta Peatonal</span>
+              <span class="bar-qty">
+                <strong>{{ getMethodCount('WALK') }}</strong> {{ dataMode() === 'deliveries' ? 'entregas' : 'avisos' }} ({{ getMethodPercent('WALK') }}%)
+              </span>
             </div>
             <div class="bar-track">
               <div class="bar-fill bar-fill--walk" [style.width.%]="getMethodPercent('WALK')"></div>
             </div>
           </div>
+        </div>
+
+        <!-- Insight rápido -->
+        <div class="method-summary-box">
+          <span class="method-icon">💡</span>
+          <span class="method-text">
+            @if (getMethodPercent('CAR') >= 80) {
+              Alta afluencia vehicular: <strong>{{ getMethodPercent('CAR') }}% en auto</strong>. Priorizar flujo continuo de bahías.
+            } @else if (getMethodPercent('WALK') >= 50) {
+              Alta afluencia peatonal: <strong>{{ getMethodPercent('WALK') }}% a pie</strong>. Mantener despejada la banqueta de acceso.
+            } @else {
+              Flujo mixto equilibrado entre circuito vehicular ({{ getMethodPercent('CAR') }}%) y puerta peatonal ({{ getMethodPercent('WALK') }}%).
+            }
+          </span>
         </div>
       </div>
     </div>
@@ -155,7 +329,10 @@
       <div class="table-header-box">
         <div>
           <h3 class="card-title">👨‍🏫 Rendimiento de Entregas por Maestro</h3>
-          <p class="card-sub">Velocidad de despacho y cantidad de alumnos entregados por el personal escolar</p>
+          <p class="card-sub">Velocidad de despacho y cantidad de alumnos despachados por el personal (Haz clic en un registro para ver análisis detallado)</p>
+        </div>
+        <div class="header-count-pill">
+          {{ kpis.teacherMetrics?.length || 0 }} maestros registrados
         </div>
       </div>
 
@@ -165,13 +342,15 @@
             <tr>
               <th>Maestro / Personal</th>
               <th>Alumnos Despachados</th>
+              <th>Nivel Principal</th>
               <th>Tiempo Promedio</th>
               <th>Efectividad</th>
+              <th class="th-actions">Detalles</th>
             </tr>
           </thead>
           <tbody>
-            @for (t of kpis.teacherMetrics || []; track t.teacherName) {
-              <tr>
+            @for (t of getDisplayedTeachers(); track t.teacherName) {
+              <tr class="clickable-row" (click)="selectTeacher(t)" title="Ver análisis de desempeño de este maestro">
                 <td>
                   <div class="teacher-cell">
                     <span class="t-avatar">{{ t.teacherName.charAt(0) }}</span>
@@ -182,28 +361,148 @@
                   <span class="badge-count">{{ t.totalDelivered }} alumnos</span>
                 </td>
                 <td>
-                  <span class="time-tag" [class.time-tag--fast]="t.avgTimeMinutes <= 5" [class.time-tag--slow]="t.avgTimeMinutes > 7">
+                  <span class="badge-level">{{ t.topLevel || 'General' }}</span>
+                </td>
+                <td>
+                  <span class="time-tag" [class.time-tag--fast]="t.avgTimeMinutes <= 3" [class.time-tag--good]="t.avgTimeMinutes > 3 && t.avgTimeMinutes <= 5.5" [class.time-tag--slow]="t.avgTimeMinutes > 5.5">
                     ⏱ {{ t.avgTimeMinutes }} min
                   </span>
                 </td>
                 <td>
                   <div class="eff-bar-wrap">
                     <div class="eff-bar">
-                      <div class="eff-fill" [style.width.%]="t.avgTimeMinutes <= 5 ? 95 : t.avgTimeMinutes <= 7 ? 75 : 50"></div>
+                      <div class="eff-fill" [style.width.%]="t.avgTimeMinutes <= 3 ? 98 : t.avgTimeMinutes <= 5.5 ? 82 : 55"></div>
                     </div>
-                    <span class="eff-txt">{{ t.avgTimeMinutes <= 5 ? 'Excelente' : t.avgTimeMinutes <= 7 ? 'Bueno' : 'Regular' }}</span>
+                    <span class="eff-txt">{{ t.avgTimeMinutes <= 3 ? 'Excelente' : t.avgTimeMinutes <= 5.5 ? 'Bueno' : 'Regular' }}</span>
                   </div>
+                </td>
+                <td class="td-actions">
+                  <button type="button" class="btn-inspect" (click)="$event.stopPropagation(); selectTeacher(t)" title="Abrir ficha de insights">
+                    🔍 Ver
+                  </button>
                 </td>
               </tr>
             } @empty {
               <tr>
-                <td colspan="4" class="empty-cell">No se registran despachos de maestros en el período seleccionado.</td>
+                <td colspan="6" class="empty-cell">No se registran despachos de maestros en el período seleccionado.</td>
               </tr>
             }
           </tbody>
         </table>
       </div>
+
+      <!-- Pagination / Expand Bar (Muestra 5 iniciales y botón Ver más) -->
+      @if ((kpis.teacherMetrics?.length || 0) > 5) {
+        <div class="table-footer-bar">
+          <span class="footer-info-text">
+            Mostrando <strong>{{ getDisplayedTeachers().length }}</strong> de <strong>{{ kpis.teacherMetrics?.length }}</strong> docentes
+          </span>
+          <button type="button" class="btn-toggle-teachers" (click)="toggleShowAllTeachers()">
+            @if (showAllTeachers()) {
+              🔼 Mostrar solo los 5 principales
+            } @else {
+              🔽 Ver todos los maestros (+{{ (kpis.teacherMetrics?.length || 0) - 5 }} más)
+            }
+          </button>
+        </div>
+      }
     </div>
+
+    <!-- Teacher Insights Modal -->
+    @if (selectedTeacher(); as teacher) {
+      <div class="insights-modal-overlay" (click)="closeTeacherModal()">
+        <div class="insights-modal-card" (click)="$event.stopPropagation()">
+          <header class="modal-header">
+            <div class="modal-teacher-info">
+              <span class="modal-avatar">{{ teacher.teacherName.charAt(0) }}</span>
+              <div>
+                <h4 class="modal-teacher-name">{{ teacher.teacherName }}</h4>
+                <div class="modal-badges-row">
+                  <span class="badge-level">{{ teacher.topLevel || 'Plantel General' }}</span>
+                  <span class="speed-badge" [class.speed-badge--fast]="teacher.avgTimeMinutes <= 3" [class.speed-badge--slow]="teacher.avgTimeMinutes > 5.5">
+                    {{ teacher.avgTimeMinutes <= 3 ? '⚡ Despacho Ultrarrápido' : teacher.avgTimeMinutes <= 5.5 ? '⏱ Ritmo Eficiente' : '⚠️ En Observación' }}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <button type="button" class="modal-close-btn" (click)="closeTeacherModal()" aria-label="Cerrar modal">✕</button>
+          </header>
+
+          <div class="modal-body">
+            <!-- Smart Insight Box -->
+            <div class="smart-insight-box">
+              <div class="insight-icon">💡</div>
+              <p class="insight-desc">{{ getTeacherInsight(teacher) }}</p>
+            </div>
+
+            <!-- Key Numbers Grid -->
+            <div class="teacher-stats-grid">
+              <div class="t-stat-card">
+                <span class="t-stat-val">{{ teacher.totalDelivered }}</span>
+                <span class="t-stat-lbl">Alumnos Despachados</span>
+              </div>
+              <div class="t-stat-card">
+                <span class="t-stat-val">{{ teacher.avgTimeMinutes }} min</span>
+                <span class="t-stat-lbl">Tiempo Promedio</span>
+              </div>
+              <div class="t-stat-card">
+                <span class="t-stat-val t-stat-val--fast">{{ teacher.fastestTimeMinutes || teacher.avgTimeMinutes }} min</span>
+                <span class="t-stat-lbl">Despacho Más Rápido</span>
+              </div>
+              <div class="t-stat-card">
+                <span class="t-stat-val t-stat-val--slow">{{ teacher.slowestTimeMinutes || teacher.avgTimeMinutes }} min</span>
+                <span class="t-stat-lbl">Mayor Tiempo Espera</span>
+              </div>
+            </div>
+
+            <!-- Performance Comparison Chart -->
+            <div class="comparison-section">
+              <h5 class="comp-title">Comparativa de Velocidad vs Media Escolar</h5>
+              <div class="comp-bars-container">
+                <div class="comp-bar-item">
+                  <div class="comp-bar-header">
+                    <span>Docente ({{ teacher.teacherName }})</span>
+                    <strong>{{ teacher.avgTimeMinutes }} min</strong>
+                  </div>
+                  <div class="comp-track">
+                    <div class="comp-fill comp-fill--teacher" [style.width.%]="Math.min(100, (teacher.avgTimeMinutes / 10) * 100)"></div>
+                  </div>
+                </div>
+
+                <div class="comp-bar-item">
+                  <div class="comp-bar-header">
+                    <span>Promedio General del Colegio</span>
+                    <strong>{{ kpis.avgPickupTimeMinutes }} min</strong>
+                  </div>
+                  <div class="comp-track">
+                    <div class="comp-fill comp-fill--school" [style.width.%]="Math.min(100, (kpis.avgPickupTimeMinutes / 10) * 100)"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="comp-verdict">
+                @let comp = getTeacherComparison(teacher);
+                @if (comp.isFaster) {
+                  <span class="verdict-tag verdict-tag--faster">
+                    🚀 Este docente despacha un <strong>{{ comp.diffPercent }}% más rápido</strong> que la media general del colegio.
+                  </span>
+                } @else {
+                  <span class="verdict-tag verdict-tag--slower">
+                    ⏱ Un {{ comp.diffPercent }}% por encima del tiempo promedio escolar. Se recomienda apoyo en hora pico.
+                  </span>
+                }
+              </div>
+            </div>
+          </div>
+
+          <footer class="modal-footer">
+            <button type="button" class="btn-modal-close" (click)="closeTeacherModal()">
+              Cerrar Análisis
+            </button>
+          </footer>
+        </div>
+      </div>
+    }
   }
 
 </div>

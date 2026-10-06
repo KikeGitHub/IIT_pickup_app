@@ -6,6 +6,8 @@ import {
   ChangeDetectionStrategy,
   OnInit,
   OnDestroy,
+  OnChanges,
+  SimpleChanges,
   ChangeDetectorRef,
   inject
 } from '@angular/core';
@@ -20,7 +22,7 @@ import { MonitorAlert, MonitorService } from '../../services/monitor.service';
   styleUrl: './student-monitor-card.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class StudentMonitorCardComponent implements OnInit, OnDestroy {
+export class StudentMonitorCardComponent implements OnInit, OnDestroy, OnChanges {
   @Input({ required: true }) alert!: MonitorAlert;
   @Input() isDispatching: boolean = false;
   @Input() isUpdated: boolean = false;
@@ -46,6 +48,18 @@ export class StudentMonitorCardComponent implements OnInit, OnDestroy {
     // Cero clics para el profesor: el mero renderizado en el monitor confirma que ya fue vista.
     if (this.alert && !this.alert.seenAt) {
       this.monitorService.acknowledgeAlert(this.alert.id);
+    }
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['alert']) {
+      this.updateElapsed();
+      // AUTO-ACK REACTIVO: Cuando el alumno cambia de estado (10 MIN -> 5 MIN -> EN FILA -> URGENTE)
+      // Angular reutiliza este componente. Detectamos el nuevo ID y confirmamos automáticamente al backend.
+      if (this.alert && !this.alert.seenAt) {
+        this.monitorService.acknowledgeAlert(this.alert.id);
+      }
+      this.cdr.markForCheck();
     }
   }
 

@@ -82,11 +82,13 @@ export class AdminService {
           peakHour: '14:00 - 14:30',
           alertsByLevel: { KINDER: 32, PRIMARIA: 84, SECUNDARIA: 26 },
           alertsByMethod: { CAR: 118, WALK: 24 },
+          deliveriesByLevel: { KINDER: 30, PRIMARIA: 74, SECUNDARIA: 24 },
+          deliveriesByMethod: { CAR: 106, WALK: 22 },
           teacherMetrics: [
-            { teacherName: 'María Fernanda Solís', totalDelivered: 45, avgTimeMinutes: 4.2 },
-            { teacherName: 'Juan Carlos Morales', totalDelivered: 38, avgTimeMinutes: 5.1 },
-            { teacherName: 'Lucía Mendoza Reyes', totalDelivered: 32, avgTimeMinutes: 6.0 },
-            { teacherName: 'Roberto Garza Vega', totalDelivered: 13, avgTimeMinutes: 7.3 }
+            { teacherName: 'María Fernanda Solís', totalDelivered: 45, avgTimeMinutes: 4.2, topLevel: 'PRIMARIA', fastestTimeMinutes: 2.1, slowestTimeMinutes: 6.4 },
+            { teacherName: 'Juan Carlos Morales', totalDelivered: 38, avgTimeMinutes: 5.1, topLevel: 'SECUNDARIA', fastestTimeMinutes: 2.5, slowestTimeMinutes: 7.2 },
+            { teacherName: 'Lucía Mendoza Reyes', totalDelivered: 32, avgTimeMinutes: 6.0, topLevel: 'KINDER', fastestTimeMinutes: 3.2, slowestTimeMinutes: 8.0 },
+            { teacherName: 'Roberto Garza Vega', totalDelivered: 13, avgTimeMinutes: 7.3, topLevel: 'PRIMARIA', fastestTimeMinutes: 4.1, slowestTimeMinutes: 9.5 }
           ]
         };
         this.kpis.set(mock);
