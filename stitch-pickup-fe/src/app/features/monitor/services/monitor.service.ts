@@ -1,6 +1,6 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { tap, catchError, of, forkJoin, EMPTY } from 'rxjs';
+import { tap, catchError, of, forkJoin, EMPTY, Subscription } from 'rxjs';
 import { WebSocketService } from '../../../core/services/websocket.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { NotificationSoundService } from '../../../core/services/notification-sound.service';
@@ -20,6 +20,7 @@ export interface MonitorAlert {
   status: 'TEN_MIN' | 'FIVE_MIN' | 'EN_FILA' | 'URGENTE';
   pickupMethod: 'CAR' | 'WALK';
   sentAt: string;
+  seenAt?: string;
   isDispatched: boolean;
   isUpdated: boolean;
   /** Indica que el padre reportó no haber recibido al alumno — mostrar badge 🚨 */
@@ -62,6 +63,7 @@ export class MonitorService {
   private pollInterval?: any;
   private clockInterval?: any;
   private visibilityHandler?: () => void;
+  private wsSubscriptions: Subscription = new Subscription();
 
   // ─── Reactive State ───────────────────────────────────────────────────────
   readonly now = signal<number>(Date.now());
@@ -130,6 +132,8 @@ export class MonitorService {
 
   // ─── Initialization ──────────────────────────────────────────────────────
   initialize(): void {
+    // BLINDAJE: Limpiar suscripciones y timers previos para evitar fugas de memoria o toasts duplicados
+    this.destroy();
     this.loadTodayAlertsGrouped();
     this.loadTodayDeliveries();
     this.subscribeToWebSocket();
@@ -176,6 +180,7 @@ export class MonitorService {
           status: a.status,
           pickupMethod: a.pickupMethod,
           sentAt: a.sentAt,
+          seenAt: a.seenAt,
           isDispatched: deliveredStudentIds.has(a.studentId),
           isUpdated: false,
           isRejectedByParent: false
@@ -199,12 +204,14 @@ export class MonitorService {
     }
 
     // 1. Resincronizar cuando el WebSocket reconecte
-    this.ws.isConnected$.subscribe(connected => {
-      if (connected) {
-        console.info('[MonitorService] 🔄 WebSocket reconectado, sincronizando alertas...');
-        this.loadTodayAlertsGrouped();
-      }
-    });
+    this.wsSubscriptions.add(
+      this.ws.isConnected$.subscribe(connected => {
+        if (connected) {
+          console.info('[MonitorService] 🔄 WebSocket reconectado, sincronizando alertas...');
+          this.loadTodayAlertsGrouped();
+        }
+      })
+    );
 
     // 2. Detección de reactivación de pantalla / cambio de app en móviles
     if (typeof document !== 'undefined' && !this.visibilityHandler) {
@@ -232,6 +239,10 @@ export class MonitorService {
   }
 
   destroy(): void {
+    if (this.wsSubscriptions) {
+      this.wsSubscriptions.unsubscribe();
+      this.wsSubscriptions = new Subscription();
+    }
     if (this.clockInterval) {
       clearInterval(this.clockInterval);
       this.clockInterval = undefined;
@@ -348,6 +359,7 @@ export class MonitorService {
           status: a.status,
           pickupMethod: a.pickupMethod,
           sentAt: a.sentAt,
+          seenAt: a.seenAt,
           isDispatched: deliveredStudentIds.has(a.studentId),
           isUpdated: false,
           isRejectedByParent: false
@@ -366,241 +378,292 @@ export class MonitorService {
 
   private subscribeToWebSocket(): void {
     // 1. Listen for new parent proximity alerts
-    this.ws.onParentAlert().subscribe(event => {
-      console.info('[MonitorService] 🔔 Evaluando alerta en monitor:', event);
-      const currentUser = this.auth.currentUser();
+    this.wsSubscriptions.add(
+      this.ws.onParentAlert().subscribe(event => {
+        console.info('[MonitorService] 🔔 Evaluando alerta en monitor:', event);
+        const currentUser = this.auth.currentUser();
 
-      // STRICT TEACHER GROUP AND LEVEL FILTERING (Resiliente y Normalizado):
-      if (currentUser && currentUser.role === 'TEACHER') {
-        const teacherLevel = (currentUser.level || '').trim().toUpperCase();
-        const eventLevel = (event.level || '').trim().toUpperCase();
+        // STRICT TEACHER GROUP AND LEVEL FILTERING (Resiliente y Normalizado):
+        if (currentUser && currentUser.role === 'TEACHER') {
+          const teacherLevel = (currentUser.level || '').trim().toUpperCase();
+          const eventLevel = (event.level || '').trim().toUpperCase();
 
-        // 1. REGLA DE NIVEL: Si el docente tiene nivel asignado (ej. SECUNDARIA o PRIMARIA),
-        // solo descarta si ambos tienen nivel definido y son claramente distintos.
-        if (teacherLevel && eventLevel && teacherLevel !== eventLevel) {
-          console.info(`[MonitorService] ⏭️ Alerta ignorada: nivel de la alerta '${eventLevel}' no coincide con el nivel del docente '${teacherLevel}'.`);
+          // 1. REGLA DE NIVEL: Si el docente tiene nivel asignado (ej. SECUNDARIA o PRIMARIA),
+          // solo descarta si ambos tienen nivel definido y son claramente distintos.
+          if (teacherLevel && eventLevel && teacherLevel !== eventLevel) {
+            console.info(`[MonitorService] ⏭️ Alerta ignorada: nivel de la alerta '${eventLevel}' no coincide con el nivel del docente '${teacherLevel}'.`);
+            return;
+          }
+
+          // 2. OBTENER SALONES ASIGNADOS: Desde currentUser.groups O teacherService.myGroups()
+          const assignedFromToken: string[] = currentUser.groups || [];
+          const assignedFromService: string[] = this.teacherService.myGroups().map(g => g.name);
+          const allAssigned = Array.from(new Set([...assignedFromToken, ...assignedFromService]));
+
+          if (allAssigned.length > 0) {
+            const clean = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+            const eventClean = clean(event.groupName || '');
+            const eventLevelClean = clean(`${event.level || ''}${event.groupName || ''}`);
+
+            const matchesGroup = allAssigned.some(g => {
+              const gClean = clean(g);
+              return (
+                gClean === eventClean ||
+                gClean === eventLevelClean ||
+                gClean.endsWith(eventClean) ||
+                eventClean.endsWith(gClean) ||
+                gClean.includes(eventClean) ||
+                eventClean.includes(gClean)
+              );
+            });
+
+            if (!matchesGroup) {
+              console.info(`[MonitorService] ⏭️ Alerta ignorada: grupo '${event.groupName}' no pertenece a los salones asignados del docente.`, allAssigned);
+              return;
+            }
+          }
+        }
+
+        // Dedup by studentId: if a card for this student already exists, UPDATE it
+        const existingIndex = this.alerts().findIndex(a => a.studentId === event.studentId && !a.isDispatched);
+
+        if (existingIndex !== -1) {
+          this.alerts.update(alerts =>
+            alerts.map((a, i) => {
+              if (i === existingIndex) {
+                return {
+                  ...a,
+                  id: event.id,
+                  status: event.status,
+                  pickupMethod: event.pickupMethod,
+                  sentAt: event.sentAt,
+                  seenAt: event.seenAt,
+                  parentName: event.parentName,
+                  level: event.level,
+                  groupName: event.groupName,
+                  isUpdated: true
+                };
+              }
+              return a;
+            })
+          );
+
+          // AUTO-ACK REACTIVO: Si la alerta ya está en la pantalla activa del docente,
+          // confirmarla de inmediato para que el padre reciba el doble check sin tener que refrescar
+          if (!event.seenAt) {
+            this.acknowledgeAlert(event.id);
+          }
+
+          setTimeout(() => {
+            this.alerts.update(alerts =>
+              alerts.map(a => a.studentId === event.studentId ? { ...a, isUpdated: false } : a)
+            );
+          }, 2000);
+
+          const statusLabel: Record<string, string> = { TEN_MIN: '10 MIN', FIVE_MIN: '5 MIN', EN_FILA: 'EN FILA', URGENTE: 'URGENTE' };
+          const label = statusLabel[event.status] || event.status;
+          const methodStr = event.pickupMethod === 'CAR' ? 'En Auto' : 'A Pie';
+
+          if (event.status === 'URGENTE') {
+            this.sound.playUrgentSound();
+            this.sound.notifyWithVibration(
+              `🚨 URGENTE: ${event.studentName}`,
+              `Grupo ${event.groupName} (${event.level}) • Requiere atención inmediata del personal`,
+              'alert-' + event.studentId
+            );
+            this.notification.warning(`🚨 ${event.studentName} — URGENTE`);
+          } else {
+            this.sound.playAlertSound();
+            this.sound.notifyWithVibration(
+              `🚗 ${event.studentName} (${label})`,
+              `Modalidad: ${methodStr} • Grupo: ${event.groupName}`,
+              'alert-' + event.studentId
+            );
+            this.notification.info(`${event.studentName} — ${label}`);
+          }
+        } else {
+          const newAlert: MonitorAlert = {
+            id: event.id,
+            parentId: event.parentId,
+            parentName: event.parentName,
+            studentId: event.studentId,
+            studentName: event.studentName,
+            level: event.level,
+            groupName: event.groupName,
+            status: event.status,
+            pickupMethod: event.pickupMethod,
+            sentAt: event.sentAt,
+            seenAt: event.seenAt,
+            isDispatched: false,
+            isUpdated: true,
+            isRejectedByParent: false
+          };
+          this.alerts.update(alerts => [newAlert, ...alerts]);
+
+          // AUTO-ACK: Tarjeta nueva en pantalla activa
+          if (!event.seenAt) {
+            this.acknowledgeAlert(event.id);
+          }
+
+          setTimeout(() => {
+            this.alerts.update(alerts =>
+              alerts.map(a => a.studentId === event.studentId ? { ...a, isUpdated: false } : a)
+            );
+          }, 2000);
+
+          const statusLabel: Record<string, string> = { TEN_MIN: '10 MIN', FIVE_MIN: '5 MIN', EN_FILA: 'EN FILA', URGENTE: 'URGENTE' };
+          const label = statusLabel[event.status] || event.status;
+          const methodStr = event.pickupMethod === 'CAR' ? 'En Auto' : 'A Pie';
+
+          if (event.status === 'URGENTE') {
+            this.sound.playUrgentSound();
+            this.sound.notifyWithVibration(
+              `🚨 NUEVA ALERTA: ${event.studentName}`,
+              `Grupo ${event.groupName} (${event.level}) • Alumno en espera`,
+              'alert-' + event.studentId
+            );
+            this.notification.warning(`🚨 NUEVA: ${event.studentName} — URGENTE`);
+          } else {
+            this.sound.playAlertSound();
+            this.sound.notifyWithVibration(
+              `🚗 NUEVA: ${event.studentName} (${label})`,
+              `Modalidad: ${methodStr} • Grupo: ${event.groupName}`,
+              'alert-' + event.studentId
+            );
+            this.notification.info(`NUEVA: ${event.studentName} — ${label}`);
+          }
+        }
+      })
+    );
+
+    // 2. Listen for delivery status updates (dispatch, confirm, reject, revert)
+    this.wsSubscriptions.add(
+      this.ws.onDeliveryEvent().subscribe(delivery => {
+        console.info('[MonitorService] 📦 Evento de entrega recibido por WebSocket:', delivery);
+
+        if (delivery.status === 'REVERTIDO_DOCENTE') {
+          // Quitar de la lista de entregados si fue revertido
+          this.deliveries.update(list => list.filter(d => d.id !== delivery.id));
           return;
         }
 
-        // 2. OBTENER SALONES ASIGNADOS: Desde currentUser.groups O teacherService.myGroups()
-        const assignedFromToken: string[] = currentUser.groups || [];
-        const assignedFromService: string[] = this.teacherService.myGroups().map(g => g.name);
-        const allAssigned = Array.from(new Set([...assignedFromToken, ...assignedFromService]));
-
-        if (allAssigned.length > 0) {
-          const clean = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
-          const eventClean = clean(event.groupName || '');
-          const eventLevelClean = clean(`${event.level || ''}${event.groupName || ''}`);
-
-          const matchesGroup = allAssigned.some(g => {
-            const gClean = clean(g);
-            return (
-              gClean === eventClean ||
-              gClean === eventLevelClean ||
-              gClean.endsWith(eventClean) ||
-              eventClean.endsWith(gClean) ||
-              gClean.includes(eventClean) ||
-              eventClean.includes(gClean)
-            );
-          });
-
-          if (!matchesGroup) {
-            console.info(`[MonitorService] ⏭️ Alerta ignorada: grupo '${event.groupName}' no pertenece a los salones asignados del docente.`, allAssigned);
-            return;
-          }
-        }
-        // Si el docente no tiene grupos específicos asignados en el momento (ej. guardia de patio/apoyo general),
-        // se acepta la alerta conforme al fallback global para que no quede a ciegas.
-      }
-
-      // Dedup by studentId: if a card for this student already exists, UPDATE it
-      const existingIndex = this.alerts().findIndex(a => a.studentId === event.studentId && !a.isDispatched);
-
-      if (existingIndex !== -1) {
+        // Actualizar el flag isDispatched en el alert correspondiente
         this.alerts.update(alerts =>
-          alerts.map((a, i) => {
-            if (i === existingIndex) {
-              return {
-                ...a,
-                id: event.id,
-                status: event.status,
-                pickupMethod: event.pickupMethod,
-                sentAt: event.sentAt,
-                parentName: event.parentName,
-                level: event.level,
-                groupName: event.groupName,
-                isUpdated: true
-              };
-            }
-            return a;
-          })
+          alerts.map(a => a.studentId === delivery.studentId ? { ...a, isDispatched: delivery.status === 'ENTREGADO_ESCUELA' || delivery.status === 'RECIBIDO_PADRE' } : a)
         );
 
-        setTimeout(() => {
-          this.alerts.update(alerts =>
-            alerts.map(a => a.studentId === event.studentId ? { ...a, isUpdated: false } : a)
-          );
-        }, 2000);
-
-        const statusLabel: Record<string, string> = { TEN_MIN: '10 MIN', FIVE_MIN: '5 MIN', EN_FILA: 'EN FILA', URGENTE: 'URGENTE' };
-        const label = statusLabel[event.status] || event.status;
-        const methodStr = event.pickupMethod === 'CAR' ? 'En Auto' : 'A Pie';
-
-        if (event.status === 'URGENTE') {
-          this.sound.playUrgentSound();
-          this.sound.notifyWithVibration(
-            `🚨 URGENTE: ${event.studentName}`,
-            `Grupo ${event.groupName} (${event.level}) • Requiere atención inmediata del personal`,
-            'alert-' + event.studentId
-          );
-          this.notification.warning(`🚨 ${event.studentName} — URGENTE`);
-        } else {
-          this.sound.playAlertSound();
-          this.sound.notifyWithVibration(
-            `🚗 ${event.studentName} (${label})`,
-            `Modalidad: ${methodStr} • Grupo: ${event.groupName}`,
-            'alert-' + event.studentId
-          );
-          this.notification.info(`📍 ${event.studentName} — ${label}`);
-        }
-      } else {
-        const newAlert: MonitorAlert = {
-          id: event.id,
-          parentId: event.parentId,
-          parentName: event.parentName,
-          studentId: event.studentId,
-          studentName: event.studentName,
-          level: event.level,
-          groupName: event.groupName,
-          status: event.status,
-          pickupMethod: event.pickupMethod,
-          sentAt: event.sentAt,
-          isDispatched: false,
-          isUpdated: true,
-          isRejectedByParent: false
-        };
-        this.alerts.update(alerts => [newAlert, ...alerts]);
-
-        setTimeout(() => {
-          this.alerts.update(alerts =>
-            alerts.map(a => a.studentId === event.studentId ? { ...a, isUpdated: false } : a)
-          );
-        }, 2000);
-
-        const statusLabel: Record<string, string> = { TEN_MIN: '10 MIN', FIVE_MIN: '5 MIN', EN_FILA: 'EN FILA', URGENTE: 'URGENTE' };
-        const label = statusLabel[event.status] || event.status;
-        const methodStr = event.pickupMethod === 'CAR' ? 'En Auto' : 'A Pie';
-
-        if (event.status === 'URGENTE') {
-          this.sound.playUrgentSound();
-          this.sound.notifyWithVibration(
-            `🚨 NUEVA ALERTA: ${event.studentName}`,
-            `Grupo ${event.groupName} (${event.level}) • Alumno en espera`,
-            'alert-' + event.studentId
-          );
-          this.notification.warning(`🚨 NUEVA: ${event.studentName} — URGENTE`);
-        } else {
-          this.sound.playAlertSound();
-          this.sound.notifyWithVibration(
-            `🚗 NUEVA: ${event.studentName} (${label})`,
-            `Modalidad: ${methodStr} • Grupo: ${event.groupName}`,
-            'alert-' + event.studentId
-          );
-          this.notification.info(`📍 NUEVA: ${event.studentName} — ${label}`);
-        }
-      }
-    });
-
-    // 2. Listen for delivery status updates (dispatch, confirm, reject, revert)
-    this.ws.onDeliveryEvent().subscribe(delivery => {
-      console.info('[MonitorService] 📦 Evento de entrega recibido por WebSocket:', delivery);
-
-      if (delivery.status === 'REVERTIDO_DOCENTE') {
-        // Quitar de la lista de entregados si fue revertido
-        this.deliveries.update(list => list.filter(d => d.id !== delivery.id));
-        return;
-      }
-
-      // Actualizar el flag isDispatched en el alert correspondiente
-      this.alerts.update(alerts =>
-        alerts.map(a => a.studentId === delivery.studentId ? { ...a, isDispatched: delivery.status === 'ENTREGADO_ESCUELA' || delivery.status === 'RECIBIDO_PADRE' } : a)
-      );
-
-      // Actualizar o agregar en la lista de entregados
-      this.deliveries.update(list => {
-        const idx = list.findIndex(d => d.id === delivery.id || d.studentId === delivery.studentId);
-        const record: DeliveryRecord = {
-          id: delivery.id,
-          studentId: delivery.studentId,
-          studentName: delivery.studentName,
-          level: delivery.level,
-          groupName: delivery.groupName,
-          teacherName: delivery.teacherName,
-          pickupMethod: delivery.pickupMethod ?? '',
-          status: delivery.status,
-          teacherConfirmedAt: delivery.teacherConfirmedAt || new Date().toISOString(),
-          parentConfirmedAt: delivery.parentConfirmedAt,
-          parentRejectedAt: delivery.parentRejectedAt,
-          revertedAt: delivery.revertedAt,
-          revertedBy: delivery.revertedBy,
-          logDate: delivery.logDate || new Date().toISOString().substring(0, 10)
-        };
-        if (idx !== -1) {
-          return list.map((item, i) => i === idx ? record : item);
-        } else {
-          return [record, ...list];
-        }
-      });
-    });
+        // Actualizar o agregar en la lista de entregados
+        this.deliveries.update(list => {
+          const idx = list.findIndex(d => d.id === delivery.id || d.studentId === delivery.studentId);
+          const record: DeliveryRecord = {
+            id: delivery.id,
+            studentId: delivery.studentId,
+            studentName: delivery.studentName,
+            level: delivery.level,
+            groupName: delivery.groupName,
+            teacherName: delivery.teacherName,
+            pickupMethod: delivery.pickupMethod ?? '',
+            status: delivery.status,
+            teacherConfirmedAt: delivery.teacherConfirmedAt || new Date().toISOString(),
+            parentConfirmedAt: delivery.parentConfirmedAt,
+            parentRejectedAt: delivery.parentRejectedAt,
+            revertedAt: delivery.revertedAt,
+            revertedBy: delivery.revertedBy,
+            logDate: delivery.logDate || new Date().toISOString().substring(0, 10)
+          };
+          if (idx !== -1) {
+            return list.map((item, i) => i === idx ? record : item);
+          } else {
+            return [record, ...list];
+          }
+        });
+      })
+    );
 
     // 3. Listen for delivery REJECTED by parent → alumno vuelve al board con badge 🚨
-    this.ws.onDeliveryRejected().subscribe(delivery => {
-      console.info('[MonitorService] 🚨 Entrega rechazada por padre:', delivery);
-      this.sound.playUrgentSound();
-      this.notification.warning(`🚨 ¡ATENCIÓN! El padre de ${delivery.studentName} reporta NO haber recibido al alumno.`);
+    this.wsSubscriptions.add(
+      this.ws.onDeliveryRejected().subscribe(delivery => {
+        console.info('[MonitorService] 🚨 Entrega rechazada por padre:', delivery);
+        this.sound.playUrgentSound();
+        this.notification.warning(`🚨 ¡ATENCIÓN! El padre de ${delivery.studentName} reporta NO haber recibido al alumno.`);
 
-      // Devolver la card al board con isDispatched=false e isRejectedByParent=true
-      this.alerts.update(alerts => {
-        const existingIdx = alerts.findIndex(a => a.studentId === delivery.studentId);
-        if (existingIdx !== -1) {
-          return alerts.map((a, i) => i === existingIdx
-            ? { ...a, isDispatched: false, isUpdated: true, isRejectedByParent: true, status: 'URGENTE' }
-            : a
-          );
-        }
-        return alerts;
-      });
+        // Devolver la card al board con isDispatched=false e isRejectedByParent=true
+        this.alerts.update(alerts => {
+          const existingIdx = alerts.findIndex(a => a.studentId === delivery.studentId);
+          if (existingIdx !== -1) {
+            return alerts.map((a, i) => i === existingIdx
+              ? { ...a, isDispatched: false, isUpdated: true, isRejectedByParent: true, status: 'URGENTE' }
+              : a
+            );
+          }
+          return alerts;
+        });
 
-      // Quitar de la lista de "Entregados Hoy"
-      this.deliveries.update(list => list.filter(d => d.id !== delivery.id));
-    });
+        // Quitar de la lista de "Entregados Hoy"
+        this.deliveries.update(list => list.filter(d => d.id !== delivery.id));
+      })
+    );
 
     // 4. Listen for delivery REVERTED by teacher/admin → alumno regresa al board
-    this.ws.onDeliveryReverted().subscribe(delivery => {
-      console.info('[MonitorService] 🔄 Entrega revertida por docente:', delivery);
+    this.wsSubscriptions.add(
+      this.ws.onDeliveryReverted().subscribe(delivery => {
+        console.info('[MonitorService] 🔄 Entrega revertida por docente:', delivery);
 
-      // Devolver la card al board con isDispatched=false
-      this.alerts.update(alerts => {
-        const existingIdx = alerts.findIndex(a => a.studentId === delivery.studentId);
-        if (existingIdx !== -1) {
-          return alerts.map((a, i) => i === existingIdx
-            ? { ...a, isDispatched: false, isUpdated: true, isRejectedByParent: false, status: 'EN_FILA' }
-            : a
-          );
-        }
-        return alerts;
-      });
+        // Devolver la card al board con isDispatched=false
+        this.alerts.update(alerts => {
+          const existingIdx = alerts.findIndex(a => a.studentId === delivery.studentId);
+          if (existingIdx !== -1) {
+            return alerts.map((a, i) => i === existingIdx
+              ? { ...a, isDispatched: false, isUpdated: true, isRejectedByParent: false, status: 'EN_FILA' }
+              : a
+            );
+          }
+          return alerts;
+        });
 
-      // Quitar de entregados
-      this.deliveries.update(list => list.filter(d => d.id !== delivery.id));
-    });
+        // Quitar de entregados
+        this.deliveries.update(list => list.filter(d => d.id !== delivery.id));
+      })
+    );
 
     // 5. Listen for alert CANCELLED by parent → retirar la tarjeta del board activo
-    this.ws.onAlertCancelled().subscribe(event => {
-      console.info('[MonitorService] 🗑️ Alerta cancelada por padre:', event);
-      // Eliminar la tarjeta del tablero activo
-      this.alerts.update(alerts => alerts.filter(a => a.studentId !== event.studentId));
-      this.notification.info(`ℹ️ ${event.studentName} canceló su aviso de llegada.`);
-    });
+    this.wsSubscriptions.add(
+      this.ws.onAlertCancelled().subscribe(event => {
+        console.info('[MonitorService] 🗑️ Alerta cancelada por padre:', event);
+        // Eliminar la tarjeta del tablero activo
+        this.alerts.update(alerts => alerts.filter(a => a.studentId !== event.studentId));
+        this.notification.info(`ℹ️ ${event.studentName} canceló su aviso de llegada.`);
+      })
+    );
+
+    // 6. Listen for alert SEEN en pantalla → actualizar seenAt en el board
+    this.wsSubscriptions.add(
+      this.ws.onAlertSeen().subscribe(event => {
+        this.alerts.update(alerts =>
+          alerts.map(a => (a.id === event.id || a.studentId === event.studentId)
+            ? { ...a, seenAt: event.seenAt }
+            : a
+          )
+        );
+      })
+    );
+  }
+
+  private readonly acknowledgedAlertIds = new Set<string>();
+
+  /**
+   * Confirma automáticamente que la alerta ya apareció en la pantalla del monitor escolar (Doble Check).
+   * Cero clics para el docente: se invoca automáticamente al renderizarse la tarjeta.
+   */
+  acknowledgeAlert(alertId: string): void {
+    if (!alertId || this.acknowledgedAlertIds.has(alertId)) return;
+    this.acknowledgedAlertIds.add(alertId);
+
+    this.http.post<AlertResponse>(`${this.apiUrl}/alerts/${alertId}/seen`, {}).pipe(
+      catchError(() => {
+        this.acknowledgedAlertIds.delete(alertId);
+        return of(null);
+      })
+    ).subscribe();
   }
 }

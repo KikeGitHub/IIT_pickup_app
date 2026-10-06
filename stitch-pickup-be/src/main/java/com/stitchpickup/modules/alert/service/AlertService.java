@@ -36,6 +36,7 @@ public class AlertService {
     private final StudentRepository studentRepository;
     private final TeacherUserRepository teacherUserRepository;
     private final com.stitchpickup.modules.student.repository.SchoolGroupRepository schoolGroupRepository;
+    private final com.stitchpickup.modules.delivery.repository.DeliveryLogRepository deliveryLogRepository;
     private final NotificationPublisher publisher;
 
     @Transactional
@@ -176,7 +177,14 @@ public class AlertService {
      */
     @Transactional(readOnly = true)
     public Optional<AlertResponse> getLatestTodayAlertForStudent(UUID studentId) {
-        Instant startOfDay = LocalDate.now(MEXICO_ZONE).atStartOfDay(MEXICO_ZONE).toInstant();
+        LocalDate today = LocalDate.now(MEXICO_ZONE);
+        // Si el alumno ya fue recibido hoy por el tutor, la alerta ya fue completada y no hay ciclo pendiente
+        Optional<com.stitchpickup.modules.delivery.entity.DeliveryLog> delivery = deliveryLogRepository.findByStudentIdAndLogDate(studentId, today);
+        if (delivery.isPresent() && delivery.get().getStatus() == com.stitchpickup.modules.delivery.entity.DeliveryLog.DeliveryStatus.RECIBIDO_PADRE) {
+            return Optional.empty();
+        }
+
+        Instant startOfDay = today.atStartOfDay(MEXICO_ZONE).toInstant();
         List<Alert> alerts = alertRepository.findLatestTodayAlertForStudent(studentId, startOfDay);
         if (alerts.isEmpty()) {
             return Optional.empty();
@@ -391,6 +399,46 @@ public class AlertService {
         return responses;
     }
 
+    /**
+     * Marca una alerta como vista en el monitor del colegio (Doble Check).
+     * Cero invasivo para el docente: se invoca cuando la tarjeta se dibuja en pantalla.
+     */
+    @Transactional
+    public AlertResponse markAlertAsSeen(UUID alertId) {
+        Alert alert = alertRepository.findById(alertId)
+                .orElseThrow(() -> new IllegalArgumentException("Alerta no encontrada con ID: " + alertId));
+
+        if (alert.getSeenAt() == null) {
+            alert.setSeenAt(Instant.now());
+            Alert saved = alertRepository.save(alert);
+            AlertResponse response = mapToResponse(saved);
+            publisher.notifyAlertSeen(alert.getParent().getId().toString(), response);
+            return response;
+        }
+        return mapToResponse(alert);
+    }
+
+    /**
+     * Marca múltiples alertas como vistas en lote.
+     */
+    @Transactional
+    public List<AlertResponse> markAlertsAsSeen(List<UUID> alertIds) {
+        if (alertIds == null || alertIds.isEmpty()) return List.of();
+        List<Alert> alerts = alertRepository.findAllById(alertIds);
+        List<AlertResponse> updated = new java.util.ArrayList<>();
+        Instant now = Instant.now();
+        for (Alert alert : alerts) {
+            if (alert.getSeenAt() == null) {
+                alert.setSeenAt(now);
+                Alert saved = alertRepository.save(alert);
+                AlertResponse response = mapToResponse(saved);
+                publisher.notifyAlertSeen(alert.getParent().getId().toString(), response);
+                updated.add(response);
+            }
+        }
+        return updated;
+    }
+
     private AlertResponse mapToResponse(Alert alert) {
         String groupName = alert.getStudent().getGroup() != null ? alert.getStudent().getGroup().getName() : "";
         return new AlertResponse(
@@ -405,7 +453,8 @@ public class AlertService {
                 alert.getPickupMethod().name(),
                 alert.getClientId() != null ? alert.getClientId().toString() : null,
                 alert.getSentAt(),
-                alert.getReceivedAt()
+                alert.getReceivedAt(),
+                alert.getSeenAt()
         );
     }
 }

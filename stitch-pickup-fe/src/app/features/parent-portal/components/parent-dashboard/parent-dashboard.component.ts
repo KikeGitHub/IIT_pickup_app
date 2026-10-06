@@ -72,6 +72,10 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
   // Cancel Alert State (padre cancela su propia alerta por error)
   readonly showCancelConfirm = signal<boolean>(false);
 
+  // Self-confirm Delivery State ("Ya me entregaron" cuando el maestro no presionó el botón)
+  readonly showSelfConfirmModal = signal<boolean>(false);
+  readonly isSelfConfirming = signal<boolean>(false);
+
   // Student Edit Modal State for Parent
   readonly showEditModal = signal<boolean>(false);
   readonly editingStudent = signal<Student | null>(null);
@@ -230,6 +234,29 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
         }
       })
     );
+
+    // Suscribirse a eventos de confirmación visual del docente (Doble Check WhatsApp style)
+    this.subscriptions.add(
+      this.ws.onAlertSeen().subscribe(event => {
+        const normalize = (id?: string) => (id || '').trim().toLowerCase();
+        const eventStudentId = normalize(event.studentId);
+
+        const myStudents = this.studentService.students();
+        const currentUser = this.authService.currentUser();
+        const tokenStudentIds = currentUser?.studentIds || [];
+        const currentUserId = normalize(currentUser?.userId);
+
+        const isMyChild =
+          (currentUserId && normalize(event.parentId) === currentUserId) ||
+          myStudents.some(s => normalize(s.id) === eventStudentId) ||
+          tokenStudentIds.some(id => normalize(id) === eventStudentId);
+
+        if (isMyChild) {
+          console.info('[ParentDashboard] 👁️ Doble check recibido para alumno:', event.studentName);
+          this.alertService.updateAlertSeen(event.studentId, event.seenAt);
+        }
+      })
+    );
   }
 
   /**
@@ -298,6 +325,11 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
 
   get currentStudentId(): string | null {
     return this.studentService.selectedStudentId();
+  }
+
+  get currentStudent(): Student | undefined {
+    const id = this.currentStudentId;
+    return this.studentService.students().find(s => s.id === id);
   }
 
   get currentStudentEvents(): HistoryEvent[] {
@@ -384,16 +416,20 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
   confirmCancelAlert(): void {
     const id = this.currentStudentId;
     if (!id) return;
+    const wasQueued = this.currentAlertStatus.state === 'QUEUED';
     this.showCancelConfirm.set(false);
     this.alertService.cancelAlert(id);
     const timeStr = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false });
     this.addHistoryEvent(id, {
       time: timeStr,
-      title: 'Aviso Cancelado',
-      description: 'El padre canceló la alerta enviada por error.',
+      title: 'Aviso Revertido',
+      description: wasQueued
+        ? 'El aviso fue eliminado de la cola antes de enviarse (generado por error).'
+        : 'El padre revirtió la alerta enviada por error.',
       type: 'ALERT'
     });
   }
+
 
   // ─── Bi-directional Delivery Receipt Confirmation ────────────────────────
   confirmDeliveryReceipt(): void {
@@ -406,6 +442,7 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
       next: () => {
         this.isConfirmingDelivery.set(false);
         this.pendingDelivery.set(null);
+        this.alertService.setStudentStatusToIdle(delivery.studentId);
         this.sound.playAlertSound();
         this.notification.success(`✅ Has confirmado la recepción de ${delivery.studentName}. ¡Buen regreso a casa!`);
 
@@ -414,6 +451,49 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
       error: (err) => {
         this.isConfirmingDelivery.set(false);
         this.notification.error('Error al confirmar la recepción. Intente nuevamente.');
+      }
+    });
+  }
+
+  // ─── Parent Self-Service Delivery Confirmation ("Ya me entregaron") ────────
+  openSelfConfirmModal(): void {
+    this.showSelfConfirmModal.set(true);
+  }
+
+  closeSelfConfirmModal(): void {
+    this.showSelfConfirmModal.set(false);
+  }
+
+  confirmSelfDelivery(): void {
+    const studentId = this.currentStudentId;
+    if (!studentId) return;
+
+    this.isSelfConfirming.set(true);
+    const method = this.currentAlertStatus.pickupMethod || 'CAR';
+
+    this.http.post<DeliveryDispatchedEvent>(`${this.apiUrl}/deliveries/parent-self-confirm`, {
+      studentId,
+      pickupMethod: method
+    }).subscribe({
+      next: (delivery) => {
+        this.isSelfConfirming.set(false);
+        this.showSelfConfirmModal.set(false);
+        this.pendingDelivery.set(null);
+        this.sound.playAlertSound();
+
+        // Cerrar ciclo y resetear estatus de alerta a IDLE
+        this.alertService.setStudentStatusToIdle(studentId);
+
+        const studentName = delivery?.studentName || this.currentStudent?.name || 'tu hijo/a';
+        this.notification.success(`✅ Has confirmado la recepción de ${studentName}. ¡Ciclo completado con éxito!`);
+
+        // Recargar historial del alumno con el evento de recepción
+        this.loadHistoryForStudent(studentId);
+      },
+      error: (err) => {
+        this.isSelfConfirming.set(false);
+        const msg = err?.error?.message || 'Error al confirmar la recepción. Intente nuevamente.';
+        this.notification.error(msg);
       }
     });
   }

@@ -109,8 +109,29 @@
             [alertStatus]="currentAlertStatus"
           ></app-alert-status-card>
 
-          <!-- Botón Cancelar aviso — solo visible cuando hay alerta activa confirmada -->
-          @if (currentAlertStatus.state === 'CONFIRMED' && !showCancelConfirm()) {
+          <!-- Botón "Ya me entregaron" — auto-confirmación cuando el docente entregó pero no presionó entregado -->
+          @if (currentAlertStatus.state === 'CONFIRMED' && !pendingDelivery() && !showCancelConfirm()) {
+            <div class="self-confirm-card">
+              <div class="self-confirm-content">
+                <span class="self-confirm-badge-icon">🎒</span>
+                <div class="self-confirm-text">
+                  <span class="self-confirm-title">¿Ya recibiste a tu hijo/a?</span>
+                  <span class="self-confirm-desc">Si el docente ya te lo entregó en persona, confirma aquí para cerrar el ciclo.</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                class="btn-self-confirm"
+                id="btn-self-confirm-delivery"
+                (click)="openSelfConfirmModal()"
+              >
+                ✅ Ya me entregaron
+              </button>
+            </div>
+          }
+
+          <!-- Botón Revertir aviso — visible cuando hay alerta activa (CONFIRMED o en cola QUEUED) -->
+          @if ((currentAlertStatus.state === 'CONFIRMED' || currentAlertStatus.state === 'QUEUED') && !showCancelConfirm()) {
             <div class="cancel-alert-row">
               <button
                 type="button"
@@ -125,7 +146,11 @@
                   <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
                   <path d="M3 21v-5h5"/>
                 </svg>
-                Cancelar aviso (lo envié por error)
+                @if (currentAlertStatus.state === 'QUEUED') {
+                  Cancelar aviso (pendiente en cola)
+                } @else {
+                  Cancelar aviso (lo envié por error)
+                }
               </button>
             </div>
           }
@@ -133,8 +158,12 @@
           <!-- Panel de confirmación de cancelación -->
           @if (showCancelConfirm()) {
             <div class="cancel-confirm-panel">
-              <p class="cancel-confirm-title">¿Cancelar el aviso?</p>
-              <p class="cancel-confirm-desc">El monitor dejará de ver tu alerta en el tablero. Usa esto solo si lo enviaste por error.</p>
+              <p class="cancel-confirm-title">¿Revertir el aviso?</p>
+              @if (currentAlertStatus.state === 'QUEUED') {
+                <p class="cancel-confirm-desc">Tu aviso está en cola offline. Se eliminará antes de ser enviado al monitor. Úsalo solo si lo generaste por error.</p>
+              } @else {
+                <p class="cancel-confirm-desc">El monitor dejará de ver tu alerta en el tablero. Usa esto solo si lo enviaste por error.</p>
+              }
               <div class="cancel-confirm-actions">
                 <button
                   type="button"
@@ -142,7 +171,7 @@
                   [disabled]="alertService.isCancelling()"
                   (click)="confirmCancelAlert()"
                 >
-                  {{ alertService.isCancelling() ? 'Cancelando...' : '✓ Sí, cancelar aviso' }}
+                  {{ alertService.isCancelling() ? 'Cancelando...' : '↩ Sí, revertir aviso' }}
                 </button>
                 <button
                   type="button"
@@ -326,6 +355,41 @@
             {{ isSavingStudent() ? 'Guardando...' : 'Guardar Fotografía' }}
           </button>
         </footer>
+      </div>
+    </div>
+  }
+
+  <!-- Modal: Confirmación de "Ya me entregaron" -->
+  @if (showSelfConfirmModal()) {
+    <div class="modal-backdrop" (click)="closeSelfConfirmModal()">
+      <div class="modal-delivery-card modal-delivery-card--self-confirm" (click)="$event.stopPropagation()">
+        <div class="delivery-badge-icon delivery-badge-icon--received">✅</div>
+        <h2 class="delivery-title">¿Confirmar entrega recibida?</h2>
+        <p class="delivery-desc">
+          ¿Confirmas que ya recibiste a <strong>{{ currentStudent?.name }}</strong>?
+          Esto guardará la evidencia de entrega en el sistema, cerrará el ciclo y actualizará el monitor escolar en tiempo real.
+        </p>
+
+        <div class="delivery-actions">
+          <button
+            type="button"
+            class="btn-confirm-receipt"
+            [disabled]="isSelfConfirming()"
+            (click)="confirmSelfDelivery()"
+          >
+            <span *ngIf="!isSelfConfirming()">✅ Sí, ya me lo entregaron</span>
+            <span *ngIf="isSelfConfirming()">Guardando en sistema...</span>
+          </button>
+
+          <button
+            type="button"
+            class="btn-dismiss-delivery"
+            [disabled]="isSelfConfirming()"
+            (click)="closeSelfConfirmModal()"
+          >
+            Cancelar
+          </button>
+        </div>
       </div>
     </div>
   }

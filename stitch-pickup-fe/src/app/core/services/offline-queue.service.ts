@@ -105,6 +105,21 @@ export class OfflineQueueService {
     await this.updateCount();
   }
 
+  /**
+   * Elimina de la cola offline todos los ítems encolados para un alumno específico.
+   * Usado cuando el padre cancela/revierte un aviso que aún no se ha enviado al servidor.
+   */
+  async clearQueueForStudent(studentId: string): Promise<void> {
+    const db = await this.getDb();
+    const all = await db.getAll(STORE_NAME);
+    const toDelete = all.filter(item => item.body?.['studentId'] === studentId);
+    for (const item of toDelete) {
+      await db.delete(STORE_NAME, item.id);
+    }
+    await this.updateCount();
+  }
+
+
   // ─── Private Helpers ────────────────────────────────────────────────────────
 
   private async initDb(): Promise<void> {

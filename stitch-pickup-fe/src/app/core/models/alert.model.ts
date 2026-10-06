@@ -22,6 +22,7 @@ export interface AlertResponse {
   clientId?: string;
   sentAt: string;
   receivedAt?: string;
+  seenAt?: string;
 }
 
 export interface StudentAlertStatus {
@@ -30,5 +31,6 @@ export interface StudentAlertStatus {
   pickupMethod: PickupMethod;
   state: LocalAlertState;
   updatedAt: string;
+  seenAt?: string;
   errorMessage?: string;
 }

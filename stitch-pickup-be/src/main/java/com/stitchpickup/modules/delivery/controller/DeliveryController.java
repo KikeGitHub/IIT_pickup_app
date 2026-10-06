@@ -1,12 +1,14 @@
 package com.stitchpickup.modules.delivery.controller;
 
 import com.stitchpickup.modules.delivery.dto.DeliveryLogResponse;
+import com.stitchpickup.modules.delivery.dto.ParentSelfConfirmRequest;
 import com.stitchpickup.modules.delivery.service.DeliveryService;
 import com.stitchpickup.security.JwtTokenProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -94,6 +96,24 @@ public class DeliveryController {
         UUID parentId = UUID.fromString(tokenProvider.getUserIdFromToken(token));
 
         return ResponseEntity.ok(deliveryService.confirmByParent(deliveryId, parentId));
+    }
+
+    @PostMapping("/parent-self-confirm")
+    @PreAuthorize("hasRole('PARENT')")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(
+        summary = "Padre confirma directamente recepción del alumno (Ya me entregaron)",
+        description = "El padre confirma haber recibido físicamente al alumno cuando el docente no presionó "
+            + "'Entregado' en su monitor. Cierra el ciclo de entrega y guarda evidencia en BD con timestamp y auditoría."
+    )
+    public ResponseEntity<DeliveryLogResponse> parentSelfConfirm(
+            @Valid @RequestBody ParentSelfConfirmRequest request,
+            HttpServletRequest httpRequest) {
+
+        String token = httpRequest.getHeader("Authorization").substring(7);
+        UUID parentId = UUID.fromString(tokenProvider.getUserIdFromToken(token));
+
+        return ResponseEntity.ok(deliveryService.parentSelfConfirm(request.studentId(), parentId, request.pickupMethod()));
     }
 
     @PostMapping("/{deliveryId}/parent-reject")

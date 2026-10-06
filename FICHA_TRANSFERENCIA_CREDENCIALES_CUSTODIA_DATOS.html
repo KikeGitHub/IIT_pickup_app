@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ficha de Transferencia de Credenciales y Custodia de Datos | IIT-Pickup</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@300;400;500;600;700;800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&display=swap');
+
+    :root {
+      --primary: #000e27;
+      --primary-container: #00234e;
+      --secondary: #b6171e;
+      --surface: #ffffff;
+      --text: #1b1b1c;
+      --text-muted: #555860;
+      --border: #dcd9d9;
+      --border-dark: #747780;
+      --bg-soft: #f8f9fa;
+      --accent-badge: #e8f0fe;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Hanken Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: var(--text);
+      background-color: #eceff1;
+      line-height: 1.45;
+      font-size: 12.5px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .document-page {
+      width: 216mm;
+      min-height: 279mm;
+      padding: 18mm 20mm;
+      margin: 25px auto;
+      background: white;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      position: relative;
+    }
+
+    @media print {
+      body {
+        background: transparent;
+      }
+      .document-page {
+        margin: 0;
+        box-shadow: none;
+        width: 100%;
+        min-height: auto;
+        padding: 15mm 18mm;
+        page-break-after: avoid;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+
+    /* Header styling */
+    .header-table {
+      width: 100%;
+      border-bottom: 2px solid var(--primary);
+      padding-bottom: 10px;
+      margin-bottom: 14px;
+    }
+    .header-table td {
+      vertical-align: middle;
+    }
+    .logo-container img {
+      max-height: 52px;
+      object-fit: contain;
+    }
+    .header-titles {
+      text-align: right;
+    }
+    .header-titles h1 {
+      font-size: 13.5px;
+      font-weight: 800;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      line-height: 1.25;
+    }
+    .header-titles h2 {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--secondary);
+      margin-top: 2px;
+    }
+    .header-meta {
+      font-size: 10.5px;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+
+    .legal-preamble {
+      background: var(--bg-soft);
+      border-left: 3.5px solid var(--primary);
+      padding: 8px 12px;
+      font-size: 11px;
+      margin-bottom: 12px;
+      border-radius: 0 4px 4px 0;
+      line-height: 1.4;
+    }
+    .legal-preamble strong {
+      color: var(--primary);
+    }
+
+    h3.section-title {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--primary);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 3px;
+      margin: 12px 0 8px 0;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    h3.section-title::before {
+      content: "";
+      display: inline-block;
+      width: 6px;
+      height: 12px;
+      background: var(--secondary);
+      border-radius: 2px;
+    }
+
+    /* Credential Card */
+    .credential-card {
+      border: 1.5px solid var(--primary-container);
+      background: #f6f8fb;
+      border-radius: 6px;
+      padding: 10px 14px;
+      margin: 8px 0 10px 0;
+    }
+    .cred-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11.5px;
+    }
+    .cred-table td {
+      padding: 4px 6px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .cred-table tr:last-child td {
+      border-bottom: none;
+    }
+    .cred-table .label {
+      font-weight: 600;
+      color: var(--primary-container);
+      width: 32%;
+    }
+    .cred-table .value {
+      font-family: 'Consolas', 'Courier New', monospace;
+      color: #0b2545;
+      font-weight: 700;
+    }
+    .key-badge {
+      background: #00234e;
+      color: white;
+      padding: 2px 7px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-family: sans-serif;
+      font-weight: bold;
+      display: inline-block;
+    }
+
+    /* Warning Callout */
+    .warning-callout {
+      background: #fff8e1;
+      border-left: 3.5px solid #f57f17;
+      padding: 7px 10px;
+      border-radius: 0 4px 4px 0;
+      font-size: 10.5px;
+      color: #5d4037;
+      margin: 8px 0;
+      line-height: 1.35;
+    }
+    .warning-callout strong {
+      color: #bf360c;
+    }
+
+    /* Custody Points */
+    .custody-block {
+      font-size: 11px;
+      line-height: 1.45;
+      margin-bottom: 8px;
+    }
+    .custody-block ul {
+      margin-left: 18px;
+      margin-top: 4px;
+    }
+    .custody-block li {
+      margin-bottom: 2.5px;
+      color: #2b2d30;
+    }
+    .custody-block strong {
+      color: var(--primary);
+    }
+
+    /* Signatures Section */
+    .signatures-block {
+      margin-top: 18px;
+      width: 100%;
+    }
+    .sig-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 25px;
+    }
+    .sig-col {
+      flex: 1;
+      text-align: center;
+    }
+    .sig-line {
+      border-top: 1.2px solid var(--text);
+      margin: 38px auto 4px auto;
+      width: 85%;
+    }
+    .sig-name {
+      font-weight: 700;
+      font-size: 11px;
+      color: var(--primary);
+    }
+    .sig-role {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+    .stamp-box {
+      margin-top: 6px;
+      height: 38px;
+      border: 1px dashed var(--border-dark);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9.5px;
+      color: #888;
+      border-radius: 4px;
+      width: 60%;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .print-btn-bar {
+      position: fixed;
+      top: 15px;
+      right: 20px;
+      z-index: 9999;
+      display: flex;
+      gap: 10px;
+    }
+    .btn-action {
+      background: var(--secondary);
+      color: white;
+      border: none;
+      padding: 9px 16px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(182, 23, 30, 0.35);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-action:hover {
+      background: #8e1016;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Floating Print Controls -->
+  <div class="print-btn-bar no-print">
+    <button class="btn-action" onclick="window.print()">
+      🖨️ Imprimir / Guardar en PDF
+    </button>
+  </div>
+
+  <div class="document-page">
+    
+    <!-- Header with Branding -->
+    <table class="header-table">
+      <tr>
+        <td style="width: 25%;" class="logo-container">
+          <img src="logo_IIT.png" alt="Instituto Inglés de Toluca" onerror="this.src='logo_IIT.jpg'">
+        </td>
+        <td style="width: 75%;" class="header-titles">
+          <h1>Ficha de Transferencia de Credenciales Maestras</h1>
+          <h2>Acta de Custodia Legal de Datos Personales (PII)</h2>
+          <div class="header-meta">
+            <strong>Sistema:</strong> IIT-Pickup &nbsp;|&nbsp; 
+            <strong>Dominio:</strong> pickup.institutoingles.edu.mx &nbsp;|&nbsp; 
+            <strong>Fecha:</strong> Octubre 2026
+          </div>
+        </td>
+      </tr>
+    </table>
+
+    <!-- Legal Preamble -->
+    <div class="legal-preamble">
+      El presente acto técnico y administrativo formaliza la entrega de las <strong>credenciales de acceso total (Super Administrador)</strong> del sistema <strong>IIT-Pickup</strong> por parte del consultor desarrollador <strong>Enrique Durán Jiménez</strong>, a favor de la Dirección General del <strong>Instituto Inglés de Toluca</strong>, quien asume la titularidad y administración de la plataforma.
+    </div>
+
+    <!-- Sección 1: Credenciales -->
+    <h3 class="section-title">1. Credenciales de Acceso Maestro Entregadas</h3>
+
+    <div class="credential-card">
+      <table class="cred-table">
+        <tr>
+          <td class="label">Panel de Administración:</td>
+          <td class="value"><a href="https://pickup.institutoingles.edu.mx/admin" style="color: #0b2545; text-decoration: none;">https://pickup.institutoingles.edu.mx/admin</a></td>
+        </tr>
+        <tr>
+          <td class="label">Usuario / Correo Maestro:</td>
+          <td class="value">admin@iit.edu.mx</td>
+        </tr>
+        <tr>
+          <td class="label">Contraseña Temporal:</td>
+          <td class="value"><span class="key-badge">admin2026</span></td>
+        </tr>
+        <tr>
+          <td class="label">Nivel de Privilegios:</td>
+          <td class="value" style="font-family: inherit; font-size: 11px;">Acceso Total (Altas, bajas, reseteos, configuración escolar y bitácoras)</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="warning-callout">
+      <strong>⚠️ AVISO DE CIBERSEGURIDAD Y CAMBIO INMEDIATO:</strong> Por estricto protocolo de seguridad, el Administrador designado por el colegio debe cambiar la contraseña temporal predeterminada inmediatamente después de firmar este documento. Dicho cambio garantiza el secreto exclusivo de las llaves maestras en manos del personal autorizado del instituto.
+    </div>
+
+    <!-- Sección 2: Custodia PII -->
+    <h3 class="section-title">2. Declaración de Custodia y Responsabilidad de Datos (PII)</h3>
+    <div class="custody-block">
+      Con base en la <strong>Ley Federal de Protección de Datos Personales en Posesión de los Particulares (LFPDPPP)</strong>:
+      <ul>
+        <li><strong>Carácter de Responsable Legal:</strong> El <strong>Instituto Inglés de Toluca</strong> asume de manera plena y exclusiva la condición de <strong>"Responsable del Tratamiento de Datos Personales"</strong> sobre la totalidad de la información contenida en el sistema: nombres, fotografías, grados y matrículas de los alumnos menores de edad; números telefónicos, correos y placas vehiculares de tutores; y registros de salida.</li>
+        <li><strong>Rol del Desarrollador (Encargado Tecnológico):</strong> Enrique Durán Jiménez actúa exclusivamente como prestador de soporte técnico e infraestructura cloud (*Encargado* conforme al Art. 3, Fracc. IX de la LFPDPPP), sin derecho de posesión, explotación o comercialización de las bases de datos escolares.</li>
+        <li><strong>Deslinde de Responsabilidad:</strong> El desarrollador queda legalmente exento de responsabilidades ante el INAI o autoridades judiciales derivadas de: (a) filtración de credenciales por omisión o negligencia interna del personal escolar; (b) borrado o alteración de datos por parte de administradores autorizados; y (c) uso indebido de los reportes descargados por el colegio.</li>
+      </ul>
+    </div>
+
+    <!-- Firmas -->
+    <h3 class="section-title">3. Constancia de Entrega y Recepción de Conformidad</h3>
+    <div class="signatures-block">
+      <div class="sig-row">
+        <div class="sig-col">
+          <div class="sig-line"></div>
+          <div class="sig-name">ENRIQUE DURÁN JIMÉNEZ</div>
+          <div class="sig-role">Consultor y Desarrollador de Software Sr.<br><em>(Entrega los Accesos)</em></div>
+        </div>
+        <div class="sig-col">
+          <div class="sig-line"></div>
+          <div class="sig-name">INSTITUTO INGLÉS DE TOLUCA</div>
+          <div class="sig-role">Director(a) General / Representante Legal<br><em>(Recibe y Asume la Custodia Legal)</em></div>
+          <div style="font-size: 9px; margin-top: 2px;">Nombre: ___________________________________</div>
+          <div class="stamp-box">Sello Oficial de la Institución</div>
+        </div>
+      </div>
+
+      <div class="sig-row" style="margin-top: 8px;">
+        <div class="sig-col" style="max-width: 60%; margin: 0 auto;">
+          <div class="sig-line" style="margin-top: 25px;"></div>
+          <div class="sig-name">RESPONSABLE DESIGNADO DE TI / CONTROL ESCOLAR</div>
+          <div class="sig-role">Administrador Operativo de la Cuenta<br>Nombre: ___________________________________ &nbsp;|&nbsp; Firma: ____________________</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>

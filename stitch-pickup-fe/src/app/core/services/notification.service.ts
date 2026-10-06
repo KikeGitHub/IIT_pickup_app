@@ -61,7 +61,30 @@ export class NotificationService {
 
   // ─── Private ────────────────────────────────────────────────────────────────
 
+  private readonly recentToastHistory = new Map<string, number>();
+
   private show(config: Omit<Toast, 'id'>): void {
+    const normMsg = (config.message || '').trim().toLowerCase();
+    const now = Date.now();
+    const lastTime = this.recentToastHistory.get(normMsg);
+
+    // DEDUPLICACIÓN REACTIVA:
+    // Evita apilar alertas idénticas si ya está visible en pantalla o se emitió hace menos de 2.5s
+    const isAlreadyOnScreen = this._toasts().some(
+      t => (t.message || '').trim().toLowerCase() === normMsg && t.type === config.type
+    );
+
+    if (isAlreadyOnScreen || (lastTime && now - lastTime < 2500)) {
+      return;
+    }
+
+    this.recentToastHistory.set(normMsg, now);
+    if (this.recentToastHistory.size > 50) {
+      for (const [k, t] of this.recentToastHistory.entries()) {
+        if (now - t > 10000) this.recentToastHistory.delete(k);
+      }
+    }
+
     const toast: Toast = {
       ...config,
       id: crypto.randomUUID(),

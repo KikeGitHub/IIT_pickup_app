@@ -265,7 +265,8 @@ export class TeacherUserCrudComponent implements OnInit {
       this.adminService.deleteTeacher(teacher.id).pipe(
         finalize(() => this.adminService.endTransaction())
       ).subscribe({
-        error: (err) => alert(err.error?.message || 'No se pudo eliminar el maestro.')
+        next: () => this.notification.success(`Docente "${teacher.nombre}" eliminado correctamente.`),
+        error: (err) => this.notification.error(err.error?.message || 'No se pudo eliminar el maestro.')
       });
     }
   }

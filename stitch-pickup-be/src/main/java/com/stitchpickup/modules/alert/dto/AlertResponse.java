@@ -14,5 +14,6 @@ public record AlertResponse(
     String pickupMethod,
     String clientId,
     Instant sentAt,
-    Instant receivedAt
+    Instant receivedAt,
+    Instant seenAt
 ) {}

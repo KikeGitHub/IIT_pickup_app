@@ -5,6 +5,7 @@ import com.stitchpickup.modules.alert.repository.AlertRepository;
 import com.stitchpickup.modules.delivery.dto.DeliveryLogResponse;
 import com.stitchpickup.modules.delivery.entity.DeliveryLog;
 import com.stitchpickup.modules.delivery.repository.DeliveryLogRepository;
+import com.stitchpickup.modules.student.entity.Student;
 import com.stitchpickup.modules.user.entity.ParentUser;
 import com.stitchpickup.modules.user.repository.ParentUserRepository;
 import com.stitchpickup.websocket.NotificationPublisher;
@@ -133,6 +134,72 @@ public class DeliveryService {
         DeliveryLogResponse response = mapToResponse(saved);
 
         publisher.publishDelivery(response);
+        return response;
+    }
+
+    /**
+     * parentSelfConfirm — El padre confirma directamente la recepción de su hijo.
+     * Cubre el caso donde el docente entregó al alumno pero no presionó "Entregado" en su monitor.
+     * Cierra el ciclo de entrega, guarda evidencia en BD y notifica a los monitores para retirar
+     * la tarjeta del alumno de la fila activa.
+     */
+    @Transactional
+    public DeliveryLogResponse parentSelfConfirm(UUID studentId, UUID parentId, Alert.PickupMethod pickupMethod) {
+        ParentUser parent = parentUserRepository.findByIdWithStudents(parentId)
+                .orElseThrow(() -> new IllegalArgumentException("Padre no encontrado"));
+
+        Student student = parent.getStudents().stream()
+                .filter(s -> s.getId().equals(studentId))
+                .findFirst()
+                .orElseThrow(() -> new SecurityException("No tienes autorización para confirmar la entrega de este alumno."));
+
+        LocalDate today = LocalDate.now(MEXICO_ZONE);
+        Instant now = Instant.now();
+
+        DeliveryLog log = deliveryLogRepository.findByStudentIdAndLogDate(studentId, today)
+                .orElse(null);
+
+        if (log == null) {
+            Instant startOfDay = today.atStartOfDay(MEXICO_ZONE).toInstant();
+            List<Alert> alerts = alertRepository.findLatestTodayAlertForStudent(studentId, startOfDay);
+            Alert alert = alerts.isEmpty() ? null : alerts.get(0);
+
+            log = DeliveryLog.builder()
+                    .student(student)
+                    .alert(alert)
+                    .teacherName("Entrega en puerta (Confirmada por Padre)")
+                    .pickupMethod(pickupMethod != null ? pickupMethod : (alert != null ? alert.getPickupMethod() : Alert.PickupMethod.CAR))
+                    .status(DeliveryLog.DeliveryStatus.RECIBIDO_PADRE)
+                    .teacherConfirmedAt(now)
+                    .parentConfirmedAt(now)
+                    .logDate(today)
+                    .build();
+        } else {
+            log.setStatus(DeliveryLog.DeliveryStatus.RECIBIDO_PADRE);
+            log.setParentConfirmedAt(now);
+            if (log.getTeacherConfirmedAt() == null) {
+                log.setTeacherConfirmedAt(now);
+            }
+            if (log.getTeacherName() == null || log.getTeacherName().isBlank()) {
+                log.setTeacherName("Entrega en puerta (Confirmada por Padre)");
+            }
+            if (pickupMethod != null) {
+                log.setPickupMethod(pickupMethod);
+            }
+            log.setParentRejectedAt(null);
+            log.setRevertedAt(null);
+            log.setRevertedBy(null);
+        }
+
+        DeliveryLog saved = deliveryLogRepository.save(log);
+        DeliveryLogResponse response = mapToResponse(saved);
+
+        DeliveryService.log.info("[Delivery] ✅ Padre auto-confirmó recepción de alumno. DeliveryId={} Alumno={} ParentId={}",
+                saved.getId(), student.getName(), parentId);
+
+        // Notificar broadcast a monitores (marca isDispatched=true y pasa a entregados del día)
+        publisher.publishDelivery(response);
+
         return response;
     }
 

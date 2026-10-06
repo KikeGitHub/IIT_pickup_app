@@ -15,6 +15,7 @@ import { DispatchConfirmationComponent } from '../dispatch-confirmation/dispatch
 import { TableSkeletonComponent } from '../../../../shared/components/table-skeleton/table-skeleton.component';
 import { PwaInstallBannerComponent } from '../../../../shared/components/pwa-install-banner/pwa-install-banner.component';
 
+import { NotificationService } from '../../../../core/services/notification.service';
 import { environment } from '../../../../../environments/environment';
 
 export interface GroupParentItem {
@@ -51,6 +52,7 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
   readonly ws = inject(WebSocketService);
   readonly wakeLock = inject(WakeLockService);
   private readonly router = inject(Router);
+  private readonly notification = inject(NotificationService);
   readonly appVersion = environment.appVersion;
 
   readonly currentTheme = signal<'light' | 'dark'>(
@@ -469,11 +471,11 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
     this.teacherService.resetParentPassword(parentId).subscribe({
       next: () => {
         this.isResettingPassword.set(false);
-        alert('✅ Contraseña restablecida exitosamente a IIT2026.');
+        this.notification.success('Contraseña restablecida exitosamente a IIT2026.');
       },
       error: (err) => {
         this.isResettingPassword.set(false);
-        alert(err.error?.message || 'Error al restablecer la contraseña.');
+        this.notification.error(err.error?.message || 'Error al restablecer la contraseña.');
       }
     });
   }
@@ -652,7 +654,7 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
         },
         error: (err: any) => {
           this.isUploadingNewPhoto.set(false);
-          alert(err.error?.message || err.message || 'Error al subir la fotografía.');
+          this.notification.error(err.error?.message || err.message || 'Error al subir la fotografía.');
         }
       });
   }
@@ -748,7 +750,7 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.isTogglingActive.set(false);
-        alert(err.error?.message || 'Error al actualizar el estado del alumno.');
+        this.notification.error(err.error?.message || 'Error al actualizar el estado del alumno.');
       }
     });
   }
@@ -876,7 +878,7 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.isResettingPassword.set(false);
-        alert(err.error?.message || 'Error al restablecer la contraseña.');
+        this.notification.error(err.error?.message || 'Error al restablecer la contraseña.');
       }
     });
   }

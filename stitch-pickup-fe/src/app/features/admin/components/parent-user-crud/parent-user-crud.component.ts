@@ -251,7 +251,8 @@ export class ParentUserCrudComponent implements OnInit {
       this.adminService.deleteParent(parent.id).pipe(
         finalize(() => this.adminService.endTransaction())
       ).subscribe({
-        error: (err) => alert(err.error?.message || 'No se pudo eliminar el padre de familia.')
+        next: () => this.notification.success(`Tutor "${parent.nombre}" eliminado correctamente.`),
+        error: (err) => this.notification.error(err.error?.message || 'No se pudo eliminar el padre de familia.')
       });
     }
   }

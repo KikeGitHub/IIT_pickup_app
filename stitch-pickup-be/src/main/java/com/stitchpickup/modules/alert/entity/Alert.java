@@ -54,6 +54,9 @@ public class Alert {
     @Column(name = "received_at")
     private Instant receivedAt;
 
+    @Column(name = "seen_at")
+    private Instant seenAt;
+
     @PrePersist
     public void prePersist() {
         if (this.sentAt == null) {

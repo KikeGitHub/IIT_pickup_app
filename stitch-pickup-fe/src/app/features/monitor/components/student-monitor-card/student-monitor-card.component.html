@@ -20,6 +20,12 @@
       </span>
     }
 
+    @if (alert.seenAt) {
+      <span class="exact-time-chip" title="Alerta confirmada en pantalla al padre (Doble Check)">
+        <span class="chip-val" style="color: #0284c7; letter-spacing: -2px; font-weight: 800; font-size: 13px;">✓✓</span>
+      </span>
+    }
+
     <span class="live-stopwatch-chip" [class]="priorityConfig.badgeClass" title="Tiempo transcurrido en espera">
       <span class="stopwatch-icon">{{ priorityConfig.icon }}</span>
       <span class="stopwatch-val">{{ elapsedFormatted }}</span>
