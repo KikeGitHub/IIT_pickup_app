@@ -1,7 +1,7 @@
 services:
   # ─── 1. Base de Datos PostgreSQL ──────────────────────────────────────────
   postgres:
-    image: postgres:16-alpine
+    image: postgres:17-alpine
     container_name: stitch-postgres
     restart: always
     environment:
