@@ -1,17 +1,39 @@
 services:
-  # ─── 1. Backend Spring Boot (Conectado a Neon PostgreSQL) ──────────────────
+  # ─── 1. Base de Datos PostgreSQL ──────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: stitch-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-stitch_pickup_db}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-stitch_pickup_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - stitch-network
+
+  # ─── 2. Backend Spring Boot (Conectado a PostgreSQL en Hetzner) ────────────
   backend:
     build:
       context: ./stitch-pickup-be
       dockerfile: Dockerfile
     container_name: stitch-backend
     restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: prod
-      # Configuración de Neon PostgreSQL
-      SPRING_DATASOURCE_URL: ${NEON_DATABASE_URL:-${SPRING_DATASOURCE_URL:-jdbc:postgresql://ep-holy-band-awa2j4it.c-12.us-east-1.aws.neon.tech/stitch_pickup_db?sslmode=require}}
-      SPRING_DATASOURCE_USERNAME: ${NEON_USER:-${SPRING_DATASOURCE_USERNAME:-neondb_owner}}
-      SPRING_DATASOURCE_PASSWORD: ${NEON_PASSWORD:-${SPRING_DATASOURCE_PASSWORD:-npg_OIhk9Zy2lczM}}
+      # Configuración de Base de Datos Interna en Docker
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL:-jdbc:postgresql://postgres:5432/stitch_pickup_db}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       JWT_SECRET: ${JWT_SECRET:-c3RpdGNoLXBpY2t1cC1qd3Qtc2VjcmV0LWtleS0yMDI2LXNlY3VyZS1oYXNoLWZvci1wcm9kdWN0aW9uLXN5c3RlbQ==}
       JWT_EXPIRATION_HOURS: 24
       SPRING_WEBSOCKET_ALLOWED_ORIGINS: "*"
@@ -26,7 +48,7 @@ services:
     networks:
       - stitch-network
 
-  # ─── 2. Frontend Angular + Nginx ─────────────────────────────────────────
+  # ─── 3. Frontend Angular + Nginx ─────────────────────────────────────────
   frontend:
     build:
       context: ./stitch-pickup-fe
@@ -39,6 +61,10 @@ services:
       - "3001:80"
     networks:
       - stitch-network
+
+volumes:
+  postgres_data:
+    driver: local
 
 networks:
   stitch-network:
