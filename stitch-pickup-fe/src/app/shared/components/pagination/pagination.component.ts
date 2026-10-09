@@ -227,9 +227,9 @@ import { FormsModule } from '@angular/forms';
 })
 export class PaginationComponent {
   @Input() totalItems: number = 0;
-  @Input() pageSize: number = 15;
+  @Input() pageSize: number = 25;
   @Input() currentPage: number = 1;
-  @Input() pageSizeOptions: number[] = [15, 30, 100];
+  @Input() pageSizeOptions: number[] = [25, 50, 100];
 
   @Output() pageChange = new EventEmitter<number>();
   @Output() pageSizeChange = new EventEmitter<number>();

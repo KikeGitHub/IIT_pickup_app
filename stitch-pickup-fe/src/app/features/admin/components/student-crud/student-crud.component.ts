@@ -30,8 +30,8 @@ export class StudentCrudComponent implements OnInit {
 
   // Pagination State
   readonly currentPage = signal<number>(1);
-  readonly pageSize = signal<number>(15);
-  readonly pageSizeOptions = [15, 30, 100];
+  readonly pageSize = signal<number>(25);
+  readonly pageSizeOptions = [25, 50, 100];
 
   // Sorting State
   readonly sortField = signal<'name' | 'level' | 'grade' | 'group' | 'status'>('name');
