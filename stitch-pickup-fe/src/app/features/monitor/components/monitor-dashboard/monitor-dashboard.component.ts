@@ -14,6 +14,7 @@ import { StudentMonitorCardComponent } from '../student-monitor-card/student-mon
 import { DispatchConfirmationComponent } from '../dispatch-confirmation/dispatch-confirmation.component';
 import { TableSkeletonComponent } from '../../../../shared/components/table-skeleton/table-skeleton.component';
 import { PwaInstallBannerComponent } from '../../../../shared/components/pwa-install-banner/pwa-install-banner.component';
+import { PaginationComponent } from '../../../../shared/components/pagination/pagination.component';
 
 import { NotificationService } from '../../../../core/services/notification.service';
 import { environment } from '../../../../../environments/environment';
@@ -38,7 +39,8 @@ export interface GroupParentItem {
     StudentMonitorCardComponent,
     DispatchConfirmationComponent,
     TableSkeletonComponent,
-    PwaInstallBannerComponent
+    PwaInstallBannerComponent,
+    PaginationComponent
   ],
   templateUrl: './monitor-dashboard.component.html',
   styleUrl: './monitor-dashboard.component.scss',
@@ -256,9 +258,38 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
     return groups.filter(g => g.name.startsWith(grade));
   }
 
+  // ─── Pagination for Groups & Students ──────────────────────────────────────
+  readonly studentPage = signal<number>(1);
+  readonly studentPageSize = signal<number>(25);
+  readonly studentPageSizeOptions: number[] = [25, 50, 100];
+
+  readonly parentPage = signal<number>(1);
+  readonly parentPageSize = signal<number>(25);
+  readonly parentPageSizeOptions: number[] = [25, 50, 100];
+
+  onStudentPageChange(page: number): void {
+    this.studentPage.set(page);
+  }
+
+  onStudentPageSizeChange(size: number): void {
+    this.studentPageSize.set(size);
+    this.studentPage.set(1);
+  }
+
+  onParentPageChange(page: number): void {
+    this.parentPage.set(page);
+  }
+
+  onParentPageSizeChange(size: number): void {
+    this.parentPageSize.set(size);
+    this.parentPage.set(1);
+  }
+
   setGroupLevel(level: string): void {
     this.selectedGroupLevel.set(level as 'ALL' | 'KINDER' | 'PRIMARIA' | 'SECUNDARIA');
     this.selectedGradeFilter.set('ALL');
+    this.studentPage.set(1);
+    this.parentPage.set(1);
     const available = this.filteredGroupsDropdown;
     if (available.length > 0) {
       this.selectedGroupId.set(available[0].id);
@@ -267,6 +298,8 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
 
   setGradeFilter(grade: string): void {
     this.selectedGradeFilter.set(grade);
+    this.studentPage.set(1);
+    this.parentPage.set(1);
     const available = this.filteredGroupsDropdown;
     if (available.length > 0) {
       this.selectedGroupId.set(available[0].id);
@@ -300,6 +333,9 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
   selectGroup(groupId: string): void {
     this.selectedGroupId.set(groupId);
     this.studentSearchQuery = '';
+    this.parentSearchQuery = '';
+    this.studentPage.set(1);
+    this.parentPage.set(1);
   }
 
   readonly rosterSortField = signal<'name' | 'grade' | 'curp' | 'tutors'>('name');
@@ -312,6 +348,7 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
       this.rosterSortField.set(field);
       this.rosterSortDirection.set('asc');
     }
+    this.studentPage.set(1);
   }
 
   get totalAllStudentsCount(): number {
@@ -342,6 +379,7 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
 
   setActiveFilter(filter: 'ALL' | 'ACTIVE' | 'INACTIVE'): void {
     this.activeFilter.set(filter);
+    this.studentPage.set(1);
   }
 
   get activeStudentsCount(): number {
@@ -401,12 +439,22 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
+  get paginatedGroupStudents(): TeacherStudent[] {
+    const list = this.filteredGroupStudents;
+    const page = this.studentPage();
+    const size = this.studentPageSize();
+    const start = (page - 1) * size;
+    return list.slice(start, start + size);
+  }
+
   // ─── Sub-view in GROUPS: Students vs Parents Directory ─────────────────────
   readonly groupSubView = signal<'STUDENTS' | 'PARENTS'>('STUDENTS');
   parentSearchQuery = '';
 
   setGroupSubView(view: 'STUDENTS' | 'PARENTS'): void {
     this.groupSubView.set(view);
+    this.studentPage.set(1);
+    this.parentPage.set(1);
   }
 
   get filteredGroupParents(): GroupParentItem[] {
@@ -448,6 +496,14 @@ export class MonitorDashboardComponent implements OnInit, OnDestroy {
       );
     }
     return list.sort((a, b) => a.nombre.localeCompare(b.nombre));
+  }
+
+  get paginatedGroupParents(): GroupParentItem[] {
+    const list = this.filteredGroupParents;
+    const page = this.parentPage();
+    const size = this.parentPageSize();
+    const start = (page - 1) * size;
+    return list.slice(start, start + size);
   }
 
   openParentAccess(parent: GroupParentItem): void {

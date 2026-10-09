@@ -274,6 +274,7 @@
                 <input
                   type="text"
                   [(ngModel)]="studentSearchQuery"
+                  (ngModelChange)="studentPage.set(1)"
                   placeholder="Buscar por nombre o CURP..."
                   class="search-input"
                 />
@@ -281,7 +282,7 @@
                   type="button"
                   *ngIf="studentSearchQuery"
                   class="btn-clear-search"
-                  (click)="studentSearchQuery = ''"
+                  (click)="studentSearchQuery = ''; studentPage.set(1)"
                 >&times;</button>
               </div>
 
@@ -371,7 +372,7 @@
                     </tr>
                   </thead>
                   <tbody>
-                    @for (s of filteredGroupStudents; track s.id) {
+                    @for (s of paginatedGroupStudents; track s.id) {
                       <tr [class.student-row--inactive]="!s.active">
                         <td>
                           <div class="student-cell">
@@ -455,7 +456,7 @@
 
               <!-- Mobile-First Cards View (< 768px) -->
               <div class="roster-mobile-view">
-                @for (s of filteredGroupStudents; track s.id) {
+                @for (s of paginatedGroupStudents; track s.id) {
                   <div class="mobile-student-card" [class.mobile-student-card--inactive]="!s.active">
                     <div class="m-card-body">
                       <!-- Left: Avatar -->
@@ -542,6 +543,16 @@
                   </div>
                 }
               </div>
+
+              <!-- Pagination Controls for Students -->
+              <app-pagination
+                [currentPage]="studentPage()"
+                [totalItems]="filteredGroupStudents.length"
+                [pageSize]="studentPageSize()"
+                [pageSizeOptions]="studentPageSizeOptions"
+                (pageChange)="onStudentPageChange($event)"
+                (pageSizeChange)="onStudentPageSizeChange($event)"
+              ></app-pagination>
             }
           }
 
@@ -554,6 +565,7 @@
                   <input
                     type="text"
                     [(ngModel)]="parentSearchQuery"
+                    (ngModelChange)="parentPage.set(1)"
                     placeholder="Buscar padre por nombre, correo, teléfono o alumno..."
                     class="search-input"
                   />
@@ -561,7 +573,7 @@
                     type="button"
                     *ngIf="parentSearchQuery"
                     class="btn-clear-search"
-                    (click)="parentSearchQuery = ''"
+                    (click)="parentSearchQuery = ''; parentPage.set(1)"
                   >&times;</button>
                 </div>
                 <div class="directory-count-badge">
@@ -582,7 +594,7 @@
                     </tr>
                   </thead>
                   <tbody>
-                    @for (p of filteredGroupParents; track p.id) {
+                    @for (p of paginatedGroupParents; track p.id) {
                       <tr>
                         <td>
                           <div class="student-cell">
@@ -648,7 +660,7 @@
 
               <!-- Mobile Parents Cards (< 768px) -->
               <div class="roster-mobile-view">
-                @for (p of filteredGroupParents; track p.id) {
+                @for (p of paginatedGroupParents; track p.id) {
                   <div class="mobile-student-card mobile-parent-card">
                     <div class="m-card-body">
                       <div class="m-avatar-wrap m-avatar-wrap--parent">
@@ -703,6 +715,16 @@
                   </div>
                 }
               </div>
+
+              <!-- Pagination Controls for Parents Directory -->
+              <app-pagination
+                [currentPage]="parentPage()"
+                [totalItems]="filteredGroupParents.length"
+                [pageSize]="parentPageSize()"
+                [pageSizeOptions]="parentPageSizeOptions"
+                (pageChange)="onParentPageChange($event)"
+                (pageSizeChange)="onParentPageSizeChange($event)"
+              ></app-pagination>
             </div>
           }
 
