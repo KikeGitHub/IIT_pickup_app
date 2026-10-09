@@ -31,6 +31,9 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: prod
       # Configuración de Base de Datos Interna en Docker
+      DB_URL: ${DB_URL:-jdbc:postgresql://postgres:5432/stitch_pickup_db}
+      DB_USER: ${POSTGRES_USER:-postgres}
+      DB_PASS: ${POSTGRES_PASSWORD:-postgres}
       SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL:-jdbc:postgresql://postgres:5432/stitch_pickup_db}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
