@@ -7,7 +7,7 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-stitch_pickup_db}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-admin}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -33,10 +33,10 @@ services:
       # Configuración de Base de Datos Interna en Docker
       DB_URL: ${DB_URL:-jdbc:postgresql://postgres:5432/stitch_pickup_db}
       DB_USER: ${POSTGRES_USER:-postgres}
-      DB_PASS: ${POSTGRES_PASSWORD:-postgres}
+      DB_PASS: ${POSTGRES_PASSWORD:-admin}
       SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL:-jdbc:postgresql://postgres:5432/stitch_pickup_db}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-admin}
       JWT_SECRET: ${JWT_SECRET:-c3RpdGNoLXBpY2t1cC1qd3Qtc2VjcmV0LWtleS0yMDI2LXNlY3VyZS1oYXNoLWZvci1wcm9kdWN0aW9uLXN5c3RlbQ==}
       JWT_EXPIRATION_HOURS: 24
       SPRING_WEBSOCKET_ALLOWED_ORIGINS: "*"
