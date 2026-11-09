@@ -9,6 +9,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.net.URI;
 import java.time.Instant;
@@ -77,6 +78,19 @@ public class GlobalExceptionHandler {
         ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.NOT_FOUND);
         pd.setTitle("Recurso no encontrado");
         pd.setDetail(ex.getMessage());
+        pd.setType(URI.create("urn:stitch-pickup:not-found"));
+        pd.setProperty("timestamp", Instant.now());
+        return pd;
+    }
+
+    // ─── Recurso Estático / Ruta no Encontrada (Spring 6) ───────────────────
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ProblemDetail handleNoResourceFound(NoResourceFoundException ex) {
+        log.warn("Ruta o recurso no encontrado: {}", ex.getResourcePath());
+        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.NOT_FOUND);
+        pd.setTitle("Recurso no encontrado");
+        pd.setDetail("La ruta solicitada no existe.");
         pd.setType(URI.create("urn:stitch-pickup:not-found"));
         pd.setProperty("timestamp", Instant.now());
         return pd;

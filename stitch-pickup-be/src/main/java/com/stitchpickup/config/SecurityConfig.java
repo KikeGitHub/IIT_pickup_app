@@ -44,6 +44,8 @@ public class SecurityConfig {
 
     // ─── Endpoints públicos ───────────────────────────────────────────────────
     private static final String[] PUBLIC_ENDPOINTS = {
+        "/",
+        "/error",
         "/api/v1/auth/**",
         "/swagger-ui/**",
         "/swagger-ui.html",
