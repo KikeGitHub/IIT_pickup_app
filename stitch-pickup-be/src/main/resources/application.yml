@@ -95,7 +95,7 @@ springdoc:
   info:
     title: IIT Pickup API
     description: API REST para el sistema de logística de recogida de alumnos del Instituto Inglés de Toluca (IIT).
-    version: 1.0.0
+    version: 1.5.0
 
 # ─── Actuator ─────────────────────────────────────────────────────────────────
 management:
