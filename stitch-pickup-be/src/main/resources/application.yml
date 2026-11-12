@@ -48,10 +48,17 @@ cloudinary:
   api_key: ${CLOUDINARY_API_KEY:}
   api_secret: ${CLOUDINARY_SECRET:}
 
-# ─── Almacenamiento local (fallback) ──────────────────────────────────────────
+# ─── Almacenamiento local (fallback) y Privacidad ─────────────────────────────
 iit-pickup:
   upload-dir: ${UPLOAD_DIR:/app/uploads}
   cloudinary-folder: iit-pickup-fotos
+  privacy:
+    version: ${PRIVACY_POLICY_VERSION:2026.1}
+    effective-date: ${PRIVACY_EFFECTIVE_DATE:2026-11-11}
+    responsible-name: ${PRIVACY_RESPONSIBLE_NAME:Instituto Inglés de Toluca}
+    responsible-address: ${PRIVACY_RESPONSIBLE_ADDRESS:Toluca de Lerdo, Estado de México (Domicilio institucional registrado ante la SEP)}
+    arco-email: ${PRIVACY_ARCO_EMAIL:privacidad@institutoingles.edu.mx}
+    authority-name: Secretaría Anticorrupción y Buen Gobierno
 
 # ─── Server ───────────────────────────────────────────────────────────────────
 server:

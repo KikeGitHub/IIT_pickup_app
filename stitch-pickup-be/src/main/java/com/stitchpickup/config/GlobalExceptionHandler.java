@@ -1,5 +1,6 @@
 package com.stitchpickup.config;
 
+import com.stitchpickup.modules.privacy.exception.PrivacyConsentRequiredException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -9,6 +10,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.net.URI;
 import java.time.Instant;
@@ -58,6 +60,31 @@ public class GlobalExceptionHandler {
         return pd;
     }
 
+    // ─── Consentimiento de Privacidad Requerido ───────────────────────────────
+
+    @ExceptionHandler(PrivacyConsentRequiredException.class)
+    public ProblemDetail handlePrivacyConsentRequired(PrivacyConsentRequiredException ex) {
+        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.PRECONDITION_REQUIRED);
+        pd.setTitle("Aviso de Privacidad requerido");
+        pd.setDetail(ex.getMessage());
+        pd.setType(URI.create("urn:stitch-pickup:privacy-consent-required"));
+        pd.setProperty("policyVersion", ex.getPolicyVersion());
+        pd.setProperty("timestamp", Instant.now());
+        return pd;
+    }
+
+    // ─── Acceso Denegado (SecurityException de dominio) ──────────────────────
+
+    @ExceptionHandler(SecurityException.class)
+    public ProblemDetail handleSecurityException(SecurityException ex) {
+        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.FORBIDDEN);
+        pd.setTitle("Operación no autorizada");
+        pd.setDetail(ex.getMessage());
+        pd.setType(URI.create("urn:stitch-pickup:forbidden"));
+        pd.setProperty("timestamp", Instant.now());
+        return pd;
+    }
+
     // ─── Acceso Denegado ──────────────────────────────────────────────────────
 
     @ExceptionHandler(AccessDeniedException.class)
@@ -77,6 +104,19 @@ public class GlobalExceptionHandler {
         ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.NOT_FOUND);
         pd.setTitle("Recurso no encontrado");
         pd.setDetail(ex.getMessage());
+        pd.setType(URI.create("urn:stitch-pickup:not-found"));
+        pd.setProperty("timestamp", Instant.now());
+        return pd;
+    }
+
+    // ─── Recurso Estático / Ruta no Encontrada (Spring 6) ───────────────────
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ProblemDetail handleNoResourceFound(NoResourceFoundException ex) {
+        log.warn("Ruta o recurso no encontrado: {}", ex.getResourcePath());
+        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.NOT_FOUND);
+        pd.setTitle("Recurso no encontrado");
+        pd.setDetail("La ruta solicitada no existe.");
         pd.setType(URI.create("urn:stitch-pickup:not-found"));
         pd.setProperty("timestamp", Instant.now());
         return pd;

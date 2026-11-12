@@ -44,11 +44,12 @@ public class AuthController {
     @PostMapping("/parent/login")
     @Operation(
         summary = "Login de padre de familia",
-        description = "Autentica a un padre de familia y devuelve un JWT con la lista de alumnos vinculados."
+        description = "Autentica a un padre de familia, valida consentimiento de Aviso de Privacidad y devuelve un JWT."
     )
     public ResponseEntity<LoginResponse> loginParent(
-            @Valid @RequestBody LoginRequest request) {
-        return ResponseEntity.ok(authService.loginParent(request));
+            @Valid @RequestBody LoginRequest request,
+            HttpServletRequest httpRequest) {
+        return ResponseEntity.ok(authService.loginParent(request, httpRequest));
     }
 
     // ─── Login Maestro / Admin ────────────────────────────────────────────────

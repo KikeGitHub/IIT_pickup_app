@@ -9,6 +9,8 @@ import { environment } from '../../../environments/environment';
 interface LoginRequest {
   email: string;
   password: string;
+  acceptedPrivacyPolicy?: boolean;
+  privacyPolicyVersion?: string;
 }
 
 interface LoginResponse {
@@ -20,6 +22,8 @@ interface LoginResponse {
   level?: string;
   groups?: string[];
   tempPassword?: boolean;
+  privacyPolicyVersion?: string;
+  privacyAccepted?: boolean;
 }
 
 const TOKEN_KEY = 'sp_jwt';
@@ -46,6 +50,9 @@ export class AuthService {
   readonly requiresPasswordChange = computed(
     () => this._currentUser()?.tempPassword === true
   );
+  readonly requiresPrivacyConsent = computed(
+    () => this._currentUser()?.role === 'PARENT' && this._currentUser()?.privacyAccepted === false
+  );
 
   constructor(
     private readonly http: HttpClient,
@@ -54,13 +61,36 @@ export class AuthService {
 
   // ─── Public API ─────────────────────────────────────────────────────────────
 
-  loginParent(email: string, password: string): Observable<LoginResponse> {
+  loginParent(
+    email: string,
+    password: string,
+    acceptedPrivacyPolicy = false,
+    privacyPolicyVersion?: string
+  ): Observable<LoginResponse> {
     return this.http
-      .post<LoginResponse>(`${this.api}/auth/parent/login`, { email, password } as LoginRequest)
+      .post<LoginResponse>(`${this.api}/auth/parent/login`, {
+        email,
+        password,
+        acceptedPrivacyPolicy,
+        privacyPolicyVersion,
+      } as LoginRequest)
       .pipe(
         tap((res) => this.handleLoginSuccess(res)),
         catchError((err) => throwError(() => err))
       );
+  }
+
+  markPrivacyAccepted(version: string): void {
+    const user = this._currentUser();
+    if (user) {
+      const updatedUser: AuthUserModel = {
+        ...user,
+        privacyPolicyVersion: version,
+        privacyAccepted: true,
+      };
+      this._currentUser.set(updatedUser);
+      localStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
+    }
   }
 
   loginTeacher(email: string, password: string): Observable<LoginResponse> {
@@ -124,6 +154,8 @@ export class AuthService {
       level: res.level,
       groups: res.groups,
       tempPassword: res.tempPassword ?? false,
+      privacyPolicyVersion: res.privacyPolicyVersion,
+      privacyAccepted: res.privacyAccepted ?? true,
     };
 
     // Enrich from token payload

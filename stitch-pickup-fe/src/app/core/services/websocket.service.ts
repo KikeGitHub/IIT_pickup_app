@@ -254,98 +254,155 @@ export class WebSocketService implements OnDestroy {
     });
     this.subscriptions.clear();
 
-    // School alerts topic
-    const alertSub = this.stompClient.subscribe(
-      '/topic/school/alerts',
-      (message: IMessage) => {
-        try {
-          const event = JSON.parse(message.body) as ParentAlertEvent;
-          console.info('[WebSocket] 🔔 Nueva Alerta Recibida por Broadcast:', event);
-          this.dispatchParentAlert(event);
-        } catch (e) {
-          console.error('[STOMP] Failed to parse alert event', e);
-        }
-      }
-    );
-    this.subscriptions.set('school-alerts', alertSub);
+    const session = this.getSessionClaims();
+    const role = (session.role || '').toUpperCase();
+    const userId = session.userId;
 
-    // School deliveries broadcast topic
-    const deliveriesSub = this.stompClient.subscribe(
-      '/topic/deliveries',
-      (message: IMessage) => {
-        try {
-          const event = JSON.parse(message.body) as DeliveryDispatchedEvent;
-          console.info('[WebSocket] 🚗 Evento de Entrega Recibido:', event);
-          this.dispatchDeliveryEvent(event);
-        } catch (e) {
-          console.error('[STOMP] Failed to parse delivery event', e);
+    // ── Canales de Monitoreo Escolar (Solo TEACHER / ADMIN / MONITOR) ───────
+    if (role !== 'PARENT') {
+      const alertSub = this.stompClient.subscribe(
+        '/topic/school/alerts',
+        (message: IMessage) => {
+          try {
+            const event = JSON.parse(message.body) as ParentAlertEvent;
+            console.info('[WebSocket] 🔔 Nueva Alerta Recibida por Broadcast:', event);
+            this.dispatchParentAlert(event);
+          } catch (e) {
+            console.error('[STOMP] Failed to parse alert event', e);
+          }
         }
-      }
-    );
-    this.subscriptions.set('school-deliveries', deliveriesSub);
+      );
+      this.subscriptions.set('school-alerts', alertSub);
 
-    // Delivery reverted: alumno regresa al board activo
-    const revertedSub = this.stompClient.subscribe(
-      '/topic/delivery/reverted',
-      (message: IMessage) => {
-        try {
-          const event = JSON.parse(message.body) as DeliveryDispatchedEvent;
-          console.info('[WebSocket] 🔄 Entrega Revertida:', event);
-          this.dispatchDeliveryReverted(event);
-        } catch (e) {
-          console.error('[STOMP] Failed to parse reverted delivery event', e);
+      const deliveriesSub = this.stompClient.subscribe(
+        '/topic/deliveries',
+        (message: IMessage) => {
+          try {
+            const event = JSON.parse(message.body) as DeliveryDispatchedEvent;
+            console.info('[WebSocket] 🚗 Evento de Entrega Recibido:', event);
+            this.dispatchDeliveryEvent(event);
+          } catch (e) {
+            console.error('[STOMP] Failed to parse delivery event', e);
+          }
         }
-      }
-    );
-    this.subscriptions.set('delivery-reverted', revertedSub);
+      );
+      this.subscriptions.set('school-deliveries', deliveriesSub);
 
-    // Alert cancelled by parent: monitor retira la tarjeta del alumno del board
-    const alertCancelledSub = this.stompClient.subscribe(
-      '/topic/school/alerts/cancelled',
-      (message: IMessage) => {
-        try {
-          const event = JSON.parse(message.body) as ParentAlertEvent;
-          console.info('[WebSocket] 🗑️ Alerta Cancelada por Padre:', event);
-          this.alertCancelled$.next(event);
-        } catch (e) {
-          console.error('[STOMP] Failed to parse alert cancelled event', e);
+      const revertedSub = this.stompClient.subscribe(
+        '/topic/delivery/reverted',
+        (message: IMessage) => {
+          try {
+            const event = JSON.parse(message.body) as DeliveryDispatchedEvent;
+            console.info('[WebSocket] 🔄 Entrega Revertida:', event);
+            this.dispatchDeliveryReverted(event);
+          } catch (e) {
+            console.error('[STOMP] Failed to parse reverted delivery event', e);
+          }
         }
-      }
-    );
-    this.subscriptions.set('school-alerts-cancelled', alertCancelledSub);
+      );
+      this.subscriptions.set('delivery-reverted', revertedSub);
 
-    // Alert seen: confirmación visual en pantalla del monitor (Doble Check)
-    const alertSeenSub = this.stompClient.subscribe(
-      '/topic/school/alerts/seen',
-      (message: IMessage) => {
-        try {
-          const event = JSON.parse(message.body) as ParentAlertEvent;
-          console.info('[WebSocket] 👁️ Alerta Marcada como Vista en Pantalla:', event);
-          this.dispatchAlertSeen(event);
-        } catch (e) {
-          console.error('[STOMP] Failed to parse alert seen event', e);
+      const alertCancelledSub = this.stompClient.subscribe(
+        '/topic/school/alerts/cancelled',
+        (message: IMessage) => {
+          try {
+            const event = JSON.parse(message.body) as ParentAlertEvent;
+            console.info('[WebSocket] 🗑️ Alerta Cancelada por Padre:', event);
+            this.alertCancelled$.next(event);
+          } catch (e) {
+            console.error('[STOMP] Failed to parse alert cancelled event', e);
+          }
         }
-      }
-    );
-    this.subscriptions.set('school-alerts-seen', alertSeenSub);
+      );
+      this.subscriptions.set('school-alerts-cancelled', alertCancelledSub);
 
-    // Delivery rejected by parent: urgente en monitor
-    const rejectedSub = this.stompClient.subscribe(
-      '/topic/delivery/rejected',
-      (message: IMessage) => {
-        try {
-          const event = JSON.parse(message.body) as DeliveryDispatchedEvent;
-          console.info('[WebSocket] 🚨 Entrega Rechazada por Padre:', event);
-          this.deliveryRejected$.next(event);
-        } catch (e) {
-          console.error('[STOMP] Failed to parse rejected delivery event', e);
+      const alertSeenSub = this.stompClient.subscribe(
+        '/topic/school/alerts/seen',
+        (message: IMessage) => {
+          try {
+            const event = JSON.parse(message.body) as ParentAlertEvent;
+            console.info('[WebSocket] 👁️ Alerta Marcada como Vista en Pantalla:', event);
+            this.dispatchAlertSeen(event);
+          } catch (e) {
+            console.error('[STOMP] Failed to parse alert seen event', e);
+          }
         }
+      );
+      this.subscriptions.set('school-alerts-seen', alertSeenSub);
+
+      const rejectedSub = this.stompClient.subscribe(
+        '/topic/delivery/rejected',
+        (message: IMessage) => {
+          try {
+            const event = JSON.parse(message.body) as DeliveryDispatchedEvent;
+            console.info('[WebSocket] 🚨 Entrega Rechazada por Padre:', event);
+            this.deliveryRejected$.next(event);
+          } catch (e) {
+            console.error('[STOMP] Failed to parse rejected delivery event', e);
+          }
+        }
+      );
+      this.subscriptions.set('delivery-rejected', rejectedSub);
+    }
+
+    // ── Canales privados de los hijos del Padre (aislamiento estricto) ─────
+    if (role === 'PARENT' && session.studentIds.length > 0) {
+      for (const sid of session.studentIds) {
+        const stuAlertSub = this.stompClient.subscribe(
+          `/topic/student/${sid}/alerts`,
+          (message: IMessage) => {
+            try {
+              const event = JSON.parse(message.body) as ParentAlertEvent;
+              this.dispatchParentAlert(event);
+            } catch (e) {
+              console.error('[STOMP] Failed to parse student alert event', e);
+            }
+          }
+        );
+        this.subscriptions.set(`student-alerts-${sid}`, stuAlertSub);
+
+        const stuDeliverySub = this.stompClient.subscribe(
+          `/topic/student/${sid}/delivery`,
+          (message: IMessage) => {
+            try {
+              const event = JSON.parse(message.body) as DeliveryDispatchedEvent;
+              this.dispatchDeliveryEvent(event);
+            } catch (e) {
+              console.error('[STOMP] Failed to parse student delivery event', e);
+            }
+          }
+        );
+        this.subscriptions.set(`student-delivery-${sid}`, stuDeliverySub);
+
+        const stuRevertedSub = this.stompClient.subscribe(
+          `/topic/student/${sid}/delivery-reverted`,
+          (message: IMessage) => {
+            try {
+              const event = JSON.parse(message.body) as DeliveryDispatchedEvent;
+              this.dispatchDeliveryReverted(event);
+            } catch (e) {
+              console.error('[STOMP] Failed to parse student reverted event', e);
+            }
+          }
+        );
+        this.subscriptions.set(`student-reverted-${sid}`, stuRevertedSub);
+
+        const stuSeenSub = this.stompClient.subscribe(
+          `/topic/student/${sid}/seen`,
+          (message: IMessage) => {
+            try {
+              const event = JSON.parse(message.body) as ParentAlertEvent;
+              this.dispatchAlertSeen(event);
+            } catch (e) {
+              console.error('[STOMP] Failed to parse student seen event', e);
+            }
+          }
+        );
+        this.subscriptions.set(`student-seen-${sid}`, stuSeenSub);
       }
-    );
-    this.subscriptions.set('delivery-rejected', rejectedSub);
+    }
 
     // Parent direct topic & queue
-    const userId = this.getUserIdFromToken();
     if (userId) {
       const parentDeliverySub = this.stompClient.subscribe(
         `/topic/delivery/parent/${userId}`,
@@ -419,35 +476,47 @@ export class WebSocketService implements OnDestroy {
     }
   }
 
-  private getUserIdFromToken(): string | null {
+  private getSessionClaims(): { userId: string | null; role: string | null; studentIds: string[] } {
     try {
+      let userId: string | null = null;
+      let role: string | null = null;
+      let studentIds: string[] = [];
+
       const rawUser = localStorage.getItem('sp_user');
       if (rawUser) {
         const u = JSON.parse(rawUser);
-        if (u?.userId) return u.userId;
+        userId = u?.userId ?? null;
+        role = u?.role ?? null;
+        studentIds = Array.isArray(u?.studentIds) ? u.studentIds : [];
       }
 
       const token = localStorage.getItem('sp_jwt');
-      if (!token) return null;
-      const parts = token.split('.');
-      if (parts.length < 2) return null;
-
-      // Handle base64url format properly (replace '-' with '+', '_' with '/')
-      let base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-      while (base64.length % 4) {
-        base64 += '=';
+      if (token) {
+        const parts = token.split('.');
+        if (parts.length >= 2) {
+          let base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+          while (base64.length % 4) {
+            base64 += '=';
+          }
+          const jsonPayload = decodeURIComponent(
+            atob(base64)
+              .split('')
+              .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+              .join('')
+          );
+          const payload = JSON.parse(jsonPayload);
+          userId = userId ?? payload.userId ?? null;
+          role = role ?? payload.role ?? null;
+          if (studentIds.length === 0 && Array.isArray(payload.studentIds)) {
+            studentIds = payload.studentIds;
+          }
+        }
       }
-      const jsonPayload = decodeURIComponent(
-        atob(base64)
-          .split('')
-          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-          .join('')
-      );
-      const payload = JSON.parse(jsonPayload);
-      return payload.userId ?? null;
+
+      return { userId, role, studentIds };
     } catch (e) {
-      console.warn('[WebSocket] Could not extract userId from token:', e);
-      return null;
+      console.warn('[WebSocket] Could not extract session claims from token:', e);
+      return { userId: null, role: null, studentIds: [] };
     }
   }
 

@@ -17,6 +17,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * ImageUploadService — Servicio de subida de imágenes para IIT Pickup.
@@ -71,6 +72,50 @@ public class ImageUploadService {
         return resolveImageUrl(publicId, folder, imageBytes);
     }
 
+    /**
+     * Elimina físicamente una fotografía de Cloudinary o del almacenamiento local
+     * (derecho de cancelación / supresión de fotografía opcional).
+     */
+    public void deleteByUrl(String imageUrl) {
+        if (imageUrl == null || imageUrl.isBlank()) {
+            return;
+        }
+        try {
+            if (imageUrl.contains("/api/v1/images/file/")) {
+                String filename = imageUrl.substring(imageUrl.lastIndexOf('/') + 1);
+                String safe = filename.replaceAll("[^a-zA-Z0-9._-]", "_");
+                Files.deleteIfExists(Paths.get(uploadDir).resolve(safe).normalize());
+                Files.deleteIfExists(Paths.get(System.getProperty("java.io.tmpdir"), "uploads").resolve(safe).normalize());
+                log.info("[ImageUpload] Imagen local eliminada físicamente: {}", safe);
+                return;
+            }
+
+            if (imageUrl.contains("res.cloudinary.com") && imageUrl.contains("/upload/")) {
+                String publicId = extractCloudinaryPublicId(imageUrl);
+                if (publicId != null && !publicId.isBlank()) {
+                    cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap());
+                    log.info("[ImageUpload] Imagen eliminada de Cloudinary: {}", publicId);
+                }
+            }
+        } catch (Exception ex) {
+            log.warn("[ImageUpload] No se pudo eliminar la imagen anterior ({}): {}", imageUrl, ex.getMessage());
+        }
+    }
+
+    private String extractCloudinaryPublicId(String url) {
+        int uploadIdx = url.indexOf("/upload/");
+        if (uploadIdx < 0) return null;
+        String afterUpload = url.substring(uploadIdx + "/upload/".length());
+        int folderIdx = afterUpload.indexOf(ROOT_FOLDER + "/");
+        String pathPart = folderIdx >= 0 ? afterUpload.substring(folderIdx) : afterUpload.replaceFirst("^([^/]+/)*v\\d+/", "");
+        int queryIdx = pathPart.indexOf('?');
+        if (queryIdx >= 0) {
+            pathPart = pathPart.substring(0, queryIdx);
+        }
+        int dotIdx = pathPart.lastIndexOf('.');
+        return dotIdx > 0 ? pathPart.substring(0, dotIdx) : pathPart;
+    }
+
     // ── Private helpers ────────────────────────────────────────────────────────
 
     /** Soporta Base64 con o sin prefijo "data:image/xxx;base64," */
@@ -95,26 +140,13 @@ public class ImageUploadService {
     }
 
     /**
-     * Construye el public_id único con indicador de fecha y hora (DDMMAAHHmmss):
-     * Formato: {nombre/identifier}_{DDMMAAHHMMSS}
-     * Ejemplo: aldaco_sanchez_mateo_150926114532
+     * Construye un public_id opaco e impredecible para no exponer el nombre del menor en URLs.
+     * Formato: {type}_{uuid16}_{DDMMAAHHmmss}
      */
     private String buildPublicId(ImageUploadRequest req) {
-        StringBuilder sb = new StringBuilder();
-
-        if (req.extraName() != null && !req.extraName().isBlank()) {
-            sb.append(sanitize(req.extraName()));
-        } else if (req.identifier() != null && !req.identifier().isBlank()) {
-            sb.append(req.type().toLowerCase()).append("_").append(sanitize(req.identifier()));
-        } else {
-            sb.append(req.type().toLowerCase());
-        }
-
-        // Indicador de fecha y hora: DDMMAAHH con minutos y segundos para garantizar que nunca se repita
+        String randomToken = UUID.randomUUID().toString().replace("-", "").substring(0, 16);
         String timestamp = LocalDateTime.now(MEXICO_ZONE).format(TIMESTAMP_FORMATTER);
-        sb.append("_").append(timestamp);
-
-        return sb.toString();
+        return sanitize(req.type()) + "_" + randomToken + "_" + timestamp;
     }
 
     private String sanitize(String input) {

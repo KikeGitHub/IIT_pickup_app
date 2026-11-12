@@ -8,7 +8,8 @@
   justify-content: center;
   min-height: 100dvh;
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   background: v.$color-primary;
 }
 
@@ -286,6 +287,86 @@
   color: v.$color-error;
   margin: 0;
   padding-left: 2px;
+}
+
+// ─── Privacy Policy Checkbox & Modal ─────────────────────────────────────────
+
+.privacy-consent-box {
+  background: #f8fafc;
+  border: 1px solid v.$color-outline-variant;
+  border-radius: v.$radius-md;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: border-color 0.15s, background 0.15s;
+
+  &--error {
+    border-color: v.$color-error;
+    background: #fef2f2;
+  }
+}
+
+.privacy-checkbox-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.privacy-checkbox-input {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  accent-color: v.$color-primary;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.privacy-consent-text {
+  font-family: v.$font-family-base;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: v.$color-on-surface-variant;
+}
+
+.privacy-inline-btn {
+  display: inline;
+  padding: 0;
+  border: none;
+  background: none;
+  color: v.$color-primary;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+
+  &:hover {
+    color: v.$color-secondary;
+  }
+}
+
+.privacy-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 14, 39, 0.72);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: v.$space-md;
+}
+
+.privacy-modal-dialog {
+  width: 100%;
+  max-width: 820px;
+  max-height: 88dvh;
+  overflow-y: auto;
+  background: #ffffff;
+  border-radius: v.$radius-xl;
+  box-shadow: v.$shadow-modal;
 }
 
 // ─── Submit Button ────────────────────────────────────────────────────────────

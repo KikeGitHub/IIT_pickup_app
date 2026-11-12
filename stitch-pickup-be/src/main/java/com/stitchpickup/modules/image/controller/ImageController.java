@@ -87,7 +87,8 @@ public class ImageController {
             byte[] data = Files.readAllBytes(file);
             return ResponseEntity.ok()
                     .contentType(MediaType.parseMediaType(detectMimeType(safe)))
-                    .header(HttpHeaders.CACHE_CONTROL, "public, max-age=604800, immutable")
+                    .header(HttpHeaders.CACHE_CONTROL, "private, max-age=86400")
+                    .header("X-Robots-Tag", "noindex, nofollow")
                     .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(data.length))
                     .body(data);
         } catch (IOException ex) {

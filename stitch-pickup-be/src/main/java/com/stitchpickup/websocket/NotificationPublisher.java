@@ -28,10 +28,11 @@ public class NotificationPublisher {
 
     private final SimpMessagingTemplate messagingTemplate;
 
-    /** Broadcast de alerta de proximidad a todos los monitores */
+    /** Broadcast de alerta de proximidad a monitores y canal privado del alumno */
     public void publishAlert(AlertResponse alertResponse) {
         try {
             messagingTemplate.convertAndSend("/topic/school/alerts", alertResponse);
+            messagingTemplate.convertAndSend("/topic/student/" + alertResponse.studentId() + "/alerts", alertResponse);
             log.info("[WebSocket] 📢 Alert broadcast → /topic/school/alerts: Alumno={} ({}) Grupo={} Estado={}",
                     alertResponse.studentName(), alertResponse.level(), alertResponse.groupName(), alertResponse.status());
         } catch (Exception e) {
@@ -46,6 +47,7 @@ public class NotificationPublisher {
     public void publishAlertCancelled(AlertResponse alertResponse) {
         try {
             messagingTemplate.convertAndSend("/topic/school/alerts/cancelled", alertResponse);
+            messagingTemplate.convertAndSend("/topic/student/" + alertResponse.studentId() + "/alerts-cancelled", alertResponse);
             log.info("[WebSocket] 🗑️ Alert cancelled broadcast → /topic/school/alerts/cancelled: Alumno={} ({}) Grupo={}",
                     alertResponse.studentName(), alertResponse.level(), alertResponse.groupName());
         } catch (Exception e) {
@@ -53,10 +55,11 @@ public class NotificationPublisher {
         }
     }
 
-    /** Broadcast de entrega despachada o confirmada a todos los monitores */
+    /** Broadcast de entrega despachada o confirmada a monitores y canal privado del alumno */
     public void publishDelivery(DeliveryLogResponse delivery) {
         try {
             messagingTemplate.convertAndSend("/topic/deliveries", delivery);
+            messagingTemplate.convertAndSend("/topic/student/" + delivery.studentId() + "/delivery", delivery);
             log.info("[WebSocket] 📢 Delivery broadcast → /topic/deliveries: Alumno={} ({}) Estado={}",
                     delivery.studentName(), delivery.level(), delivery.status());
         } catch (Exception e) {
@@ -83,6 +86,7 @@ public class NotificationPublisher {
     public void publishRevertedDelivery(DeliveryLogResponse delivery) {
         try {
             messagingTemplate.convertAndSend("/topic/delivery/reverted", delivery);
+            messagingTemplate.convertAndSend("/topic/student/" + delivery.studentId() + "/delivery-reverted", delivery);
             log.info("[WebSocket] 🔄 Delivery reverted → /topic/delivery/reverted: Alumno={} by={}",
                     delivery.studentName(), delivery.revertedBy());
         } catch (Exception e) {
@@ -126,6 +130,7 @@ public class NotificationPublisher {
     public void notifyAlertSeen(String parentId, AlertResponse alertResponse) {
         try {
             messagingTemplate.convertAndSend("/topic/alert/parent/" + parentId + "/seen", alertResponse);
+            messagingTemplate.convertAndSend("/topic/student/" + alertResponse.studentId() + "/seen", alertResponse);
             messagingTemplate.convertAndSend("/topic/school/alerts/seen", alertResponse);
             log.info("[WebSocket] 👁️ Alert seen broadcast: ParentId={} Alumno={} Status={} SeenAt={}",
                     parentId, alertResponse.studentName(), alertResponse.status(), alertResponse.seenAt());

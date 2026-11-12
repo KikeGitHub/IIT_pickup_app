@@ -11,4 +11,6 @@ export interface AuthUserModel {
   groups?: string[];
   avatar?: string;
   tempPassword?: boolean;
+  privacyPolicyVersion?: string;
+  privacyAccepted?: boolean;
 }

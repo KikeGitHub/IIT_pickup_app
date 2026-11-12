@@ -45,5 +45,11 @@ public record LoginResponse(
      * Para TEACHER/ADMIN: grupos asignados (ej: ["3A", "5B"]).
      * Para PARENT: null.
      */
-    List<String> groups
+    List<String> groups,
+
+    /** Versión vigente del Aviso de Privacidad */
+    String privacyPolicyVersion,
+
+    /** Si el usuario tiene aceptada la versión vigente del Aviso de Privacidad */
+    boolean privacyAccepted
 ) {}

@@ -1,6 +1,7 @@
 package com.stitchpickup.modules.student.service;
 
 import com.stitchpickup.modules.admin.dto.FamilyMemberRequest;
+import com.stitchpickup.modules.image.service.ImageUploadService;
 import com.stitchpickup.modules.student.dto.FamilyMemberResponse;
 import com.stitchpickup.modules.student.dto.ParentStudentUpdateRequest;
 import com.stitchpickup.modules.student.dto.StudentResponse;
@@ -25,6 +26,7 @@ public class StudentService {
     private final StudentRepository studentRepository;
     private final FamilyMemberRepository familyMemberRepository;
     private final ParentUserRepository parentUserRepository;
+    private final ImageUploadService imageUploadService;
 
     @Transactional(readOnly = true)
     public List<StudentResponse> getStudentsByParentId(UUID parentId) {
@@ -46,13 +48,29 @@ public class StudentService {
             throw new SecurityException("No tienes autorización para editar este alumno.");
         }
 
-        // El padre únicamente puede subir/actualizar la fotografía del alumno
-        if (request.avatarUrl() != null) {
-            student.setAvatarUrl(request.avatarUrl().trim());
+        String previousUrl = student.getAvatarUrl();
+        boolean shouldRemove = Boolean.TRUE.equals(request.removePhoto())
+                || (request.avatarUrl() != null && request.avatarUrl().isBlank());
+
+        if (shouldRemove) {
+            student.setAvatarUrl(null);
+            Student saved = studentRepository.save(student);
+            imageUploadService.deleteByUrl(previousUrl);
+            return mapToStudentResponse(saved);
         }
 
-        Student saved = studentRepository.save(student);
-        return mapToStudentResponse(saved);
+        // El padre únicamente puede subir/actualizar la fotografía opcional del alumno
+        if (request.avatarUrl() != null) {
+            String nextUrl = request.avatarUrl().trim();
+            student.setAvatarUrl(nextUrl);
+            Student saved = studentRepository.save(student);
+            if (previousUrl != null && !previousUrl.equals(nextUrl)) {
+                imageUploadService.deleteByUrl(previousUrl);
+            }
+            return mapToStudentResponse(saved);
+        }
+
+        return mapToStudentResponse(student);
     }
 
     private StudentResponse mapToStudentResponse(Student s) {
@@ -68,15 +86,16 @@ public class StudentService {
 
         String groupName = s.getGroup() != null ? s.getGroup().getName() : "";
 
+        // Minimización de datos para portal de padres: no exponer CURP ni fecha de nacimiento
         return new StudentResponse(
                 s.getId().toString(),
                 s.getName(),
                 s.getLevel().name(),
                 s.getGrade(),
                 groupName,
-                s.getBirthday() != null ? s.getBirthday().toString() : null,
+                null,
                 s.getGender(),
-                s.getCurp(),
+                null,
                 s.getAvatarUrl(),
                 memberDtos
         );

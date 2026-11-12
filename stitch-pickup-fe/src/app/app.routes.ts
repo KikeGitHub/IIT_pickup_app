@@ -43,6 +43,13 @@ export const routes: Routes = [
       import('./features/auth/auth.routes').then((m) => m.AUTH_ROUTES),
   },
 
+  // ── Privacy Policy module (public — LFPDPPP & App Stores) ────────────────
+  {
+    path: 'privacidad',
+    loadChildren: () =>
+      import('./features/privacy/privacy.routes').then((m) => m.PRIVACY_ROUTES),
+  },
+
   // ── Parent Portal (PARENT role only) ─────────────────────────────────────
   {
     path: 'parent',
