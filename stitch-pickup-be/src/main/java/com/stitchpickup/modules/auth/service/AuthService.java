@@ -3,11 +3,13 @@ package com.stitchpickup.modules.auth.service;
 import com.stitchpickup.modules.auth.dto.ChangePasswordRequest;
 import com.stitchpickup.modules.auth.dto.LoginRequest;
 import com.stitchpickup.modules.auth.dto.LoginResponse;
+import com.stitchpickup.modules.privacy.service.PrivacyService;
 import com.stitchpickup.modules.user.entity.ParentUser;
 import com.stitchpickup.modules.user.entity.TeacherUser;
 import com.stitchpickup.modules.user.repository.ParentUserRepository;
 import com.stitchpickup.modules.user.repository.TeacherUserRepository;
 import com.stitchpickup.security.JwtTokenProvider;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -34,11 +36,12 @@ public class AuthService {
     private final TeacherUserRepository teacherRepo;
     private final JwtTokenProvider tokenProvider;
     private final PasswordEncoder passwordEncoder;
+    private final PrivacyService privacyService;
 
     // ─── Login Padre ──────────────────────────────────────────────────────────
 
     @Transactional
-    public LoginResponse loginParent(LoginRequest request) {
+    public LoginResponse loginParent(LoginRequest request, HttpServletRequest httpRequest) {
         ParentUser parent = parentRepo
                 .findByEmailWithStudents(request.email())
                 .filter(ParentUser::getActive)
@@ -48,6 +51,14 @@ public class AuthService {
             log.warn("Intento de login fallido para padre: {}", request.email());
             throw new BadCredentialsException("Credenciales inválidas");
         }
+
+        // Validar y registrar consentimiento informado del Aviso de Privacidad vigente
+        privacyService.validateAndRecordParentLoginConsent(
+                parent,
+                request.acceptedPrivacyPolicy(),
+                request.privacyPolicyVersion(),
+                httpRequest
+        );
 
         // Actualizar lastLogin
         parent.setLastLogin(Instant.now());
@@ -134,7 +145,9 @@ public class AuthService {
             ParentUser p, String token, List<String> studentIds) {
         return new LoginResponse(
             token, p.getId().toString(), p.getEmail(), p.getNombre(),
-            "PARENT", p.getTempPassword(), studentIds, null, null
+            "PARENT", p.getTempPassword(), studentIds, null, null,
+            privacyService.getCurrentVersion(),
+            privacyService.hasAcceptedCurrentVersion(p)
         );
     }
 
@@ -142,7 +155,9 @@ public class AuthService {
             TeacherUser t, String token, String level, List<String> groups) {
         return new LoginResponse(
             token, t.getId().toString(), t.getEmail(), t.getNombre(),
-            t.getRole(), t.getTempPassword(), null, level, groups
+            t.getRole(), t.getTempPassword(), null, level, groups,
+            privacyService.getCurrentVersion(),
+            true
         );
     }
 }

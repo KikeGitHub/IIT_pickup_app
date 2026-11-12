@@ -2,7 +2,7 @@ import { Component, inject, OnInit, OnDestroy, ChangeDetectionStrategy, signal }
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { StudentService } from '../../../../core/services/student.service';
 import { AlertService } from '../../../../core/services/alert.service';
@@ -12,6 +12,7 @@ import { WebSocketService, DeliveryDispatchedEvent } from '../../../../core/serv
 import { NotificationSoundService } from '../../../../core/services/notification-sound.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { ImageUploadService } from '../../../../core/services/image-upload.service';
+import { PrivacyService } from '../../../../core/services/privacy.service';
 import { AlertStatus, PickupMethod } from '../../../../core/models/alert.model';
 import { Student } from '../../../../core/models/student.model';
 import { environment } from '../../../../../environments/environment';
@@ -21,6 +22,7 @@ import { AlertButtonsComponent } from '../alert-buttons/alert-buttons.component'
 import { AlertStatusCardComponent } from '../alert-status-card/alert-status-card.component';
 import { DayHistoryComponent, HistoryEvent } from '../day-history/day-history.component';
 import { PwaInstallBannerComponent } from '../../../../shared/components/pwa-install-banner/pwa-install-banner.component';
+import { PrivacyPolicyComponent } from '../../../privacy/components/privacy-policy/privacy-policy.component';
 
 @Component({
   selector: 'app-parent-dashboard',
@@ -28,12 +30,14 @@ import { PwaInstallBannerComponent } from '../../../../shared/components/pwa-ins
   imports: [
     CommonModule,
     FormsModule,
+    RouterLink,
     StudentCardComponent,
     PickupModeSelectorComponent,
     AlertButtonsComponent,
     AlertStatusCardComponent,
     DayHistoryComponent,
-    PwaInstallBannerComponent
+    PwaInstallBannerComponent,
+    PrivacyPolicyComponent
   ],
   templateUrl: './parent-dashboard.component.html',
   styleUrl: './parent-dashboard.component.scss',
@@ -48,6 +52,7 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
   readonly sound = inject(NotificationSoundService);
   private readonly notification = inject(NotificationService);
   private readonly imageUpload = inject(ImageUploadService);
+  private readonly privacyService = inject(PrivacyService);
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
 
@@ -83,7 +88,20 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
   editError = '';
   isSavingStudent = signal<boolean>(false);
 
+  // Privacy Policy Re-consent Modal (si existe nueva versión o sesión previa sin registro)
+  readonly showPrivacyConsentModal = signal<boolean>(false);
+
   ngOnInit(): void {
+    this.privacyService.getCurrentPolicy().subscribe((doc) => {
+      const user = this.authService.currentUser();
+      if (
+        user?.role === 'PARENT' &&
+        (this.authService.requiresPrivacyConsent() || user.privacyPolicyVersion !== doc.version)
+      ) {
+        this.showPrivacyConsentModal.set(true);
+      }
+    });
+
     const token = this.authService.getToken();
     if (token) {
       this.ws.connect(token);
@@ -554,7 +572,7 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
     this.isSavingStudent.set(true);
 
     this.imageUpload
-      .uploadFile(file, 'student', student?.id, student?.name)
+      .uploadFile(file, 'student', student?.id, undefined)
       .subscribe({
         next: (url) => {
           // Aplica thumbnail 400x400 si viene de Cloudinary
@@ -591,19 +609,50 @@ export class ParentDashboardComponent implements OnInit, OnDestroy {
     this.isSavingStudent.set(true);
     this.editError = '';
 
-    const payload = { avatarUrl: this.editAvatarUrl.trim() || undefined };
+    const cleanedUrl = this.editAvatarUrl.trim();
+    const isRemoval = cleanedUrl.length === 0;
+    const payload = isRemoval
+      ? { avatarUrl: '', removePhoto: true }
+      : { avatarUrl: cleanedUrl, removePhoto: false };
 
     this.studentService.updateStudentByParent(student.id, payload).subscribe({
       next: () => {
         this.isSavingStudent.set(false);
         this.closeEditModal();
-        this.notification.success('Fotografía del alumno actualizada correctamente.');
+        this.notification.success(
+          isRemoval
+            ? 'Fotografía eliminada permanentemente.'
+            : 'Fotografía del alumno actualizada correctamente.'
+        );
       },
       error: (err) => {
         this.isSavingStudent.set(false);
         this.editError = err.error?.message || 'Error al guardar la fotografía.';
       }
     });
+  }
+
+  acceptUpdatedPrivacy(version: string): void {
+    this.privacyService.acceptPolicy(version).subscribe({
+      next: () => {
+        this.authService.markPrivacyAccepted(version);
+        this.showPrivacyConsentModal.set(false);
+        this.notification.success('Aviso de Privacidad aceptado y registrado.');
+      },
+      error: () => {
+        this.notification.error('No se pudo registrar tu aceptación. Intenta nuevamente.');
+      }
+    });
+  }
+
+  closePrivacyConsentModal(): void {
+    const user = this.authService.currentUser();
+    const currentVer = this.privacyService.currentVersion();
+    if (user?.privacyPolicyVersion === currentVer && !this.authService.requiresPrivacyConsent()) {
+      this.showPrivacyConsentModal.set(false);
+    } else {
+      this.notification.warning('Debes aceptar el Aviso de Privacidad vigente o cerrar sesión.');
+    }
   }
 
   logout(): void {

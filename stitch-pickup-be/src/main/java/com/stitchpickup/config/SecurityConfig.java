@@ -47,12 +47,13 @@ public class SecurityConfig {
         "/",
         "/error",
         "/api/v1/auth/**",
+        "/api/v1/privacy/current",
         "/swagger-ui/**",
         "/swagger-ui.html",
         "/api-docs/**",
         "/v3/api-docs/**",
         "/actuator/health",
-        "/ws/**"                // WebSocket handshake — Spring Security lo maneja aparte
+        "/ws/**"                // Handshake HTTP SockJS — JWT validado en WebSocketConfig STOMP CONNECT
     };
 
     @Bean
@@ -83,9 +84,11 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/users/**").hasRole("ADMIN")
                 // KPIs (ADMIN y MONITOR de entregas)
                 .requestMatchers("/api/v1/kpis/**").hasAnyRole("ADMIN", "MONITOR")
-                // Monitor público y autenticado
-                .requestMatchers(HttpMethod.GET, "/api/v1/alerts/today/grouped").permitAll()
+                // Monitor autenticado (cerrado acceso anónimo a datos de menores en tiempo real)
+                .requestMatchers(HttpMethod.GET, "/api/v1/alerts/today/grouped").hasAnyRole("TEACHER", "ADMIN", "MONITOR")
                 .requestMatchers(HttpMethod.GET, "/api/v1/alerts/today").hasAnyRole("TEACHER", "ADMIN", "MONITOR")
+                .requestMatchers(HttpMethod.POST, "/api/v1/alerts/*/seen", "/api/v1/alerts/seen/batch").hasAnyRole("TEACHER", "ADMIN", "MONITOR")
+                .requestMatchers(HttpMethod.GET, "/api/v1/alerts/student/*/latest").hasAnyRole("PARENT", "TEACHER", "ADMIN", "MONITOR")
                 .requestMatchers(HttpMethod.GET, "/api/v1/deliveries/today").hasAnyRole("TEACHER", "ADMIN", "MONITOR")
                 .requestMatchers("/api/v1/deliveries/*/dispatch").hasAnyRole("TEACHER", "ADMIN", "MONITOR")
                 .requestMatchers("/api/v1/deliveries/*/revert").hasAnyRole("TEACHER", "ADMIN", "MONITOR")
@@ -93,7 +96,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/teacher/**").hasAnyRole("TEACHER", "ADMIN")
                 // Simulación de alertas para pruebas (TEACHER, ADMIN, MONITOR)
                 .requestMatchers(HttpMethod.POST, "/api/v1/alerts/simulate").hasAnyRole("TEACHER", "ADMIN", "MONITOR")
-                // Solo PARENT — envío de alertas, consulta y confirmación de entregas
+                // Solo PARENT — envío de alertas, privacidad, consulta y confirmación de entregas
+                .requestMatchers("/api/v1/privacy/accept", "/api/v1/privacy/my-consents").hasRole("PARENT")
                 .requestMatchers(HttpMethod.POST, "/api/v1/alerts").hasRole("PARENT")
                 .requestMatchers(HttpMethod.GET, "/api/v1/students/my-students").hasRole("PARENT")
                 .requestMatchers("/api/v1/students/*/parent-update").hasRole("PARENT")

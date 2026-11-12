@@ -48,6 +48,11 @@ services:
       CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-912463379929212}
       CLOUDINARY_SECRET: ${CLOUDINARY_SECRET:-9CmlnIrFnEf4wbPISatNAAopJjU}
       UPLOAD_DIR: ${UPLOAD_DIR:-/tmp/uploads}
+      PRIVACY_POLICY_VERSION: ${PRIVACY_POLICY_VERSION:-2026.1}
+      PRIVACY_EFFECTIVE_DATE: ${PRIVACY_EFFECTIVE_DATE:-2026-11-11}
+      PRIVACY_RESPONSIBLE_NAME: ${PRIVACY_RESPONSIBLE_NAME:-Instituto Inglés de Toluca}
+      PRIVACY_RESPONSIBLE_ADDRESS: ${PRIVACY_RESPONSIBLE_ADDRESS:-Toluca de Lerdo, Estado de México (Domicilio institucional registrado ante la SEP)}
+      PRIVACY_ARCO_EMAIL: ${PRIVACY_ARCO_EMAIL:-privacidad@institutoingles.edu.mx}
     ports:
       - "127.0.0.1:8080:8080"
     networks:

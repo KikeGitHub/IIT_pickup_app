@@ -1,0 +1,136 @@
+<section class="privacy-page" [class.privacy-page--embedded]="embedded" aria-label="Módulo de Aviso de Privacidad">
+  <div class="privacy-shell">
+
+    <!-- Header -->
+    <header class="privacy-header">
+      <div class="header-top">
+        <div class="brand-pill">
+          <img src="/logo_IIT.jpg" alt="Instituto Inglés de Toluca" class="brand-logo" />
+          <div>
+            <span class="brand-kicker">Instituto Inglés de Toluca • IIT Pickup</span>
+            <h1 class="privacy-title">{{ policy().title }}</h1>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          @if (!embedded) {
+            <button type="button" class="btn-outline" (click)="printPolicy()" title="Imprimir o guardar como PDF">
+              🖨️ Imprimir / PDF
+            </button>
+            <a routerLink="/auth/login" class="btn-primary-nav">
+              ← Ir al Portal
+            </a>
+          } @else {
+            <button type="button" class="btn-close-modal" (click)="onClose()" aria-label="Cerrar aviso de privacidad">
+              &times;
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="meta-badges">
+        <span class="badge badge--version">Versión {{ policy().version }}</span>
+        <span class="badge badge--date">Vigente desde: {{ policy().effectiveDate }}</span>
+        <span class="badge badge--law">LFPDPPP (México)</span>
+        <span class="badge badge--authority">Autoridad: {{ policy().authorityName }}</span>
+      </div>
+    </header>
+
+    <!-- Simplified Summary Box -->
+    <div class="summary-callout">
+      <div class="callout-icon" aria-hidden="true">🛡️</div>
+      <div class="callout-content">
+        <h2>Aviso de Privacidad Simplificado</h2>
+        <p>{{ policy().simplifiedSummary }}</p>
+      </div>
+    </div>
+
+    <!-- Trust Pillars -->
+    <div class="pillars-grid" aria-label="Garantías de protección infantil">
+      <div class="pillar-card">
+        <span class="pillar-emoji">👶</span>
+        <h3>Datos Mínimos</h3>
+        <p>Solo nombre, grupo y foto <strong>100% opcional</strong>. No pedimos datos bancarios ni publicidad.</p>
+      </div>
+      <div class="pillar-card">
+        <span class="pillar-emoji">🚫</span>
+        <h3>Cero Biometría / GPS</h3>
+        <p>No hacemos reconocimiento facial ni rastreo de ubicación continua en el teléfono.</p>
+      </div>
+      <div class="pillar-card">
+        <span class="pillar-emoji">🗑️</span>
+        <h3>Borrado Inmediato</h3>
+        <p>Puedes quitar la fotografía opcional de tu hijo/a en cualquier momento desde tu portal.</p>
+      </div>
+    </div>
+
+    <!-- Full Sections -->
+    <div class="sections-list">
+      @for (sec of policy().sections; track sec.id) {
+        <article class="policy-section" [id]="sec.id">
+          <h2 class="section-title">{{ sec.title }}</h2>
+          <p class="section-body">{{ sec.body }}</p>
+          @if (sec.highlights && sec.highlights.length > 0) {
+            <ul class="section-highlights">
+              @for (item of sec.highlights; track item) {
+                <li>{{ item }}</li>
+              }
+            </ul>
+          }
+        </article>
+      }
+    </div>
+
+    <!-- Responsible & ARCO Card -->
+    <aside class="arco-card">
+      <h3>📬 Contacto Oficial para Derechos ARCO y Revocación</h3>
+      <div class="arco-grid">
+        <div>
+          <span class="arco-label">Responsable del Tratamiento:</span>
+          <strong>{{ policy().responsibleName }}</strong>
+        </div>
+        <div>
+          <span class="arco-label">Domicilio:</span>
+          <strong>{{ policy().responsibleAddress }}</strong>
+        </div>
+        <div>
+          <span class="arco-label">Correo de Privacidad / ARCO:</span>
+          <a [href]="'mailto:' + policy().arcoEmail" class="arco-email">{{ policy().arcoEmail }}</a>
+        </div>
+        <div>
+          <span class="arco-label">Huella de Integridad (SHA-256):</span>
+          <code class="hash-code">{{ policy().sha256Hash }}</code>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Parent's own audit trail if logged in -->
+    @if (isParentAuthenticated() && myConsents().length > 0) {
+      <section class="consent-history-card">
+        <h3>📜 Tu Constancia de Aceptación Registrada</h3>
+        <p class="history-subtitle">Registro auditable asociado a tu cuenta de padre/tutor:</p>
+        <div class="history-list">
+          @for (c of myConsents(); track c.id) {
+            <div class="history-row">
+              <span><strong>Versión {{ c.policyVersion }}</strong> • {{ c.consentScope }}</span>
+              <span>{{ c.acceptedAt | date:'dd/MM/yyyy HH:mm' }}</span>
+            </div>
+          }
+        </div>
+      </section>
+    }
+
+    <!-- Embedded Footer Actions -->
+    @if (embedded) {
+      <footer class="embedded-footer">
+        <button type="button" class="btn-outline" (click)="onClose()">Cerrar</button>
+        @if (showAcceptButton) {
+          <button type="button" class="btn-accept" (click)="onAcceptAndClose()">
+            ✅ He leído y acepto este Aviso de Privacidad
+          </button>
+        }
+      </footer>
+    }
+  </div>
+</section>
+

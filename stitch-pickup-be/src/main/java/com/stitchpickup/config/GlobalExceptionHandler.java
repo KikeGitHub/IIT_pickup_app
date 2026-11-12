@@ -1,5 +1,6 @@
 package com.stitchpickup.config;
 
+import com.stitchpickup.modules.privacy.exception.PrivacyConsentRequiredException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -55,6 +56,31 @@ public class GlobalExceptionHandler {
         pd.setTitle("Credenciales inválidas");
         pd.setDetail(ex.getMessage());
         pd.setType(URI.create("urn:stitch-pickup:invalid-credentials"));
+        pd.setProperty("timestamp", Instant.now());
+        return pd;
+    }
+
+    // ─── Consentimiento de Privacidad Requerido ───────────────────────────────
+
+    @ExceptionHandler(PrivacyConsentRequiredException.class)
+    public ProblemDetail handlePrivacyConsentRequired(PrivacyConsentRequiredException ex) {
+        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.PRECONDITION_REQUIRED);
+        pd.setTitle("Aviso de Privacidad requerido");
+        pd.setDetail(ex.getMessage());
+        pd.setType(URI.create("urn:stitch-pickup:privacy-consent-required"));
+        pd.setProperty("policyVersion", ex.getPolicyVersion());
+        pd.setProperty("timestamp", Instant.now());
+        return pd;
+    }
+
+    // ─── Acceso Denegado (SecurityException de dominio) ──────────────────────
+
+    @ExceptionHandler(SecurityException.class)
+    public ProblemDetail handleSecurityException(SecurityException ex) {
+        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.FORBIDDEN);
+        pd.setTitle("Operación no autorizada");
+        pd.setDetail(ex.getMessage());
+        pd.setType(URI.create("urn:stitch-pickup:forbidden"));
         pd.setProperty("timestamp", Instant.now());
         return pd;
     }

@@ -69,10 +69,11 @@ Con fundamento en la **Ley Federal de Protección de Datos Personales en Posesi�
 A partir de la suscripción de esta ficha y de la entrega material de los accesos:
 
 * **Gestión Interna:** La institución educativa asume la responsabilidad exclusiva sobre el uso, divulgación interna, asignación de roles y control de las cuentas dentro de su comunidad escolar.
-* **Deslinde por Fugas o Extravío de Claves:** *"EL DESARROLLADOR"* queda exento de cualquier responsabilidad legal, civil, penal o administrativa ante el INAI o autoridades competentes por:
+* **Deslinde por Fugas o Extravío de Claves:** *"EL DESARROLLADOR"* queda exento de cualquier responsabilidad legal, civil, penal o administrativa ante la **Secretaría Anticorrupción y Buen Gobierno** (autoridad competente conforme a la Ley Federal de Protección de Datos Personales en Posesión de los Particulares vigente, DOF 20/03/2025) u otras autoridades competentes por:
   1. El extravío, filtración o divulgación negligente de las credenciales de administración por parte del personal del colegio.
   2. Modificaciones, bajas erróneas o eliminaciones masivas de datos efectuadas por los usuarios que operen las cuentas de administrador.
   3. Omisión en el cambio oportuno de las contraseñas temporales iniciales.
+* **Validación del Aviso de Privacidad y Textos Legales:** *"EL CLIENTE"* asume la revisión, aprobación jurídica y veracidad de la razón social, domicilio y correo oficial de Derechos ARCO publicados en el módulo `/privacidad` y en el consentimiento expreso de acceso de la plataforma.
 
 ---
 

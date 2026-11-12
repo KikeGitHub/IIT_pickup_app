@@ -121,6 +121,35 @@
           }
         </div>
 
+        <!-- Privacy Policy Express Consent Checkbox -->
+        <div class="privacy-consent-box" [class.privacy-consent-box--error]="isFieldInvalid('acceptedPrivacy')">
+          <label class="privacy-checkbox-label" for="parent-privacy-checkbox">
+            <input
+              id="parent-privacy-checkbox"
+              type="checkbox"
+              formControlName="acceptedPrivacy"
+              class="privacy-checkbox-input"
+              [attr.aria-describedby]="isFieldInvalid('acceptedPrivacy') ? 'privacy-error' : null"
+              [attr.aria-invalid]="isFieldInvalid('acceptedPrivacy')"
+            />
+            <span class="privacy-consent-text">
+              Como padre/madre o tutor legal, he leído y acepto el
+              <button
+                type="button"
+                class="privacy-inline-btn"
+                id="btn-open-privacy-modal"
+                (click)="openPrivacyModal()"
+              >
+                Aviso de Privacidad Integral (v{{ policyVersion() }})
+              </button>
+              y autorizo el uso de datos del menor (nombre, grupo y foto estrictamente opcional) solo para entregas escolares.
+            </span>
+          </label>
+          @if (isFieldInvalid('acceptedPrivacy')) {
+            <p id="privacy-error" class="form-error" role="alert">{{ getFieldError('acceptedPrivacy') }}</p>
+          }
+        </div>
+
         <!-- Submit Button -->
         <button
           type="submit"
@@ -155,10 +184,29 @@
         <p class="footer-text footer-text--small">
           ¿Problemas para acceder? Contacta a la dirección escolar.
         </p>
+        <p class="footer-text footer-text--small" style="margin-top:6px;">
+          <a routerLink="/privacidad" class="footer-link" id="link-privacy-policy">
+            🛡️ Consultar Aviso de Privacidad
+          </a>
+        </p>
         <span style="display:block; text-align:center; margin-top:8px; font-size:10px; opacity:0.4; font-family:monospace;">IIT Pickup {{ appVersion }}</span>
       </footer>
 
     </div>
   </main>
+
+  <!-- Privacy Policy Modal -->
+  @if (showPrivacyModal()) {
+    <div class="privacy-modal-backdrop" (click)="closePrivacyModal()" role="dialog" aria-modal="true" aria-label="Aviso de Privacidad Integral">
+      <div class="privacy-modal-dialog" (click)="$event.stopPropagation()">
+        <app-privacy-policy
+          [embedded]="true"
+          [showAcceptButton]="true"
+          (closed)="closePrivacyModal()"
+          (acceptedFromModal)="acceptPrivacyFromModal()"
+        ></app-privacy-policy>
+      </div>
+    </div>
+  }
 
 </section>

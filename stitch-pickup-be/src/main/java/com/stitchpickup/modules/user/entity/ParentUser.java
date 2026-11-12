@@ -60,6 +60,12 @@ public class ParentUser {
     @Column(name = "last_login")
     private Instant lastLogin;
 
+    @Column(name = "privacy_policy_version", length = 20)
+    private String privacyPolicyVersion;
+
+    @Column(name = "privacy_accepted_at")
+    private Instant privacyAcceptedAt;
+
     // ─── Relación N:M con Students ───────────────────────────────────────────
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(

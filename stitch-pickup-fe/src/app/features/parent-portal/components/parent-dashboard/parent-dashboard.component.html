@@ -341,10 +341,10 @@
           </div>
 
           <div class="info-notice-box">
-            <span class="notice-icon">ℹ️</span>
+            <span class="notice-icon">🔒</span>
             <div class="notice-text">
-              <strong>Control Institucional de Datos</strong>
-              <p>Los datos escolares, grado, grupo, CURP y tutores autorizados son registrados y validados por la Dirección del plantel.</p>
+              <strong>Fotografía 100% Opcional y Privacidad del Menor</strong>
+              <p>Subir fotografía es voluntario; el sistema funciona solo con nombre y grupo. No realizamos biometría ni reconocimiento facial. Si decides quitar la foto, se eliminará permanentemente de nuestros servidores. <a routerLink="/privacidad" (click)="closeEditModal()" class="inline-privacy-link">Ver Aviso de Privacidad</a></p>
             </div>
           </div>
         </div>
@@ -397,7 +397,27 @@
   <!-- Footer discreto con versión desplegada -->
   <footer class="portal-bottom-footer">
     <span>Colegio IIT • IIT Pickup</span>
+    <a routerLink="/privacidad" class="footer-privacy-link">🛡️ Aviso de Privacidad</a>
     <span class="bottom-version">{{ appVersion }}</span>
   </footer>
+
+  <!-- Modal obligatorio de actualización / aceptación de Aviso de Privacidad -->
+  @if (showPrivacyConsentModal()) {
+    <div class="privacy-consent-backdrop" role="dialog" aria-modal="true" aria-label="Aceptación de Aviso de Privacidad">
+      <div class="privacy-consent-dialog">
+        <app-privacy-policy
+          [embedded]="true"
+          [showAcceptButton]="true"
+          (closed)="closePrivacyConsentModal()"
+          (acceptedFromModal)="acceptUpdatedPrivacy($event)"
+        ></app-privacy-policy>
+        <div class="privacy-decline-bar">
+          <button type="button" class="btn-decline-logout" (click)="logout()">
+            No acepto — Cerrar sesión
+          </button>
+        </div>
+      </div>
+    </div>
+  }
 
 </div>
